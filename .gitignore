@@ -1,0 +1,7 @@
+*.egg*
+*.py[co]
+*.sw*
+.env
+.tox/
+build/
+dist/
