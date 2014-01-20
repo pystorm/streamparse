@@ -132,7 +132,7 @@ def read_handshake():
     send_message({'pid': pid})
     storm_log.info('Process ID sent to Storm')
 
-    return msg['conf'], msg['conf']
+    return msg['conf'], msg['context']
 
 
 ## Message sending
