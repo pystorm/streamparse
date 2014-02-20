@@ -1,0 +1,28 @@
+{
+    "lib": "ptrack/",
+    "specs": "specs/",
+    "requirements": "requirements.txt"
+    "envs": {
+        "prod": {
+            "nimbus": "ue1a-storm-head.cogtree.com",
+            "workers": [
+                "ue1a-storm1.cogtree.com",
+                "ue1a-storm2.cogtree.com",
+                "ue1a-storm3.cogtree.com"
+            ],
+            "virtualenv_dir": "/data/virtualenvs/ptrack-prod/",
+            "log_dir": "/var/log/cogtree/ptrack-prod/"
+        },
+        "beta": {
+            "nimbus": "ptrack-nextgen2.cogtree.com",
+            "workers": [
+                "ptrack-nextgen1.cogtree.com",
+                "ptrack-nextgen2.cogtree.com",
+                "ptrack-nextgen3.cogtree.com",
+                "ptrack-nextgen4.cogtree.com"
+            ],
+            "virtualenv_dir": "/data/virtualenvs/ptrack-beta/",
+            "log_dir": "/var/log/cogtree/ptrack-beta/"
+        }
+    }
+}
