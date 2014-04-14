@@ -28,7 +28,7 @@ stormpy allows you to write your Storm Spout and Bolt implementations in pure
 Python. It also provides mechanisms for managing and debugging your clusters.
 But Storm is actually a language-independent technology. It is written in Java
 and Clojure and runs on the JVM, but works with other programming languages via
-its "multi-lang protocol". As a result of this flexibily, stormpy leverages
+its "multi-lang protocol". As a result of this flexibility, stormpy leverages
 Storm's existing Clojure DSL for configuring Storm topologies. This allows you
 to freely mix Python Spouts and Bolts with Java/Clojure Spouts and Bolts (as
 well as Spouts and Bolts written in other languages altogether). This is
@@ -104,6 +104,8 @@ To create a project template which will have:
 * fabfile.py: remote management tasks (Fabric)
 * tasks.py: local management tasks (invoke)
 
+## Running and Debugging locally
+
 You can then run the local Storm topology using:
 
     stormpy run-local
@@ -125,16 +127,18 @@ This will set a breakpoint when the Bolt receives its first data tuple.
 
 In both cases, debug-local uses ``pdb`` over a socket connection.
 
+## Packaging and submitting
+
 To package your uberjar for submission to a Storm cluster, use:
 
     stormpy package topologies/topology.clj
 
 This will create a project JAR file containing all your Python code inside
-``_target/``. Temporary build articles are stored in ``_build/``.
+``_target/``. Temporary build artifacts are stored in ``_build/``.
 
 To submit your Storm topology to a locally-running Storm cluster, use:
 
-    stormpy submit topologies/topology.clj
+    stormpy submit topologies/topology.clj --config=config/local.json
 
 To submit your Storm topology to a remotely-running production Storm cluster, use:
 
@@ -142,7 +146,22 @@ To submit your Storm topology to a remotely-running production Storm cluster, us
 
 The submit task will automatically package your topology before submitting.
 
+## Monitoring
+
 To monitor a running Storm topology in production, use:
 
     stormpy monitor --config=config/prod.json
 
+To tail all the log files for a running topology across a production Storm
+cluster, use:
+
+    stormpy tail --config=config/prod.json
+
+## Managing
+
+To kill a running Storm topology, use:
+
+    stormpy kill --config=config/prod.json
+
+Topologies are automatically killed when you re-submit an existing topology to
+a cluster.
