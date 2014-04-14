@@ -1,5 +1,5 @@
 from docopt import docopt
-
+from invoke import run
 
 def main():
     """stormpy
@@ -15,7 +15,7 @@ def main():
     """
     args = docopt(main.__doc__, version="stormpy 0.1")
     if args["run-local"]:
-        print "run local"
+        run("lein run -s topologies/wordcount.clj")
     elif args["debug-local"]:
         print "debug local"
 
