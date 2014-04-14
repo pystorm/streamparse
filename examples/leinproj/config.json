@@ -1,11 +1,10 @@
 {
     "library": "ptrack/",
-    "topologies": {
-        "wordcount": {
-            "topology": "topologies/wordcount/topology.clj",
-            "requirements": "topologies/wordcount/requirements.txt"
-        }
-    }
+    "topology_specs": "topologies/",
+    "virtualenv_specs": "virtualenvs/",
+    "topologies": [
+        "wordcount"
+    ],
     "envs": {
         "prod": {
             "nimbus": "ue1a-storm-head.cogtree.com",

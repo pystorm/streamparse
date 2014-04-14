@@ -1,4 +1,4 @@
-(ns stormy 
+(ns stormlocal
   (:use [clojure.tools.cli :only (cli)])
   ;; various utilities
   (:require [clojure.string :as str]
