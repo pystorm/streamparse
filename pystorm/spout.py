@@ -1,5 +1,4 @@
 from __future__ import print_function
-import traceback
 
 from .util import read_handshake, read_command, send_message, Component, json
 from .util import _stdout
@@ -34,12 +33,12 @@ class Spout(Component):
 
         :param tup: a ``list`` representing the tuple to send to Storm, should
                     contain only JSON-serializable data.
-        :param tup_id: ``str`` or ``int`` which is the id for the tuple. Leave this
-                       blank for an unreliable emit.
-        :param stream: ``str`` ID of the stream this tuple should be emitted to.
-                       Leave empty to emit to the default stream.
+        :param tup_id: ``str`` or ``int`` which is the id for the tuple. Leave
+                    this blank for an unreliable emit.
+        :param stream: ``str`` ID of the stream this tuple should be emitted
+                    to.  Leave empty to emit to the default stream.
         :param direct_task: ``int`` indicating the task to send the tuple to if
-                            performing a direct emit.
+                    performing a direct emit.
         """
         msg = {'command': 'emit', 'tuple': tup}
         if tup_id is not None:
@@ -73,7 +72,6 @@ class Spout(Component):
             lines.append('end')
         print('\n'.join(lines), file=_stdout)
 
-
     def run(self):
         storm_conf, context = read_handshake()
         try:
@@ -89,4 +87,3 @@ class Spout(Component):
                 send_message({'command': 'sync'})
         except Exception as e:
             Component.exception(e)
-

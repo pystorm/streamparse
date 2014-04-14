@@ -3,7 +3,6 @@ import os
 import time
 import socket
 import logging
-import traceback
 from collections import deque
 
 try:
@@ -206,7 +205,7 @@ def emitBolt(tup, stream=None, anchors = [], directTask=None, need_task_ids=Fals
     sendMsgToParent(m)
     return need_task_ids
     
-def emitManySpout(tuples, stream=None, id=None, directTask=None):
+def emitManySpout(tuples, stream=None, id=None, directTask=None, need_task_ids=False):
     m = {
         "command": "emit",
         "tuple": None,

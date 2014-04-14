@@ -1,5 +1,4 @@
 from __future__ import print_function
-import traceback
 
 from .util import read_handshake, read_tuple, send_message, Component, json
 from .util import _stdout
@@ -106,6 +105,7 @@ class Bolt(Component):
 class BasicBolt(Bolt):
 
     def run(self):
+        global _ANCHOR_TUPLE
         storm_conf, context = read_handshake()
         try:
             self.initialize(storm_conf, context)
