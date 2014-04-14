@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-stormpy.pdb
+stormpy.debug
 
-Remote debugger for Python-based Storm tasks.
+Remote debugger for Python-based Storm tasks, based on Pdb.
 
 Inspired by http://snippets.dzone.com/posts/show/7248.
 """
