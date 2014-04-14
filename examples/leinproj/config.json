@@ -7,6 +7,7 @@
     ],
     "envs": {
         "prod": {
+            "user": "cogtree",
             "nimbus": "ue1a-storm-head.cogtree.com",
             "workers": [
                 "ue1a-storm1.cogtree.com",
@@ -17,6 +18,7 @@
             "log_dir": "/var/log/cogtree/ptrack-prod/"
         },
         "beta": {
+            "user": "cogtree",
             "nimbus": "ptrack-nextgen2.cogtree.com",
             "workers": [
                 "ptrack-nextgen1.cogtree.com",
