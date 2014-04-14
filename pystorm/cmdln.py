@@ -7,6 +7,7 @@ def main():
     Usage:
         stormpy run-local
         stormpy debug-local
+        stormpy list
 
     Options:
         -h --help           Show this screen.
@@ -17,7 +18,13 @@ def main():
     if args["run-local"]:
         run("lein run -s topologies/wordcount.clj")
     elif args["debug-local"]:
-        print "debug local"
+        run("lein run -s topologies/wordcount.clj")
+    elif args["list"]:
+        print "invoke tasks:"
+        run("invoke -l")
+        print
+        print "fabric tasks:"
+        run("fab -l")
 
 
 if __name__ == "__main__":
