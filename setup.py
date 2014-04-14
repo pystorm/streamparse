@@ -22,7 +22,8 @@ from setuptools import setup, find_packages
 from pystorm import __version__
 
 install_requires = [
-    'invoke'
+    'invoke',
+    'fabric'
 ]
 
 lint_requires = [
