@@ -44,6 +44,11 @@ setup(
     description='TODO',
     license='Apache License 2.0',
     packages=find_packages(),
+    entry_points={
+        'console_scripts': [
+            'stormpy = pystorm.cmdln:main'
+        ]
+    },
     install_requires=install_requires,
     tests_require=tests_require,
     setup_requires=setup_requires,
