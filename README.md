@@ -94,15 +94,16 @@ This will offer a command-line tool, ``stormpy``. Use:
 To create a project template which will have:
 
 * src/
-    * stormlib.py: example spout and bolt implementations in Python
-* config/
-    * local.json: example local configuration file
-    * prod.json: example configuration file for production Storm cluster
+    * wordlib.py: example support library in Python
+    * wordcount.py: example Spout & Bolt implementation in Python
 * topologies/
-    * topology.clj: example topology configuration in Clojure DSL
-* project.clj: Storm dependencies expressed as lein project file
-* fabfile.py: remote management tasks (Fabric)
-* tasks.py: local management tasks (invoke)
+    * wordcount.clj: ``clj`` file with topology configuration in Clojure DSL
+* virtualenvs/
+    * wordcount.txt: ``requirements`` file to express Python dependencies
+* config.json: config file w/ Storm cluster hostnames and code locations
+* project.clj: ``lein`` project file to express Storm dependencies
+* fabfile.py: remote management tasks (fabric, customizable)
+* tasks.py: local management tasks (invoke, customizable)
 
 ## Running and Debugging locally
 
@@ -115,13 +116,13 @@ first run.
 
 You can debug a local Storm topology's Spout by running:
 
-    stormpy debug-local --spout=stormlib.sample_spout
+    stormpy debug-local --spout=wordcount.sample_spout
 
 This will set a breakpoint when the Spout receives its first data tuple and let you trace through it.
 
 You can debug a local Storm topology's Bolt by running:
 
-    stormpy debug-local --bolt=stormlib.sample_bolt
+    stormpy debug-local --bolt=wordcount.sample_bolt
 
 This will set a breakpoint when the Bolt receives its first data tuple.
 
@@ -138,11 +139,11 @@ This will create a project JAR file containing all your Python code inside
 
 To submit your Storm topology to a locally-running Storm cluster, use:
 
-    stormpy submit topologies/topology.clj --config=config/local.json
+    stormpy submit topologies/topology.clj
 
 To submit your Storm topology to a remotely-running production Storm cluster, use:
 
-    stormpy submit topologies/topology.clj --config=config/prod.json
+    stormpy submit topologies/topology.clj --env=prod
 
 The submit task will automatically package your topology before submitting.
 
@@ -150,18 +151,18 @@ The submit task will automatically package your topology before submitting.
 
 To monitor a running Storm topology in production, use:
 
-    stormpy monitor --config=config/prod.json
+    stormpy monitor --env=prod
 
 To tail all the log files for a running topology across a production Storm
 cluster, use:
 
-    stormpy tail --config=config/prod.json
+    stormpy tail --env=prod
 
 ## Managing
 
 To kill a running Storm topology, use:
 
-    stormpy kill --config=config/prod.json
+    stormpy kill --env=prod
 
 Topologies are automatically killed when you re-submit an existing topology to
 a cluster.
