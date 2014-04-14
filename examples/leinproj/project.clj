@@ -5,7 +5,7 @@
   :target-path "_build"
   :min-lein-version "2.0.0"
   :main stormy
-  :dependencies [[storm "0.8.2"]
+  :dependencies [[org.apache.storm/storm-core "0.9.1-incubating"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/data.json "0.2.4"]
                  [org.clojure/tools.cli "0.3.1"]
