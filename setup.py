@@ -23,7 +23,8 @@ from pystorm import __version__
 
 install_requires = [
     'invoke',
-    'fabric'
+    'fabric',
+    'docopt',
 ]
 
 lint_requires = [
