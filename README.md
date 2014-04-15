@@ -76,6 +76,7 @@ monitoring, and debugging Storm topologies in Python. These are:
 
 ### Python
 
+* docopt
 * fabric
 * invoke
 
