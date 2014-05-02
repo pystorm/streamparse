@@ -404,6 +404,8 @@ class BasicBolt(Task):
                     'The error occurred while processing this tuple: %s',
                     repr(tup.values)[:2000])
 
+Bolt = BasicBolt
+
 class Spout(Task):
     def initialize(self, conf, context):
         pass
@@ -537,3 +539,5 @@ class LogStream(object):
     def write(self, message):
         for line in message.split('\n'):
             self.logger.error(line)
+
+__all__ = ["Bolt", "Spout"]
