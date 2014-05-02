@@ -70,6 +70,10 @@ To create a project template which will have this structure:
 * fabfile.py: remote management tasks (fabric, customizable)
 * tasks.py: local management tasks (invoke, customizable)
 
+*Development note*: Since quickstart isn't yet implemented, a
+project template of this form is currently being developed in 
+``./examples/leinproj``.
+
 ## Running and Debugging locally
 
 You can then run the local sample word count topology using:
