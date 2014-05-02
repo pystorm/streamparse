@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright 2013 Parsely, Inc.
+Copyright 2014 Parsely, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,17 +39,18 @@ if 'nosetests' in sys.argv[1:]:
     setup_requires.append('nose')
 
 setup(
-    name='pystorm',
+    name='streamparse',
     version=__version__,
     author='Parsely, Inc.',
-    author_email='TODO',
-    url='https://github.com/Parsely/pystorm',
-    description='TODO',
+    author_email='hello@parsely.com',
+    url='https://github.com/Parsely/streamparse',
+    description='streamparse lets you run Python code against real-time streams of data. Integrates with Apache Storm.',
     license='Apache License 2.0',
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'sparse = pystorm.cmdln:main'
+            'sparse = streamparse.cmdln:main',
+            'streamparse = streamparse.cmdln:main'
         ]
     },
     install_requires=install_requires,

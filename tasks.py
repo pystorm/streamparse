@@ -3,10 +3,9 @@ import os
 
 @task
 def lint():
-    for src in os.listdir("pystorm"):
+    for src in os.listdir("streamparse"):
         if src.endswith(".py"):
-            run("pyflakes pystorm/{}".format(src))
-            #run("pep8 pystorm/{}".format(src))
+            run("pyflakes streamparse/{}".format(src))
 
 @task
 def build(docs=False):

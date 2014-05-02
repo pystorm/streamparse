@@ -1,8 +1,138 @@
-# sparse
+# streamparse
 
-sparse is a Pythonic interop library for the Apache Storm framework.
+streamparse lets you run Python code against real-time streams of data. It also
+integrates Python smoothly with Apache Storm.
 
-## What is Storm and why should a Pythonista care about it?
+It can be viewed as a more robust alternative to Python worker-and-queue
+systems, as might be built atop frameworks like Celery and RQ. It offers a way
+to do "real-time map/reduce style computation" against live streams of data. It
+can also be a powerful way to scale long-running, highly parallel Python
+processes in production.
+
+## WARNING: IN DEVELOPMENT
+
+streamparse is still in active development. It is not ready for production use.
+It isn't even really ready for development use. Follow the project's progress
+via our Google Group::
+
+    e-mail: streamparse@googlegroups.com
+    web: https://groups.google.com/forum/#!forum/streamparse
+
+You can also reach out to [@amontalenti][twitter] on Twitter.
+
+[twitter]: http://twitter.com/amontalenti
+
+## Dependencies
+
+### Java and Clojure
+
+To run local and remote computation clusters, streamparse relies upon a JVM
+technology called Apache Storm. The integration with this technology is
+lightweight, and for the most part, you don't need to think about it.
+
+However, to get the library running, you'll need:
+
+* JDK 7+: use apt-get or homebrew to install this
+* lein: http://leiningen.org/#install
+
+### Python
+
+* fabric: used for remote SSH server management
+* invoke: used as a local shell-based build tool
+
+You don't actually need fabric and invoke installed separately from streamparse;
+it will be installed automatically when you install the ``streamparse`` module.
+>>>>>>> updated README - setup.py - tasks for name change
+
+# Getting started
+
+## Installation
+
+After installing the Java/Clojure requirements, you can run:
+
+    pip install sparse
+
+This will offer a command-line tool, ``sparse``. Use:
+
+    sparse quickstart
+
+To create a project template which will have this structure:
+
+* src/
+    * wordlib.py: example support library in Python
+    * wordcount.py: example Spout & Bolt implementation in Python
+* topologies/
+    * wordcount.clj: ``clj`` file with topology configuration in Clojure DSL
+* virtualenvs/
+    * wordcount.txt: ``requirements`` file to express Python dependencies
+* config.json: config file w/ Storm cluster hostnames and code locations
+* project.clj: ``lein`` project file to express Storm dependencies
+* fabfile.py: remote management tasks (fabric, customizable)
+* tasks.py: local management tasks (invoke, customizable)
+
+## Running and Debugging locally
+
+You can then run the local sample word count topology using:
+
+    sparse run
+
+This will produce a lot of output and may also download Storm dependencies upon
+first run.
+
+You can debug a local topology's Spout by running:
+
+    sparse debug --spout=wordcount.sample_spout
+
+This will set a breakpoint when the Spout receives its first data tuple and let you trace through it.
+
+You can debug a local Storm topology's Bolt by running:
+
+    sparse debug --bolt=wordcount.sample_bolt
+
+This will set a breakpoint when the Bolt receives its first data tuple.
+
+In both cases, debug uses ``pdb`` over a socket connection.
+
+## Packaging and submitting
+
+To package your uberjar for submission to a Storm cluster, use:
+
+    sparse package topologies/topology.clj
+
+This will create a project JAR file containing all your Python code inside
+``_target/``. Temporary build artifacts are stored in ``_build/``.
+
+To submit your Storm topology to a locally-running Storm cluster, use:
+
+    sparse submit topologies/topology.clj
+
+To submit your Storm topology to a remotely-running production Storm cluster, use:
+
+    sparse submit topologies/topology.clj --env=prod
+
+The submit task will automatically package your topology before submitting.
+
+## Monitoring
+
+To monitor a running Storm topology in production, use:
+
+    sparse monitor --env=prod
+
+To tail all the log files for a running topology across a production Storm
+cluster, use:
+
+    sparse tail --env=prod
+
+## Managing
+
+To kill a running Storm topology, use:
+
+    sparse kill --env=prod
+
+Topologies are automatically killed when you re-submit an existing topology to
+a cluster.
+
+# What is Storm?
 
 Storm is a distributed real-time computation framework. Storm is sometimes
 referred to as a "real-time map/reduce implementation". It allows you to define
@@ -13,6 +143,8 @@ declared. Data originates in a cluster via Spout, which simply exposes a stream
 of named tuples. A Spout receives its source data from a high-performance queue
 like Apache Kafka (though ZeroMQ, RabbitMQ, and other sources are also
 options).
+
+## Why should a Pythonista care about Storm?
 
 In short, the Spout and Bolts abstraction allows you to write Python code which
 transforms a live stream of data and execute it performantly across a cluster
@@ -67,103 +199,3 @@ monitoring, and debugging Storm topologies in Python. These are:
 * out-of-box Sentry/Raven support
 * local execution using Storm ``LocalCluster``
 
-## Dependencies
-
-### Java/Clojure
-
-* JDK 1.7+
-* lein
-
-### Python
-
-* docopt
-* fabric
-* invoke
-
-# Getting started
-
-## Installation
-
-After installing the Java requirements, you can run:
-
-    pip install sparse
-
-This will offer a command-line tool, ``sparse``. Use:
-
-    sparse quickstart
-
-To create a project template which will have:
-
-* src/
-    * wordlib.py: example support library in Python
-    * wordcount.py: example Spout & Bolt implementation in Python
-* topologies/
-    * wordcount.clj: ``clj`` file with topology configuration in Clojure DSL
-* virtualenvs/
-    * wordcount.txt: ``requirements`` file to express Python dependencies
-* config.json: config file w/ Storm cluster hostnames and code locations
-* project.clj: ``lein`` project file to express Storm dependencies
-* fabfile.py: remote management tasks (fabric, customizable)
-* tasks.py: local management tasks (invoke, customizable)
-
-## Running and Debugging locally
-
-You can then run the local Storm topology using:
-
-    sparse run
-
-This will produce a lot of output and may also download Storm dependencies upon
-first run.
-
-You can debug a local Storm topology's Spout by running:
-
-    sparse debug --spout=wordcount.sample_spout
-
-This will set a breakpoint when the Spout receives its first data tuple and let you trace through it.
-
-You can debug a local Storm topology's Bolt by running:
-
-    sparse debug --bolt=wordcount.sample_bolt
-
-This will set a breakpoint when the Bolt receives its first data tuple.
-
-In both cases, debug uses ``pdb`` over a socket connection.
-
-## Packaging and submitting
-
-To package your uberjar for submission to a Storm cluster, use:
-
-    sparse package topologies/topology.clj
-
-This will create a project JAR file containing all your Python code inside
-``_target/``. Temporary build artifacts are stored in ``_build/``.
-
-To submit your Storm topology to a locally-running Storm cluster, use:
-
-    sparse submit topologies/topology.clj
-
-To submit your Storm topology to a remotely-running production Storm cluster, use:
-
-    sparse submit topologies/topology.clj --env=prod
-
-The submit task will automatically package your topology before submitting.
-
-## Monitoring
-
-To monitor a running Storm topology in production, use:
-
-    sparse monitor --env=prod
-
-To tail all the log files for a running topology across a production Storm
-cluster, use:
-
-    sparse tail --env=prod
-
-## Managing
-
-To kill a running Storm topology, use:
-
-    sparse kill --env=prod
-
-Topologies are automatically killed when you re-submit an existing topology to
-a cluster.
