@@ -154,41 +154,46 @@ also provides mechanisms to guarantee fault-tolerance and at-least-once message
 processing semantics. It is a strong alternative to Celery for log and stream
 processing problems.
 
-## sparse, Clojure, and lein
+## streamparse, Clojure, and lein
 
-sparse allows you to write your Storm Spout and Bolt implementations in pure
-Python. It also provides mechanisms for managing and debugging your clusters.
+streamparse allows you to write your Storm Spout and Bolt implementations in
+pure Python. It also provides mechanisms for managing and debugging your
+clusters.
+
 But Storm is actually a language-independent technology. It is written in Java
 and Clojure and runs on the JVM, but works with other programming languages via
-its "multi-lang protocol". As a result of this flexibility, sparse leverages
-Storm's existing Clojure DSL for configuring Storm topologies. This allows you
-to freely mix Python Spouts and Bolts with Java/Clojure Spouts and Bolts (as
-well as Spouts and Bolts written in other languages altogether). This is
-important because the community around Storm has written many re-usable
+its "multi-lang protocol". As a result of this flexibility, streamparse leverages
+Storm's existing Clojure DSL for configuring Storm topologies.
+
+This allows you to freely mix Python Spouts and Bolts with Java/Clojure Spouts
+and Bolts (as well as Spouts and Bolts written in other languages altogether).
+This is important because the community around Storm has written many re-usable
 components in Java/Clojure. For example, there are several data integration
 Spouts already written for tools like Kafka, RabbitMQ, ZeroMQ, MongoDB and
-Cassandra. Therefore, every sparse project is actually a mixed Python and
+Cassandra. Therefore, every streamparse project is actually a mixed Python and
 Clojure project.
 
 The ``lein`` build tool is used to resolve dependencies to Storm itself,
 install it locally, run Storm topologies locally, add dependencies for
 community-supported JVM-based Spout implementations, offer an interactive
 debugging REPL, and to package your topologies as an "uberjar" for submission
-to a production Storm cluster.
+to a production Storm cluster. All of this is scripted under the hood using a
+small command-line Clojure program that is included with streamparse.
 
-You may be worried that this means to use sparse, you need to know Clojure.
-This is not the case. The Clojure DSL is essentially just a lightweight
-configuration file format that happens to be written in Clojure. It isn't any
-harder than JSON since it's ultimately just configured using some data maps.
-Plus, we have plenty of examples for you to follow. And, we've provided a
-simple tool for introspecting your Python Spouts and Bolts and offering
-starting points for configuration.
+You may be worried that this means to use streamparse, you need to know
+Clojure.  This is not the case. The Clojure DSL is essentially just a
+lightweight configuration file format that happens to be written in Clojure.
+
+It isn't any harder than JSON since it's ultimately just configured using some
+data maps.  Plus, we have plenty of examples for you to follow. And, we've
+provided a simple tool for introspecting your Python Spouts and Bolts and
+offering starting points for configuration.
 
 ## Core focus of this library
 
 With Storm local building and packaging handled by ``lein``, this library has a
 reduced scope and will only focus on a few key areas core to writing, running,
-monitoring, and debugging Storm topologies in Python. These are:
+monitoring, and debugging clusters in Python. These are:
 
 * an enhanced Pythonic support library
 * decorators for your Bolts and Spouts, ``@bolt`` and ``@spout``
