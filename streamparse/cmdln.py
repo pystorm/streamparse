@@ -2,11 +2,11 @@ from docopt import docopt
 from invoke import run
 
 def main():
-    """sparse: manage StreamParse clusters.
+    """sparse: manage streamparse clusters.
 
-    sparse provides a front-end to StreamParse, a framework for creating Python
-    projects for running, debugging, and submitting Storm topologies for data
-    processing.
+    sparse provides a front-end to streamparse, a framework for creating Python
+    projects for running, debugging, and submitting computation topologies against
+    real-time streams, using Apache Storm.
 
     It requires the lein (Clojure build tool) to be on your $PATH, and uses
     lein and Clojure under the hood for JVM interop.
@@ -14,7 +14,7 @@ def main():
     Usage:
         sparse quickstart <proj_name>
         sparse setup [-e ENV]
-        sparse run [-e ENV]
+        sparse run [-e ENV] [-t TIME]
         sparse debug [-e ENV]
         sparse kill [-e ENV]
         sparse restart [-e ENV]
@@ -28,7 +28,8 @@ def main():
     Options:
         -h --help         Show this screen.
         --version         Show version.
-        -e ENV            Set environment [default: local].
+        -e ENV            Set environment; as described in config.json [default: local].
+        -t TIME           Time (in milliseconds) to keep cluster running [default: 5000].
         --verbose         Verbose output.
         --debug           Debug output.
     """
@@ -36,7 +37,9 @@ def main():
     print args
     if args["run"]:
         print "Running wordcount topology..."
-        run("lein run -s topologies/wordcount.clj")
+        word_count = "topologies/wordcount.clj"
+        run("lein run -s {topology} -t {time}".format(
+            topology=word_count, time=args["-t"]))
     elif args["debug"]:
         print "Debugging wordcount topology..."
         run("lein run -s topologies/wordcount.clj")
