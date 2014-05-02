@@ -1,16 +1,16 @@
-from collections import defaultdict
+from collections import Counter
+
 from streamparse import storm
 
 class WordCounter(storm.Bolt):
 
-    def initialize(self, stormconf, context):
-        self.counts = defaultdict(int)
+    def initialize(self, conf, ctx):
+        self.counts = Counter()
 
     def process(self, tup):
         word = tup.values[0]
         self.counts[word] += 1
-        if self.counts[word] % 10 == 0:
-            storm.emit([word, self.counts[word]])
-            storm.log('%s: %d' % (word, self.counts[word]))
+        storm.emit([word, self.counts[word]])
+        storm.log('%s: %d' % (word, self.counts[word]))
 
 WordCounter().run()
