@@ -29,20 +29,25 @@ To run local and remote computation clusters, streamparse relies upon a JVM
 technology called Apache Storm. The integration with this technology is
 lightweight, and for the most part, you don't need to think about it.
 
-However, to get the library running, you'll need:
+However, to get the library running, you'll need (1) JDK 7+, which you can
+install with apt-get, homebrew, or an installler; and (2) lein, which
+you can install from the [project's page][lein-proj] or [Github][lein-github]. 
 
-* JDK 7+: use apt-get or homebrew to install this
-* lein: http://leiningen.org/#install
+[lein-proj]: http://leiningen.org/
+[lein-github]: https://github.com/technomancy/leiningen#leiningen
 
-### Python
+### Python dependencies
 
 * fabric: used for remote SSH server management
 * invoke: used as a local shell-based build tool
 
-You don't actually need fabric and invoke installed separately from streamparse;
-it will be installed automatically when you install the ``streamparse`` module.
-However, fabric and invoke provide mechanisms for you to extend your streamparse
-projects with custom build and server management steps.
+You don't actually need fabric and invoke installed separately from
+streamparse; it will be installed automatically when you install the
+``streamparse`` module.  However, fabric and invoke provide mechanisms for you
+to extend your streamparse projects with custom build and server management
+steps. This project currently depends on development versions of these
+libraries that are not available on PyPI. (For now, install from Github
+using `python setup.py develop`.)
 
 # Getting started
 
