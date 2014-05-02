@@ -39,4 +39,6 @@ def workers(deploy_env="beta"):
 
 @task
 def setup_virtualenv(topology=None):
-    run("ls")
+    puts("setting up virtualenv on...")
+    run("hostname")
+    puts("...fakely done!")

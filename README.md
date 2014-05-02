@@ -1,6 +1,6 @@
-# stormpy
+# sparse
 
-stormpy is a Pythonic interop library for the Apache Storm framework.
+sparse is a Pythonic interop library for the Apache Storm framework.
 
 ## What is Storm and why should a Pythonista care about it?
 
@@ -22,20 +22,20 @@ also provides mechanisms to guarantee fault-tolerance and at-least-once message
 processing semantics. It is a strong alternative to Celery for log and stream
 processing problems.
 
-## stormpy, Clojure, and lein
+## sparse, Clojure, and lein
 
-stormpy allows you to write your Storm Spout and Bolt implementations in pure
+sparse allows you to write your Storm Spout and Bolt implementations in pure
 Python. It also provides mechanisms for managing and debugging your clusters.
 But Storm is actually a language-independent technology. It is written in Java
 and Clojure and runs on the JVM, but works with other programming languages via
-its "multi-lang protocol". As a result of this flexibility, stormpy leverages
+its "multi-lang protocol". As a result of this flexibility, sparse leverages
 Storm's existing Clojure DSL for configuring Storm topologies. This allows you
 to freely mix Python Spouts and Bolts with Java/Clojure Spouts and Bolts (as
 well as Spouts and Bolts written in other languages altogether). This is
 important because the community around Storm has written many re-usable
 components in Java/Clojure. For example, there are several data integration
 Spouts already written for tools like Kafka, RabbitMQ, ZeroMQ, MongoDB and
-Cassandra. Therefore, every stormpy project is actually a mixed Python and
+Cassandra. Therefore, every sparse project is actually a mixed Python and
 Clojure project.
 
 The ``lein`` build tool is used to resolve dependencies to Storm itself,
@@ -44,7 +44,7 @@ community-supported JVM-based Spout implementations, offer an interactive
 debugging REPL, and to package your topologies as an "uberjar" for submission
 to a production Storm cluster.
 
-You may be worried that this means to use stormpy, you need to know Clojure.
+You may be worried that this means to use sparse, you need to know Clojure.
 This is not the case. The Clojure DSL is essentially just a lightweight
 configuration file format that happens to be written in Clojure. It isn't any
 harder than JSON since it's ultimately just configured using some data maps.
@@ -86,11 +86,11 @@ monitoring, and debugging Storm topologies in Python. These are:
 
 After installing the Java requirements, you can run:
 
-    pip install stormpy
+    pip install sparse
 
-This will offer a command-line tool, ``stormpy``. Use:
+This will offer a command-line tool, ``sparse``. Use:
 
-    stormpy quickstart
+    sparse quickstart
 
 To create a project template which will have:
 
@@ -110,41 +110,41 @@ To create a project template which will have:
 
 You can then run the local Storm topology using:
 
-    stormpy run-local
+    sparse run
 
 This will produce a lot of output and may also download Storm dependencies upon
 first run.
 
 You can debug a local Storm topology's Spout by running:
 
-    stormpy debug-local --spout=wordcount.sample_spout
+    sparse debug --spout=wordcount.sample_spout
 
 This will set a breakpoint when the Spout receives its first data tuple and let you trace through it.
 
 You can debug a local Storm topology's Bolt by running:
 
-    stormpy debug-local --bolt=wordcount.sample_bolt
+    sparse debug --bolt=wordcount.sample_bolt
 
 This will set a breakpoint when the Bolt receives its first data tuple.
 
-In both cases, debug-local uses ``pdb`` over a socket connection.
+In both cases, debug uses ``pdb`` over a socket connection.
 
 ## Packaging and submitting
 
 To package your uberjar for submission to a Storm cluster, use:
 
-    stormpy package topologies/topology.clj
+    sparse package topologies/topology.clj
 
 This will create a project JAR file containing all your Python code inside
 ``_target/``. Temporary build artifacts are stored in ``_build/``.
 
 To submit your Storm topology to a locally-running Storm cluster, use:
 
-    stormpy submit topologies/topology.clj
+    sparse submit topologies/topology.clj
 
 To submit your Storm topology to a remotely-running production Storm cluster, use:
 
-    stormpy submit topologies/topology.clj --env=prod
+    sparse submit topologies/topology.clj --env=prod
 
 The submit task will automatically package your topology before submitting.
 
@@ -152,18 +152,18 @@ The submit task will automatically package your topology before submitting.
 
 To monitor a running Storm topology in production, use:
 
-    stormpy monitor --env=prod
+    sparse monitor --env=prod
 
 To tail all the log files for a running topology across a production Storm
 cluster, use:
 
-    stormpy tail --env=prod
+    sparse tail --env=prod
 
 ## Managing
 
 To kill a running Storm topology, use:
 
-    stormpy kill --env=prod
+    sparse kill --env=prod
 
 Topologies are automatically killed when you re-submit an existing topology to
 a cluster.

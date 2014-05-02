@@ -49,7 +49,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'stormpy = pystorm.cmdln:main'
+            'sparse = pystorm.cmdln:main'
         ]
     },
     install_requires=install_requires,
