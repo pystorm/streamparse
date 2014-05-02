@@ -1,27 +1,16 @@
 import itertools
 
-from pystorm import storm
-from pystorm.storm import Spout
+from streamparse import storm
 
-class WordSpout(Spout):
-
-    def reader(self):
-        with open('pg12.txt') as f:
-            for line in f.readlines():
-                words = line.lower().strip().split()
-                for word in words:
-                    if word:
-                        yield word
+class WordSpout(storm.Spout):
 
     def initialize(self, stormconf, context):
         #self.words = self.reader()
-        self.words = itertools.cycle(['a', 'b', 'c', 'd'])
+        self.words = itertools.cycle(['dog', 'cat', 
+                                      'zebra', 'elephant'])
 
     def nextTuple(self):
-        try:
-            word = next(self.words)
-            storm.emit([word])
-        except StopIteration:
-            storm.emit(["DONE"])
+        word = next(self.words)
+        storm.emit([word])
 
 WordSpout().run()
