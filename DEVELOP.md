@@ -1,6 +1,6 @@
-# stormpy Development
+# streamparse Development
 
-To build stormpy, we use the `invoke` library, which also happens to be an
+To build streamparse, we use the `invoke` library, which also happens to be an
 actual dependency of the project.
 
 To build an egg:
