@@ -5,5 +5,5 @@
 .tox/
 build/
 dist/
-doc/build/
+doc/_build/
 .DS_Store
