@@ -13,10 +13,9 @@ processes in production.
 
 streamparse is still in active development. It is not ready for production use.
 It isn't even really ready for development use. Follow the project's progress
-via our Google Group::
+via our Google Group, [streamparse@googlegroups.com][google-group].
 
-    e-mail: streamparse@googlegroups.com
-    web: https://groups.google.com/forum/#!forum/streamparse
+[google-group]: https://groups.google.com/forum/#!forum/streamparse
 
 You can also reach out to [@amontalenti][twitter] on Twitter.
 
@@ -42,7 +41,6 @@ However, to get the library running, you'll need:
 
 You don't actually need fabric and invoke installed separately from streamparse;
 it will be installed automatically when you install the ``streamparse`` module.
->>>>>>> updated README - setup.py - tasks for name change
 
 # Getting started
 
