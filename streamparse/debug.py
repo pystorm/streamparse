@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-stormpy.debug
+streamparse.debug
 
 Remote debugger for Python-based Storm tasks, based on Pdb.
 
