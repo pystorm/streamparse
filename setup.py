@@ -19,7 +19,7 @@ import sys
 
 from setuptools import setup, find_packages
 
-from pystorm import __version__
+from streamparse import __version__
 
 install_requires = [
     'invoke',
