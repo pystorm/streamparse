@@ -1,6 +1,6 @@
 ## notes on remote debugging
 
-I have a basic remote debugger working in ``pystorm.debug``.
+I have a basic remote debugger working in ``streamparse.debug``.
 
 You can run it with ``python debug.py`` and then connect to the port indicated
 with ``telnet`` or ``nc``, e.g.
