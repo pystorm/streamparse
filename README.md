@@ -41,6 +41,8 @@ However, to get the library running, you'll need:
 
 You don't actually need fabric and invoke installed separately from streamparse;
 it will be installed automatically when you install the ``streamparse`` module.
+However, fabric and invoke provide mechanisms for you to extend your streamparse
+projects with custom build and server management steps.
 
 # Getting started
 
@@ -48,7 +50,7 @@ it will be installed automatically when you install the ``streamparse`` module.
 
 After installing the Java/Clojure requirements, you can run:
 
-    pip install sparse
+    pip install streamparse
 
 This will offer a command-line tool, ``sparse``. Use:
 
