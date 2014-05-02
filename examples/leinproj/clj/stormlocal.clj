@@ -10,19 +10,19 @@
   (:import  [backtype.storm StormSubmitter LocalCluster])
   (:gen-class :main true))
 
-(defn run-local! [topology-file debug]
+(defn run-local! [topology-file debug sleep]
   (try 
     (let [cluster (LocalCluster.)]
       ;; submit the topology configured above
       (.submitTopology cluster 
                       ;; topology name (arbitrary)
-                      "topology-local"
+                      "stormlocal"
                       ;; topology settings
                       {TOPOLOGY-DEBUG debug} 
                       ;; topology configuration
                       (apply topology (var-get (load-file topology-file))))
       ;; sleep for 5 seconds before...
-      (Thread/sleep 5000)
+      (Thread/sleep sleep)
       ;; shutting down the cluster
       (.shutdown cluster)
       ) 
@@ -34,7 +34,7 @@
   (println (str "Options:\n" opts "\n"))
   (println (str "Arguments:\n" args "\n"))
   (println (apply topology (var-get (load-file (:spec opts)))))
-  (run-local! (:spec opts) (:debug opts))
+  (run-local! (:spec opts) (:debug opts) (:time opts))
 )
 
 (defn -main [& args]
@@ -47,6 +47,8 @@
              ["-c" "--config" "Storm Environment config FILE" :default "config.json"]
              ["-d" "--debug" "Enable Storm Topology debugging" :default true]
              ["-e" "--env" "Environment, e.g. prod or local" :default "local"]
+             ["-t" "--time" "Amount of time to keep cluster running in milliseconds" :default 5000
+                                                                                     :parse-fn #(Integer/parseInt %)]
              )]
     (when (:help opts)
       (println banner)
