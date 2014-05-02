@@ -1,11 +1,11 @@
-"""pystorm.invoke
+"""streamparse.ext.invoke
 
 invoke tasks that are imported into a project's task.py.
 
 Should be used like this::
 
     from invoke import task, run
-    from pystorm.ext.invoke import *
+    from streamparse.ext.invoke import *
 
     # your other tasks
 """
