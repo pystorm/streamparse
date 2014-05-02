@@ -1,8 +1,7 @@
 from collections import defaultdict
-from pystorm import storm
-from pystorm.storm import BasicBolt
+from streamparse import storm
 
-class WordCounter(BasicBolt):
+class WordCounter(storm.Bolt):
 
     def initialize(self, stormconf, context):
         self.counts = defaultdict(int)
