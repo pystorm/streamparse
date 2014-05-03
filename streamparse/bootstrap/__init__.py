@@ -83,16 +83,3 @@ def quickstart(project_name):
         with _cd('virtualenvs'):
             _cp(_here('project', 'virtualenvs', 'wordcount.txt'),
                 'wordcount.txt')
-
-
-# * src/
-#     * wordlib.py: example support library in Python
-#     * wordcount.py: example Spout & Bolt implementation in Python
-# * topologies/
-#     * wordcount.clj: ``clj`` file with topology configuration in Clojure DSL
-# * virtualenvs/
-#     * wordcount.txt: ``requirements`` file to express Python dependencies
-# * config.json: config file w/ Storm cluster hostnames and code locations
-# * project.clj: ``lein`` project file to express Storm dependencies
-# * fabfile.py: remote management tasks (fabric, customizable)
-# * tasks.py: local management tasks (invoke, customizable)
