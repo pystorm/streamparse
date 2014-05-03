@@ -25,6 +25,7 @@ install_requires = [
     'invoke',
     'fabric',
     'docopt',
+    'jinja2',
 ]
 
 lint_requires = [
