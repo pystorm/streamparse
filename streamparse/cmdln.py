@@ -1,6 +1,10 @@
 from docopt import docopt
 from invoke import run
 
+import json
+
+from os import path
+
 from bootstrap import quickstart
 
 
@@ -40,9 +44,12 @@ def main():
     print args
     if args["run"]:
         print "Running wordcount topology..."
-        word_count = "topologies/wordcount.clj"
+        cfg = json.load(open("config.json"))
+        topo_dir = cfg["topology_specs"]
+        topo_first = cfg["topologies"][0] + ".clj"
+        print path.join(topo_dir, topo_first)
         run("invoke stormlocal --topology={topology} --time={time}".format(
-            topology=word_count, time=args["-t"]))
+            topology=path.join(topo_dir, topo_first), time=args["-t"]))
     elif args["debug"]:
         print "Debugging wordcount topology..."
         run("lein run -s topologies/wordcount.clj")
