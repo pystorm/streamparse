@@ -11,21 +11,21 @@
   (:gen-class :main true))
 
 (defn run-local! [topology-file debug sleep]
-  (try 
+  (try
     (let [cluster (LocalCluster.)]
       ;; submit the topology configured above
-      (.submitTopology cluster 
+      (.submitTopology cluster
                       ;; topology name (arbitrary)
                       "stormlocal"
                       ;; topology settings
-                      {TOPOLOGY-DEBUG debug} 
+                      {TOPOLOGY-DEBUG debug}
                       ;; topology configuration
                       (apply topology (var-get (load-file topology-file))))
       ;; sleep for 5 seconds before...
       (Thread/sleep sleep)
       ;; shutting down the cluster
       (.shutdown cluster)
-      ) 
+      )
     (catch RuntimeException rte (str "caught exception: " (.getMessage rte)))))
 
 (defn run
