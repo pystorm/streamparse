@@ -1,0 +1,14 @@
+{
+    "library": "ptrack/",
+    "topology_specs": "topologies/",
+    "virtualenv_specs": "virtualenvs/",
+    "topologies": [
+        "wordcount"
+    ],
+    "envs": {
+        "prod": {
+        },
+        "beta": {
+        }
+    }
+}

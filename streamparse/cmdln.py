@@ -1,6 +1,9 @@
 from docopt import docopt
 from invoke import run
 
+from bootstrap import quickstart
+
+
 def main():
     """sparse: manage streamparse clusters.
 
@@ -53,8 +56,7 @@ def main():
         print "Setting up virtualenv on remote cluster..."
         run("fab workers setup_virtualenv")
     elif args["quickstart"]:
-        print "Starting a new sparse project..."
-        run("echo mkdir -p yourproj ...")
+        quickstart(args['<proj_name>'])
 
 
 if __name__ == "__main__":
