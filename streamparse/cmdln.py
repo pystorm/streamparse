@@ -41,7 +41,7 @@ def main():
     if args["run"]:
         print "Running wordcount topology..."
         word_count = "topologies/wordcount.clj"
-        run("lein run -s {topology} -t {time}".format(
+        run("invoke stormlocal --topology={topology} --time={time}".format(
             topology=word_count, time=args["-t"]))
     elif args["debug"]:
         print "Debugging wordcount topology..."

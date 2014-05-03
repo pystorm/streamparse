@@ -10,13 +10,23 @@ Should be used like this::
     # your other tasks
 """
 from __future__ import absolute_import
+from __future__ import print_function
 
 from invoke import run, task
 
 __all__ = ["stormlocal"]
 
+def stormdeps(topology=None):
+    print("Storm dependencies (via lein):")
+    run("lein deps :tree")
+    print("Python dependencies (via pip):")
+    run("cat virtualenvs/{}".format(topology))
+
 @task
-def stormlocal(topology=None):
+def stormlocal(topology=None, time="5000"):
+    if topology is None:
+        print("Must specify topology for stormlocal")
+        return
     run("mkdir -p _resources/resources")
     run("cp src/*.py _resources/resources/")
-    run("lein run -s {}".format(topology))
+    run("lein run -s {} -t {}".format(topology, time))
