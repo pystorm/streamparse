@@ -13,4 +13,6 @@ class WordCounter(storm.Bolt):
         storm.emit([word, self.counts[word]])
         storm.log('%s: %d' % (word, self.counts[word]))
 
-WordCounter().run()
+
+if __name__ == '__main__':
+    WordCounter().run()

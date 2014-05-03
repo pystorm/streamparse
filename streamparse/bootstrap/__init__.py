@@ -77,7 +77,7 @@ def quickstart(project_name):
         _mkdir('src')
         with _cd('src'):
             _cp(_here('project', 'src', 'wordcount.py'), 'wordcount.py')
-            _cp(_here('project', 'src', 'wordlib.py'), 'wordlib.py')
+            _cp(_here('project', 'src', 'words.py'), 'words.py')
         _cp(_here('project', 'tasks.py'), 'tasks.py')
         _mkdir('topologies')
         with _cd('topologies'):
