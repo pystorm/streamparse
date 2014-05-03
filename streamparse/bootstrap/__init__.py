@@ -49,9 +49,8 @@ def _generate(template_filename, dest):
            else dest
     print '\t{:<20} {}'.format(green('create'), dest)
     template = _env.get_template(template_filename)
-    context = {}  # TODO: should be jinja2 context stuff
     with open(dest, 'w') as fp:
-        fp.write(template.render(**context))
+        fp.write(template.render())
 
 
 def quickstart(project_name):
