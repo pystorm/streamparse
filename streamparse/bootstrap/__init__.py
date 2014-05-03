@@ -64,9 +64,13 @@ def quickstart(project_name):
 
     print 'Creating your {} sparse project...'\
           .format(blue(project_name))
+    _env.globals['project_name'] = project_name
 
     _mkdir(project_name)
     with _cd(project_name):
+        _mkdir('clj')
+        with _cd('clj'):
+            _cp(_here('project', 'clj', 'stormlocal.clj'), 'stormlocal.clj')
         _generate('config.jinja2.json', 'config.json')
         _touch('fabfile.py')
         _generate('project.jinja2.clj', 'project.clj')
