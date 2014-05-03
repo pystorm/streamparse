@@ -17,4 +17,6 @@ __all__ = ["stormlocal"]
 
 @task
 def stormlocal(topology=None):
+    run("mkdir -p _resources/resources")
+    run("cp src/*.py _resources/resources/")
     run("lein run -s {}".format(topology))
