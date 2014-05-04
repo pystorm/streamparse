@@ -1,16 +1,16 @@
 import itertools
 
-from streamparse import storm
+from streamparse.spout import Spout
 
-class WordSpout(storm.Spout):
+class WordSpout(Spout):
 
     def initialize(self, stormconf, context):
         self.words = itertools.cycle(['dog', 'cat',
                                       'zebra', 'elephant'])
 
-    def nextTuple(self):
+    def next_tuple(self):
         word = next(self.words)
-        storm.emit([word])
+        self.emit([word])
 
 
 if __name__ == '__main__':
