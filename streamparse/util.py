@@ -149,8 +149,7 @@ class Component(object):
     logging messages back to the Storm worker process.
     """
 
-    @classmethod
-    def exception(cls, exception):
+    def raise_exception(self, exception):
         """Report an exception back to Storm.
 
         :param exception: a Python exception.
@@ -160,8 +159,7 @@ class Component(object):
             'msg': traceback.format_exc(exception),
         })
 
-    @classmethod
-    def log(cls, message, level='info'):
+    def log(self, message, level='info'):
         """Log a message to Storm optionally providing a logging level.
 
         :param message: any object that supports ``__str__()``.
