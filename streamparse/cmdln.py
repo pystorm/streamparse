@@ -42,7 +42,7 @@ def main():
         -h --help         Show this screen.
         --version         Show version.
         -e <env>          Set environment; as described in config.json [default: local].
-        -t <time>         Time (in milliseconds) to keep cluster running [default: 5000].
+        -t <time>         Time (in milliseconds) to keep cluster running [default: 10000].
         --verbose         Verbose output.
         --debug           Debug output.
     """
