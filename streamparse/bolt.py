@@ -21,8 +21,7 @@ class Bolt(Component):
         """
         raise NotImplementedError()
 
-    @classmethod
-    def emit(cls, tup, stream=None, anchors=[], direct_task=None):
+    def emit(self, tup, stream=None, anchors=[], direct_task=None):
         """Emit a bolt tuple message.
 
         :param tup: a ``list`` representing the tuple ot send to Storm, should
@@ -48,8 +47,7 @@ class Bolt(Component):
 
         send_message(msg)
 
-    @classmethod
-    def emit_many(cls, tuples, stream=None, anchors=[], direct_task=None):
+    def emit_many(self, tuples, stream=None, anchors=[], direct_task=None):
         """A more efficient way to send many tuples, dumps out all tuples to
         STDOUT instead of writing one at a time.
         """
@@ -71,16 +69,14 @@ class Bolt(Component):
             lines.append('end')
         print('\n'.join(lines), file=_stdout)
 
-    @classmethod
-    def ack(cls, tup):
+    def ack(self, tup):
         """Acknowledge a tuple.
 
         :param tup: a ``Tuple`` object.
         """
         send_message({'command': 'ack', 'id': tup.id})
 
-    @classmethod
-    def fail(cls, tup):
+    def fail(self, tup):
         """Fail a tuple.
 
         :param tup: a ``Tuple`` object.
@@ -99,7 +95,7 @@ class Bolt(Component):
                 tup = read_tuple()
                 self.process(tup)
         except Exception as e:
-            Component.exception(e)
+            self.raise_exception(e)
 
 
 class BasicBolt(Bolt):
@@ -115,5 +111,5 @@ class BasicBolt(Bolt):
                 self.process(tup)
                 self.ack(tup)
         except Exception as e:
-            Component.exception(e)
+            self.raise_exception(e)
 

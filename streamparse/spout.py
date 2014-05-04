@@ -27,8 +27,7 @@ class Spout(Component):
     def next_tuple(self):
         raise NotImplementedError()
 
-    @classmethod
-    def emit(cls, tup, tup_id=None, stream=None, direct_task=None):
+    def emit(self, tup, tup_id=None, stream=None, direct_task=None):
         """Emit a spout tuple message.
 
         :param tup: a ``list`` representing the tuple to send to Storm, should
@@ -40,6 +39,10 @@ class Spout(Component):
         :param direct_task: ``int`` indicating the task to send the tuple to if
                     performing a direct emit.
         """
+        if not isinstance(tup, list):
+            raise TypeError('All tuples must be lists, received {!r} instead'\
+                .format(type(tup)))
+
         msg = {'command': 'emit', 'tuple': tup}
         if tup_id is not None:
             msg['id'] = tup_id
@@ -50,8 +53,7 @@ class Spout(Component):
 
         send_message(msg)
 
-    @classmethod
-    def emit_many(cls, tuples, tup_id=None, stream=None, direct_task=None):
+    def emit_many(self, tuples, tup_id=None, stream=None, direct_task=None):
         """A more efficient way to send many tuples, dumps out all tuples to
         STDOUT instead of writing one at a time.
         """
@@ -86,4 +88,4 @@ class Spout(Component):
                     self.fail(cmd['id'])
                 send_message({'command': 'sync'})
         except Exception as e:
-            Component.exception(e)
+            self.raise_exception(e)
