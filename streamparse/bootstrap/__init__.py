@@ -7,11 +7,17 @@ from fabric.colors import green, red, blue
 from invoke import run
 from jinja2 import Environment, FileSystemLoader
 
+import pkg_resources
 
 _path_prefixes = []
 _path_prefix = ''
 _root = os.path.abspath(os.path.dirname(__file__))
-_here = lambda *x: os.path.join(_root, *x)
+
+def _here(*paths):
+    path = os.path.join(*paths)
+    filename = pkg_resources.resource_filename(__name__, path)
+    return filename
+
 _env = Environment(loader=FileSystemLoader(_here('project')))
 
 @contextmanager
