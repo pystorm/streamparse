@@ -1,2 +1,1 @@
-from fabric.api import *
-from streamparse.ext.invoke import *
+from streamparse.ext.fabric import *
