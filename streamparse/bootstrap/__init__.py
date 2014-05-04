@@ -88,6 +88,7 @@ def quickstart(project_name):
             _cp(_here('project', 'virtualenvs', 'wordcount.txt'),
                 'wordcount.txt')
 
-    print '\nDone.'
-    print ('Try running your topology locally with '
-           '"cd {}; streamparse run"'.format(project_name))
+    print 'Done.\n'
+    print ('Try running your topology locally with:\n\n'
+           '\tcd {}\n'
+           '\tsparse run'.format(project_name))
