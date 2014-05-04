@@ -10,13 +10,12 @@ from bootstrap import quickstart
 
 # XXX: these are commands we're working on still
 TODO_CMDS = """
-        sparse setup [-e ENV]
-        sparse debug [-e ENV]
-        sparse kill [-e ENV]
-        sparse restart [-e ENV]
-        sparse attach [-e ENV]
-        sparse list [-e ENV]
-        sparse logs [-e ENV]
+        sparse setup [-e <env>]
+        sparse debug [-e <env>]
+        sparse kill [-e <env>]
+        sparse restart [-e <env>]
+        sparse attach [-e <env>]
+        sparse logs [-e <env>]
 
 """
 
@@ -32,29 +31,31 @@ def main():
     lein and Clojure under the hood for JVM interop.
 
     Usage:
-        sparse quickstart <proj_name>
-        sparse run [-e ENV] [-t TIME]
-        sparse deploy [-e ENV]
+        sparse quickstart <project_dir>
+        sparse run [-e <env>] [-t <time>]
+        sparse deploy [-e <env>]
+        sparse list
         sparse (-h | --help)
         sparse --version
 
     Options:
         -h --help         Show this screen.
         --version         Show version.
-        -e ENV            Set environment; as described in config.json [default: local].
-        -t TIME           Time (in milliseconds) to keep cluster running [default: 5000].
+        -e <env>          Set environment; as described in config.json [default: local].
+        -t <time>         Time (in milliseconds) to keep cluster running [default: 5000].
         --verbose         Verbose output.
         --debug           Debug output.
     """
     args = docopt(main.__doc__, version="sparse 0.1")
     if args["run"]:
-        print "Running wordcount topology..."
         cfg = json.load(open("config.json"))
         topo_dir = cfg["topology_specs"]
-        topo_first = cfg["topologies"][0] + ".clj"
-        print path.join(topo_dir, topo_first)
+        topo_first = cfg["topologies"][0]
+        print "Running {topo_name} topology...".format(topo_name=topo_first)
+        time = args["-t"]
+        topology = path.join(topo_dir, topo_first) + ".clj"
         run("invoke stormlocal --topology={topology} --time={time}".format(
-            topology=path.join(topo_dir, topo_first), time=args["-t"]))
+            topology=topology, time=time))
     elif args["list"]:
         print "invoke (local) tasks:"
         run("invoke -l")
@@ -62,7 +63,7 @@ def main():
         print "fabric (remote) tasks:"
         run("fab -l")
     elif args["quickstart"]:
-        quickstart(args['<proj_name>'])
+        quickstart(args['<project_dir>'])
 
 
 if __name__ == "__main__":
