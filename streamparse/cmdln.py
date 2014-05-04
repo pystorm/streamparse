@@ -41,7 +41,6 @@ def main():
         --debug           Debug output.
     """
     args = docopt(main.__doc__, version="sparse 0.1")
-    print args
     if args["run"]:
         print "Running wordcount topology..."
         cfg = json.load(open("config.json"))
