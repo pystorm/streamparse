@@ -59,12 +59,12 @@ After installing the Java/Clojure requirements, you can run:
 
 This will offer a command-line tool, ``sparse``. Use:
 
-    sparse quickstart
+    sparse quickstart wordcount
 
 To create a project template which will have this structure:
 
 * src/
-    * wordlib.py: example support library in Python
+    * words.py: example support library in Python
     * wordcount.py: example Spout & Bolt implementation in Python
 * topologies/
     * wordcount.clj: ``clj`` file with topology configuration in Clojure DSL
@@ -75,18 +75,19 @@ To create a project template which will have this structure:
 * fabfile.py: remote management tasks (fabric, customizable)
 * tasks.py: local management tasks (invoke, customizable)
 
-*Development note*: Since quickstart isn't yet implemented, a
-project template of this form is currently being developed in 
-``./examples/leinproj``.
-
-## Running and Debugging locally
+## Running locally
 
 You can then run the local sample word count topology using:
 
+    cd wordcount
     sparse run
 
 This will produce a lot of output and may also download Storm dependencies upon
 first run.
+
+## Debugging locally
+
+*Note*: Not yet implemented.
 
 You can debug a local topology's Spout by running:
 
@@ -103,6 +104,8 @@ This will set a breakpoint when the Bolt receives its first data tuple.
 In both cases, debug uses ``pdb`` over a socket connection.
 
 ## Packaging and submitting
+
+*Note*: Not yet implemented.
 
 To package your uberjar for submission to a Storm cluster, use:
 
@@ -123,6 +126,8 @@ The submit task will automatically package your topology before submitting.
 
 ## Monitoring
 
+*Note*: Not yet implemented.
+
 To monitor a running Storm topology in production, use:
 
     sparse monitor --env=prod
@@ -133,6 +138,8 @@ cluster, use:
     sparse tail --env=prod
 
 ## Managing
+
+*Note*: Not yet implemented.
 
 To kill a running Storm topology, use:
 
