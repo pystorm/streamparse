@@ -23,10 +23,13 @@ def stormdeps(topology=None):
     run("cat virtualenvs/{}".format(topology))
 
 @task
-def stormlocal(topology=None, time="5000"):
+def stormlocal(topology=None, time="5000", debug=False):
     if topology is None:
         print("Must specify topology for stormlocal")
         return
     run("mkdir -p _resources/resources")
     run("cp src/*.py _resources/resources/")
-    run("lein run -s {} -t {}".format(topology, time))
+    cmd = "lein run -s {} -t {}".format(topology, time)
+    if debug:
+        cmd += " -d"
+    run(cmd)

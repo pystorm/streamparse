@@ -53,9 +53,10 @@ def main():
         topo_first = cfg["topologies"][0]
         print "Running {topo_name} topology...".format(topo_name=topo_first)
         time = args["-t"]
+        debug = args["--debug"]
         topology = path.join(topo_dir, topo_first) + ".clj"
-        run("invoke stormlocal --topology={topology} --time={time}".format(
-            topology=topology, time=time))
+        run("invoke stormlocal --topology={topology} --time={time} --debug={debug}".format(
+            topology=topology, time=time, debug=debug))
     elif args["list"]:
         print "invoke (local) tasks:"
         run("invoke -l")
