@@ -32,7 +32,7 @@ def main():
 
     Usage:
         sparse quickstart <project_dir>
-        sparse run [-e <env>] [-t <time>]
+        sparse run [-e <env>] [-t <time>] [--debug]
         sparse deploy [-e <env>]
         sparse list
         sparse (-h | --help)
@@ -55,8 +55,11 @@ def main():
         time = args["-t"]
         debug = args["--debug"]
         topology = path.join(topo_dir, topo_first) + ".clj"
-        run("invoke stormlocal --topology={topology} --time={time} --debug={debug}".format(
-            topology=topology, time=time, debug=debug))
+        cmd = "invoke stormlocal --topology={topology} --time={time}".format(
+            topology=topology, time=time, debug=debug)
+        if debug:
+            cmd += " --debug"
+        run(cmd)
     elif args["list"]:
         print "invoke (local) tasks:"
         run("invoke -l")
