@@ -154,10 +154,10 @@ class Component(object):
 
         :param exception: a Python exception.
         """
-        send_message({
-            'command': 'error',
-            'msg': traceback.format_exc(exception),
-        })
+        self.log('Python exception raised: {}\n{}'\
+                 .format(exception.__class__.__name__,
+                         traceback.format_exc(exception)))
+        send_message({'command': 'sync'})  # sync up right away
 
     def log(self, message, level='info'):
         """Log a message to Storm optionally providing a logging level.
