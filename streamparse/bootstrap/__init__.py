@@ -27,27 +27,27 @@ def _cd(path):
 
 def _mkdir(path):
     path = '{}/{}'.format(_path_prefix, path) if _path_prefix != '' else path
-    print '\t{:<20} {}'.format(green('create'), path)
+    print '    {:<18} {}'.format(green('create'), path)
     run('mkdir -p {}'.format(path))
 
 
 def _cp(src, dest):
     dest = '{}/{}'.format(_path_prefix, dest) if _path_prefix != '' else dest
-    print '\t{:<20} {}'.format(green('create'), dest)
+    print '    {:<18} {}'.format(green('create'), dest)
     run('cp {} {}'.format(src, dest))
 
 
 def _touch(filename):
     filename = '{}/{}'.format(_path_prefix, filename) if _path_prefix != '' \
                else filename
-    print '\t{:<20} {}'.format(green('create'), filename)
+    print '    {:<18} {}'.format(green('create'), filename)
     run('touch {}'.format(filename))
 
 
 def _generate(template_filename, dest):
     dest = '{}/{}'.format(_path_prefix, dest) if _path_prefix != '' \
            else dest
-    print '\t{:<20} {}'.format(green('create'), dest)
+    print '    {:<18} {}'.format(green('create'), dest)
     template = _env.get_template(template_filename)
     with open(dest, 'w') as fp:
         fp.write(template.render())
@@ -61,7 +61,7 @@ def quickstart(project_name):
         print '{}: folder "{}" already exists'.format(red('error'), project_name)
         sys.exit(1)
 
-    print 'Creating your {} sparse project...'\
+    print '\nCreating your {} streamparse project...'\
           .format(blue(project_name))
     _env.globals['project_name'] = project_name
 
@@ -72,7 +72,7 @@ def quickstart(project_name):
         with _cd('clj'):
             _cp(_here('project', 'clj', 'stormlocal.clj'), 'stormlocal.clj')
         _generate('config.jinja2.json', 'config.json')
-        _touch('fabfile.py')
+        _cp(_here('project', 'fabfile.py'), 'fabfile.py')
         _generate('project.jinja2.clj', 'project.clj')
         _touch('README.md')
         _mkdir('src')
@@ -87,3 +87,7 @@ def quickstart(project_name):
         with _cd('virtualenvs'):
             _cp(_here('project', 'virtualenvs', 'wordcount.txt'),
                 'wordcount.txt')
+
+    print '\nDone.'
+    print ('Try running your topology locally with '
+           '"cd {}; streamparse run"'.format(project_name))
