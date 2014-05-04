@@ -45,7 +45,7 @@
              ["-s" "--spec" "REQUIRED: Storm Topology spec clj file"]
              ["-j" "--jar" "REQUIRED: Storm Topology code jar file"]
              ["-c" "--config" "Storm Environment config FILE" :default "config.json"]
-             ["-d" "--debug" "Enable Storm Topology debugging" :default false]
+             ["-d" "--debug" "Enable Storm Topology debugging" :flag true :default false]
              ["-e" "--env" "Environment, e.g. prod or local" :default "local"]
              ["-t" "--time" "Amount of time to keep cluster running in milliseconds" :default 5000
                                                                                      :parse-fn #(Integer/parseInt %)]
