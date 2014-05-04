@@ -8,6 +8,19 @@ from os import path
 from bootstrap import quickstart
 
 
+# XXX: these are commands we're working on still
+TODO_CMDS = """
+        sparse setup [-e ENV]
+        sparse debug [-e ENV]
+        sparse kill [-e ENV]
+        sparse restart [-e ENV]
+        sparse attach [-e ENV]
+        sparse list [-e ENV]
+        sparse logs [-e ENV]
+
+"""
+
+
 def main():
     """sparse: manage streamparse clusters.
 
@@ -20,15 +33,8 @@ def main():
 
     Usage:
         sparse quickstart <proj_name>
-        sparse setup [-e ENV]
         sparse run [-e ENV] [-t TIME]
-        sparse debug [-e ENV]
-        sparse kill [-e ENV]
-        sparse restart [-e ENV]
-        sparse attach [-e ENV]
-        sparse list [-e ENV]
-        sparse submit [-e ENV]
-        sparse logs [-e ENV]
+        sparse deploy [-e ENV]
         sparse (-h | --help)
         sparse --version
 
@@ -49,18 +55,12 @@ def main():
         print path.join(topo_dir, topo_first)
         run("invoke stormlocal --topology={topology} --time={time}".format(
             topology=path.join(topo_dir, topo_first), time=args["-t"]))
-    elif args["debug"]:
-        print "Debugging wordcount topology..."
-        run("lein run -s topologies/wordcount.clj")
     elif args["list"]:
-        print "invoke tasks:"
+        print "invoke (local) tasks:"
         run("invoke -l")
         print
-        print "fabric tasks:"
+        print "fabric (remote) tasks:"
         run("fab -l")
-    elif args["setup"]:
-        print "Setting up virtualenv on remote cluster..."
-        run("fab workers setup_virtualenv")
     elif args["quickstart"]:
         quickstart(args['<proj_name>'])
 
