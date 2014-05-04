@@ -7,8 +7,17 @@
     ],
     "envs": {
         "prod": {
+            "hosts": {
+                "nimbus": "",
+                "workers": []
+            }
         },
         "beta": {
+            "hosts": {
+                "nimbus": "",
+                "workers": []
+            }
+
         }
     }
 }
