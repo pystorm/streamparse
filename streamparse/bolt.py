@@ -113,13 +113,14 @@ class Bolt(Component):
         caught and logged back to Storm prior to the Python process exits.
         """
         storm_conf, context = read_handshake()
+        tup = None
         try:
             self.initialize(storm_conf, context)
             while True:
                 tup = read_tuple()
                 self.process(tup)
         except Exception as e:
-            self.raise_exception(e)
+            self.raise_exception(e, tup)
 
 
 class BasicBolt(Bolt):
@@ -129,6 +130,7 @@ class BasicBolt(Bolt):
     def run(self):
         global _ANCHOR_TUPLE
         storm_conf, context = read_handshake()
+        tup = None
         try:
             self.initialize(storm_conf, context)
             while True:
@@ -137,4 +139,4 @@ class BasicBolt(Bolt):
                 self.process(tup)
                 self.ack(tup)
         except Exception as e:
-            self.raise_exception(e)
+            self.raise_exception(e, tup)
