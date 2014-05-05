@@ -45,15 +45,25 @@ You don't actually need fabric and invoke installed separately from
 streamparse; it will be installed automatically when you install the
 ``streamparse`` module.  However, fabric and invoke provide mechanisms for you
 to extend your streamparse projects with custom build and server management
-steps. This project currently depends on development versions of these
-libraries that are not available on PyPI. (For now, install from Github
-using `python setup.py develop`.)
+steps.
 
 # Getting started
 
 ## Installation
 
-After installing the Java/Clojure requirements, you can run:
+Confirm that you have ``lein`` installed by running:
+
+    lein version
+    
+You should get output similar to this:
+
+    Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
+
+If ``lein`` isn't installed, [follow these directions][lein-install].
+
+[lein-install]: leiningen.org/#install
+
+Once that's all set, you can run:
 
     pip install streamparse
 
@@ -61,15 +71,14 @@ This will offer a command-line tool, ``sparse``. Use:
 
     sparse quickstart wordcount
 
-To create a project template which will have this structure:
+To create a project template in the ``wordcount`` directory,
+which will have this structure:
 
 * src/
-    * words.py: example support library in Python
-    * wordcount.py: example Spout & Bolt implementation in Python
+    * words.py: example Spout in Python (stream of words)
+    * wordcount.py: example Bolt in Python (word count)
 * topologies/
-    * wordcount.clj: ``clj`` file with topology configuration in Clojure DSL
-* virtualenvs/
-    * wordcount.txt: ``requirements`` file to express Python dependencies
+    * wordcount.clj: ``clj`` file with topology configuration (Clojure DSL)
 * config.json: config file w/ Storm cluster hostnames and code locations
 * project.clj: ``lein`` project file to express Storm dependencies
 * fabfile.py: remote management tasks (fabric, customizable)
