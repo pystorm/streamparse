@@ -1,8 +1,4 @@
-"""
-Both ends of this protocol use a line-reading mechanism, so be sure to trim off newlines from the input and to append them to your output.
-All JSON inputs and outputs are terminated by a single line containing "end". Note that this delimiter is not itself JSON encoded.
-The bullet points below are written from the perspective of the script writer's STDIN and STDOUT.
-"""
+"""Utilities for interprocess communication between Python and Storm."""
 from __future__ import print_function
 try:
     import simplejson as json
@@ -29,7 +25,8 @@ _pending_task_ids = deque()
 _stdout = sys.stdout
 
 
-class StormIPCException(Exception): pass
+class StormIPCException(Exception):
+    pass
 
 
 class LogStream(object):
@@ -44,7 +41,7 @@ class LogStream(object):
             self.logger.error(line)
 
 
-## Message recieving
+# Message recieving
 
 def read_message_lines():
     lines = blank_lines = 0
@@ -77,8 +74,8 @@ def read_message_lines():
                                          'broken'.format(blank_lines)))
 
         if lines >= _MAX_LINES:
-            raise StormIPCException(('Message exceeds {:,} lines, assuming this'
-                                     'is an error.'.format(lines)))
+            raise StormIPCException(('Message exceeds {:,} lines, assuming '
+                                     'this is an error.'.format(lines)))
 
         yield line
 
@@ -113,7 +110,8 @@ def read_command():
 
 def read_tuple():
     cmd = read_command()
-    return Tuple(cmd['id'], cmd['comp'], cmd['stream'], cmd['task'], cmd['tuple'])
+    return Tuple(cmd['id'], cmd['comp'], cmd['stream'], cmd['task'],
+                 cmd['tuple'])
 
 
 def read_handshake():
@@ -135,51 +133,10 @@ def read_handshake():
     return msg['conf'], msg['context']
 
 
-## Message sending
+# Message sending
 
 def send_message(message):
     """Send a message to Storm via stdout"""
     print(json.dumps(message), file=_stdout)
     print('end', file=_stdout)
     _stdout.flush()
-
-
-class Component(object):
-    """Base class for Spouts and Bolts which contains class methods for
-    logging messages back to the Storm worker process.
-    """
-
-    def raise_exception(self, exception):
-        """Report an exception back to Storm.
-
-        :param exception: a Python exception.
-        """
-        self.log('Python exception raised: {}\n{}'\
-                 .format(exception.__class__.__name__,
-                         traceback.format_exc(exception)))
-        send_message({'command': 'sync'})  # sync up right away
-
-    def log(self, message, level='info'):
-        """Log a message to Storm optionally providing a logging level.
-
-        :param message: any object that supports ``__str__()``.
-        :param level: a ``str`` representing the log level.
-        """
-        send_message({'command': 'log', 'msg': str(message), 'level': level})
-
-
-class Tuple(object):
-
-    __slots__ = ['id', 'component', 'stream', 'task', 'values']
-
-    def __init__(self, id, component, stream, task, values):
-        self.id = id
-        self.component = component
-        self.stream = stream
-        self.task = task
-        self.values = values
-
-    def __repr__(self):
-        return '<{}: {}> {}'.format(self.__class__.__name__, self.id,
-                                    self.values)
-

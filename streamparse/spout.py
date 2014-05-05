@@ -1,12 +1,25 @@
+"""Base Spout classes."""
 from __future__ import print_function
 
-from .util import read_handshake, read_command, send_message, Component, json
-from .util import _stdout
+from ipc import read_handshake, read_command, send_message, json, _stdout
+from base import Component
 
 
 class Spout(Component):
+    """Base class for all streamparse spouts.  For more information on spouts,
+    consult Storm's `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+    """
 
     def initialize(self, storm_conf, context):
+        """Called immediately after the initial handshake with Storm and before
+        the main run loop. A good place to initialize connections to data
+        sources.
+
+        :param storm_conf: a ``dict`` containing the Storm configuration for
+        this spout.  This is the configuration provided to the topology, merged
+        in with cluster configuration on the worker node.
+        :param context: a ``dict`` containing information about the component's
+        place within the topology such as: task IDs, inputs, outputs etc."""
         pass
 
     def ack(self, tup_id):
@@ -40,8 +53,8 @@ class Spout(Component):
                     performing a direct emit.
         """
         if not isinstance(tup, list):
-            raise TypeError('All tuples must be lists, received {!r} instead'\
-                .format(type(tup)))
+            raise TypeError('All tuples must be lists, received {!r} instead'
+                            .format(type(tup)))
 
         msg = {'command': 'emit', 'tuple': tup}
         if tup_id is not None:
