@@ -13,12 +13,14 @@ _path_prefixes = []
 _path_prefix = ''
 _root = os.path.abspath(os.path.dirname(__file__))
 
+
 def _here(*paths):
     path = os.path.join(*paths)
     filename = pkg_resources.resource_filename(__name__, path)
     return filename
 
 _env = Environment(loader=FileSystemLoader(_here('project')))
+
 
 @contextmanager
 def _cd(path):
@@ -64,7 +66,8 @@ def quickstart(project_name):
     # glob.glob('project/**/*') and then we copy everything that's doesn't have
     # jinja2 in filename, generate the jinja2 stuff
     if os.path.exists(project_name):
-        print '{}: folder "{}" already exists'.format(red('error'), project_name)
+        print '{}: folder "{}" already exists'.format(red('error'),
+                                                      project_name)
         sys.exit(1)
 
     print '\nCreating your {} streamparse project...'\
@@ -88,7 +91,8 @@ def quickstart(project_name):
         _cp(_here('project', 'tasks.py'), 'tasks.py')
         _mkdir('topologies')
         with _cd('topologies'):
-            _cp(_here('project', 'topologies', 'wordcount.clj'), 'wordcount.clj')
+            _cp(_here('project', 'topologies', 'wordcount.clj'),
+                'wordcount.clj')
         _mkdir('virtualenvs')
         with _cd('virtualenvs'):
             _cp(_here('project', 'virtualenvs', 'wordcount.txt'),
