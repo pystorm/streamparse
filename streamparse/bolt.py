@@ -108,9 +108,10 @@ class Bolt(Component):
         send_message({'command': 'fail', 'id': tup.id})
 
     def run(self):
-        """Main run loop for all bolts, performs initial handshake with Storm
+        """Main run loop for all bolts. Performs initial handshake with Storm
         and reads tuples handing them off to subclasses.  Any exceptions are
         caught and logged back to Storm prior to the Python process exits.
+        Subclasses should not override this method.
         """
         storm_conf, context = read_handshake()
         tup = None
@@ -125,7 +126,7 @@ class Bolt(Component):
 
 class BasicBolt(Bolt):
     """A bolt implementation that automatically acknowledges all tuples after
-    processing."""
+    `self.process(tup)` completes."""
 
     def run(self):
         global _ANCHOR_TUPLE

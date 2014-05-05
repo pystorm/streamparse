@@ -43,14 +43,14 @@ class Spout(Component):
     def emit(self, tup, tup_id=None, stream=None, direct_task=None):
         """Emit a spout tuple message.
 
-        :param tup: a ``list`` representing the tuple to send to Storm, should
-                    contain only JSON-serializable data.
+        :param tup: a ``list`` representing the tuple to send to Storm.  Should
+        contain only JSON-serializable data.
         :param tup_id: ``str`` or ``int`` which is the id for the tuple. Leave
-                    this blank for an unreliable emit.
+        this blank for an unreliable emit.
         :param stream: ``str`` ID of the stream this tuple should be emitted
-                    to.  Leave empty to emit to the default stream.
+        to.  Leave empty to emit to the default stream.
         :param direct_task: ``int`` indicating the task to send the tuple to if
-                    performing a direct emit.
+        performing a direct emit.
         """
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead'
@@ -69,6 +69,15 @@ class Spout(Component):
     def emit_many(self, tuples, tup_id=None, stream=None, direct_task=None):
         """A more efficient way to send many tuples, dumps out all tuples to
         STDOUT instead of writing one at a time.
+
+        :param tuples: a two-dimensional ``list`` representing the tuples to
+        send to Storm.  Tuples should contain only JSON-serializable data.
+        :param tup_id: ``str`` or ``int`` which is the id for the tuple.  Leave
+        this blank for unreliable emits.
+        :param stream: ``str`` ID of the stream these tuples should be emitted
+        to.  Leave empty to emit to the default stream.
+        :param direct_task: ``int`` indicating the task to send the tuple to if
+        performing a direct emit.
         """
         msg = {
             'command': 'emit',
@@ -88,6 +97,11 @@ class Spout(Component):
         print('\n'.join(lines), file=_stdout)
 
     def run(self):
+        """Main run loop for all spouts. Performs initial handshake with Storm
+        and reads tuples handing them off to subclasses.  Any exceptions are
+        caught and logged back to Storm prior to the Python process exits.
+        Subclasses should not override this method.
+        """
         storm_conf, context = read_handshake()
         try:
             self.initialize(storm_conf, context)
