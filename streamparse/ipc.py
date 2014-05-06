@@ -8,8 +8,8 @@ import logging
 import os
 import sys
 from collections import deque
-import traceback
 
+from base import Tuple
 
 config = context = None
 storm_log = logging.getLogger('pystorm')

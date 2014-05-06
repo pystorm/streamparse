@@ -11,10 +11,8 @@ Should be used like this::
 """
 from __future__ import absolute_import
 import json
-import os
 
 from fabric.api import *
-from .util import get_config
 
 # __all__ = ["setup_virtualenv", "workers"]
 __all__ = ['env', 'deploy_topology', 'uberjar', 'deploy_virtualenv',
