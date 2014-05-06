@@ -9,22 +9,18 @@ Should be used like this::
 
     # your other tasks
 """
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import os
 import sys
 import json
 from glob import glob
 
 from invoke import run, task
-from fabric.colors import red
+
+from util import get_config, die
 
 
 __all__ = ["stormlocal", "run_local_topology"]
-
-def print_error(msg, error_code=1):
-    print("{}: {}".format(red("error"), msg))
-    sys.exit(error_code)
 
 
 def stormdeps(topology=None):
@@ -47,29 +43,23 @@ def stormlocal(topology_file, time="5000", debug=False):
 
 @task
 def run_local_topology(name=None, time="5000", debug=False):
-    if not os.path.exists("config.json"):
-        print_error("No config.json found. You must run this command inside a"
-                    "streamparse project directory.")
-
-    with open("config.json") as fp:
-        config = json.load(fp)
-
+    config = get_config()
     topology_path = config["topology_specs"]
     # Select the first topology definition file that we find in
     # alphabetical order
     if name is None:
         topology_files = glob("{}/*.clj".format(topology_path))
         if not topology_files:
-            print_error("No topology definitions are defined in {}."
-                        .format(topology_path))
+            die("No topology definitions are defined in {}."
+                .format(topology_path))
         topology_file = topology_files[0]
         name = topology_file.rstrip(".clj").lstrip(topology_path)
     else:
         topology_file = "{}.clj".format(os.path.join(topology_path, name))
         if not os.path.exists(topology_file):
-            print_error("Topology definition file not found {}. You need to "
-                        "create a topology definition file first."
-                        .format(topology_file))
+            die("Topology definition file not found {}. You need to "
+                "create a topology definition file first."
+                .format(topology_file))
 
     print("Running {} topology...".format(name))
     stormlocal(topology_file, time, debug)
