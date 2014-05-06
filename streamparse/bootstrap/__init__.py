@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 import os
 import sys
+import shutil
 
 from fabric.colors import green, red, blue
 from invoke import run
@@ -36,20 +37,21 @@ def _cd(path):
 def _mkdir(path):
     path = '{}/{}'.format(_path_prefix, path) if _path_prefix != '' else path
     print '    {:<18} {}'.format(green('create'), path)
-    run('mkdir -p {}'.format(path))
+    os.makedirs(path)
 
 
 def _cp(src, dest):
     dest = '{}/{}'.format(_path_prefix, dest) if _path_prefix != '' else dest
     print '    {:<18} {}'.format(green('create'), dest)
-    run('cp {} {}'.format(src, dest))
+    shutil.copy(src, dest)
 
 
 def _touch(filename):
     filename = '{}/{}'.format(_path_prefix, filename) if _path_prefix != '' \
                else filename
     print '    {:<18} {}'.format(green('create'), filename)
-    run('touch {}'.format(filename))
+    with open(filename, 'w') as fp:
+        pass
 
 
 def _generate(template_filename, dest):
