@@ -32,20 +32,3 @@ class Component(object):
         :param level: a ``str`` representing the log level.
         """
         send_message({'command': 'log', 'msg': str(message), 'level': level})
-
-
-class Tuple(object):
-    """Storm's primitive data type passed around via streams."""
-
-    __slots__ = ['id', 'component', 'stream', 'task', 'values']
-
-    def __init__(self, id, component, stream, task, values):
-        self.id = id
-        self.component = component
-        self.stream = stream
-        self.task = task
-        self.values = values
-
-    def __repr__(self):
-        return '<{}: {}> {}'.format(self.__class__.__name__, self.id,
-                                    self.values)
