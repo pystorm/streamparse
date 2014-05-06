@@ -1,23 +1,14 @@
 {
-    "library": "ptrack/",
+    "library": "",
     "topology_specs": "topologies/",
     "virtualenv_specs": "virtualenvs/",
-    "topologies": [
-        "wordcount"
-    ],
     "envs": {
         "prod": {
-            "hosts": {
-                "nimbus": "",
-                "workers": []
-            }
-        },
-        "beta": {
-            "hosts": {
-                "nimbus": "",
-                "workers": []
-            }
-
+            "user": "",
+            "nimbus": "",
+            "workers": [],
+            "log_path": "",
+            "virtualenv_path": ""
         }
     }
 }

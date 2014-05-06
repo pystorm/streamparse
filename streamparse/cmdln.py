@@ -1,10 +1,8 @@
 from docopt import docopt
 from invoke import run
 
-import json
-
-from os import path
-
+from ext.fabric import *
+from ext.invoke import *
 from bootstrap import quickstart
 
 
@@ -32,9 +30,9 @@ def main():
 
     Usage:
         sparse quickstart <project_dir>
-        sparse run [-e <env>] [-t <time>] [--debug]
         sparse deploy [-e <env>]
         sparse list
+        sparse run [-n <topology_name>] [-e <env>] [-t <time>] [--debug]
         sparse (-h | --help)
         sparse --version
 
@@ -48,18 +46,8 @@ def main():
     """
     args = docopt(main.__doc__, version="sparse 0.1")
     if args["run"]:
-        cfg = json.load(open("config.json"))
-        topo_dir = cfg["topology_specs"]
-        topo_first = cfg["topologies"][0]
-        print "Running {topo_name} topology...".format(topo_name=topo_first)
-        time = args["-t"]
-        debug = args["--debug"]
-        topology = path.join(topo_dir, topo_first) + ".clj"
-        cmd = "invoke stormlocal --topology={topology} --time={time}".format(
-            topology=topology, time=time, debug=debug)
-        if debug:
-            cmd += " --debug"
-        run(cmd)
+        run_local_topology(args["<topology_name>"], args['<time>'],
+                           args['--debug'])
     elif args["list"]:
         print "invoke (local) tasks:"
         run("invoke -l")
