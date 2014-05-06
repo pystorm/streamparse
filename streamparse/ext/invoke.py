@@ -17,7 +17,7 @@ from glob import glob
 
 from invoke import run, task
 
-from util import get_config, die
+from .util import get_config, die
 
 
 __all__ = ["stormlocal", "run_local_topology"]
