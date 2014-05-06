@@ -13,7 +13,7 @@ def die(msg, error_code=1):
 
 def get_config():
     if not os.path.exists("config.json"):
-        die("No config.json found. You must run this command inside a"
+        die("No config.json found. You must run this command inside a "
             "streamparse project directory.")
 
     with open("config.json") as fp:
