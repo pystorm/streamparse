@@ -17,9 +17,9 @@ via our Google Group, [streamparse@googlegroups.com][google-group].
 
 [google-group]: https://groups.google.com/forum/#!forum/streamparse
 
-You can also reach out to [@amontalenti][twitter] on Twitter.
-
-[twitter]: http://twitter.com/amontalenti
+You can also reach out to [@amontalenti][https://twitter.com/amontalenti],
+[@msukmanowsky](https://twitter.com/msukmanowsky) or
+[@kbourgoin](https://twitter.com/kbourgoin) on Twitter.
 
 ## Demo Video
 
