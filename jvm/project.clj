@@ -22,3 +22,4 @@
   :test-paths ["test"]
   :aot :all
   :main streamparse)
+  :resource-paths ["resources"]
