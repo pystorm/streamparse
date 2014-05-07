@@ -21,6 +21,10 @@ You can also reach out to [@amontalenti][twitter] on Twitter.
 
 [twitter]: http://twitter.com/amontalenti
 
+## Demo Video
+
+![demo video gif](https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif)
+
 ## Dependencies
 
 ### Java and Clojure
@@ -31,7 +35,7 @@ lightweight, and for the most part, you don't need to think about it.
 
 However, to get the library running, you'll need (1) JDK 7+, which you can
 install with apt-get, homebrew, or an installler; and (2) lein, which
-you can install from the [project's page][lein-proj] or [Github][lein-github]. 
+you can install from the [project's page][lein-proj] or [Github][lein-github].
 
 [lein-proj]: http://leiningen.org/
 [lein-github]: https://github.com/technomancy/leiningen#leiningen
@@ -54,7 +58,7 @@ steps.
 Confirm that you have ``lein`` installed by running:
 
     lein version
-    
+
 You should get output similar to this:
 
     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
