@@ -25,6 +25,10 @@ You can also reach out to [@amontalenti][twitter] on Twitter.
 
 ![demo video gif](https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif)
 
+also check out the demo of a [real-time redis wordcount topology][redis]
+
+[redis]: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/redis.gif
+
 ## Dependencies
 
 ### Java and Clojure
