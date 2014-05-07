@@ -1,0 +1,28 @@
+#!/bin/sh
+
+usage='sparsej
+
+The streamparse command line interface for JVM/Thrift interop with Storm.
+
+Usage:
+    sparsej <command> [options]
+
+Commands:
+    sparsej list    For listing topologies on a running cluster.
+    sparsej kill    For killing topologies by name.
+
+Examples:
+    sparsej list --json
+    sparsej kill mytopology
+
+To see help on a given command type:
+    sparsej <command> [-h | --help]
+'
+
+if [ "$1" == "list" ]; then
+    lein run -m streamparse.commands.list/-main ${*:2}
+elif [ "$1" == "kill" ]; then
+    lein run -m streamparse.commands.kill/-main ${*:2}
+else
+    echo "$usage"
+fi
