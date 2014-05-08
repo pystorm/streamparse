@@ -11,8 +11,8 @@
   :min-lein-version "2.0.0"
   :dependencies [[commons-collections/commons-collections "3.2.1"]]
   :profiles {:dev
-              {:dependencies [[storm "0.8.2"]
-                              [storm/tools.cli "0.2.2"]
+              {:dependencies [[org.apache.storm/storm-core "0.9.1-incubating" :exclusions [org.clojure/tools.cli]]
+                              [storm/tools.cli "0.2.2" :exclusions [org.clojure/tools.cli]]
                               [org.clojure/clojure "1.4.0"]
                               [org.clojure/tools.cli "0.3.1"]
                               [org.clojure/data.json "0.2.4"]
