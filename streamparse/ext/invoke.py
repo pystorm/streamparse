@@ -34,6 +34,8 @@ def stormdeps(topology=None):
 @task
 def stormlocal(topology_file, time="5000", debug=False):
     time = time or "5000"
+    if os.path.isdir("_resources/resources"):
+        shutil.rmtree("_resources/resources")
     shutil.copytree("src", "_resources/resources")
     cmd = ["lein run -s", topology_file, "-t", time]
     if debug:
