@@ -13,6 +13,8 @@ Usage:
 Commands:
     sparsej list    For listing topologies on a running cluster.
     sparsej kill    For killing topologies by name.
+    sparsej run     For running local topologies.
+    sparsej submit  For submitting topologies to remote clusters.
 
 Examples:
     sparsej list --json
@@ -26,6 +28,10 @@ if [ "$1" == "list" ]; then
     lein run -m streamparse.commands.list/-main ${*:2}
 elif [ "$1" == "kill" ]; then
     lein run -m streamparse.commands.kill/-main ${*:2}
+elif [ "$1" == "run" ]; then
+    lein run -m streamparse.commands.run/-main ${*:2}
+elif [ "1" == "submit" ]; then
+    lein run -m streamparse.commands.submit_topology/-main ${*:2}
 else
     echo "$usage"
 fi
