@@ -1,4 +1,7 @@
 #!/bin/sh
+# Command line utility not actually packaged with the clojar itself. Will
+# eventually be either deleted or placed within a streamparse project directory
+# upon quickstart.
 
 usage='sparsej
 
