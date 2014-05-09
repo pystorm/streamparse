@@ -30,7 +30,7 @@ elif [ "$1" == "kill" ]; then
     lein run -m streamparse.commands.kill/-main ${*:2}
 elif [ "$1" == "run" ]; then
     lein run -m streamparse.commands.run/-main ${*:2}
-elif [ "1" == "submit" ]; then
+elif [ "$1" == "submit" ]; then
     lein run -m streamparse.commands.submit_topology/-main ${*:2}
 else
     echo "$usage"

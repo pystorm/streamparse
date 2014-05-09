@@ -38,8 +38,9 @@
          (cli args
               ["-h" "--help" "Show this help screen." :flag true :default false]
               ["-n" "--host" "Hostname for Nimbus." :default "localhost"]
-              ["-p" "--port" "Port for Nimbus." :default 6627 :parse-fn #(Integer/parseInt %)])]
-              ["-d" "--debug" "Enable debugging for the cluster." :flag true :default false]
+              ["-p" "--port" "Port for Nimbus." :default 6627 :parse-fn #(Integer/parseInt %)]
+              ["-d" "--debug" "Enable debugging for the cluster." :flag true :default false])]
+
     (when (or (= (count args) 0) (:help opts))
       (println (usage))
       (println banner)
