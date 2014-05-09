@@ -23,7 +23,7 @@ from .util import get_config, die
 from ..contextmanagers import ssh_tunnel
 
 
-__all__ = ["list_topologies", "run_local_topology", "deploy_topology"]
+__all__ = ["list_topologies",  "kill_topology", "run_local_topology", "deploy_topology"]
 
 
 def stormdeps(topology=None):
@@ -84,6 +84,20 @@ def list_topologies(env_name="prod"):
         run(" ".join(cmd))
 
 
+@task
+def kill_topology(topology_name, env_name="prod"):
+    config = get_config()
+    env = config["envs"][env_name]
+    host, port = _get_nimbus_for_env(env)
+
+    with ssh_tunnel(env["user"], host, 6627, port):
+        cmd = ["lein",
+               "run -m streamparse.commands.kill_topology/-main",
+               topology_name]
+        run(" ".join(cmd))
+
+
+@task
 def uberjar_for_deploy():
     print("Creating topology uber-JAR...")
     res = run("lein uberjar", hide="stdout")

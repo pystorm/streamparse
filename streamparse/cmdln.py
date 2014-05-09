@@ -10,7 +10,6 @@ from bootstrap import quickstart
 TODO_CMDS = """
         sparse setup [-e <env>]
         sparse debug [-e <env>]
-        sparse kill [-e <env>]
         sparse restart [-e <env>]
         sparse attach [-e <env>]
         sparse logs [-e <env>]
@@ -52,6 +51,8 @@ def main():
         run_local_topology(args["-n"], time, args["--debug"])
     elif args["list"]:
         list_topologies()
+    elif args["kill"]:
+        kill_topology(args["<topology_name>"])
     elif args["quickstart"]:
         quickstart(args['<project_dir>'])
     elif args["deploy"]:
