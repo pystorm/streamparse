@@ -60,17 +60,22 @@ def _get_topology(name=None):
 
 @task
 def uberjar_for_deploy():
-    print("Creating jar for topology...")
-    res = run("lein with-profile deploy uberjar", hide="stdout")
+    print("Creating topology uber-JAR...")
+    res = run("lein uberjar", hide="stdout")
     if not res.ok:
         raise Exception("Unable to uberjar!\nSTDOUT:\n{}"
                         "\nSTDERR:\n{}".format(res.stdout, res.stderr))
 
-    return res.stdout.split("\n")[0]
+    # TODO: This is a lil dicey, should get the uberjar based on settings or
+    # something
+    lines = [l.strip().lstrip("Created ") for l in res.stdout.split()
+             if "standalone.jar" in l]
+    return lines[0]
 
 
 @task
 def run_local_topology(name=None, time=5, debug=False):
+    """Run a topology locally using Storm's LocalCluster class."""
     name, topology_file = _get_topology(name)
     print("Running {} topology...".format(name))
     if os.path.isdir("_resources/resources"):
@@ -80,13 +85,16 @@ def run_local_topology(name=None, time=5, debug=False):
            "-t", str(time)]
     if debug:
         cmd.append("--debug")
-    print(" ".join(cmd))
     run(" ".join(cmd))
 
 
 @task
 def deploy_topology(name=None, env="prod", debug=False):
+    """Deploy a topology to a remote Storm cluster."""
     config = get_config()
+
+    # TODO: Update virtualenvs on Storm workers
+
     env = config["envs"][env]
     name, topology_file = _get_topology(name)
     if ":" in env["nimbus"]:
@@ -99,14 +107,18 @@ def deploy_topology(name=None, env="prod", debug=False):
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = uberjar_for_deploy()
 
-    print("Deploying {} topology...".format(name))
+    print('Deploying "{}" topology...'.format(name))
     with ssh_tunnel(env["user"], host, 6627, port):
-        print("ssh tunnel to Nimbus established.")
-        os.environ["JVM_OPTS"] = "-Dstorm.jar={}".format(topology_jar)
+        print("ssh tunnel to Nimbus {}:{} established."
+              .format(host, port))
+        jvm_opts = [
+            "-Dstorm.jar={}".format(topology_jar),
+            "-Dstorm.options=",
+            "-Dstorm.conf.file=",
+        ]
+        os.environ["JVM_OPTS"] = " ".join(jvm_opts)
         cmd = ["lein",
-               "with-profile deploy",
                "run -m streamparse.commands.submit_topology/-main",
                topology_file]
-        print(" ".join(cmd))
         run(" ".join(cmd))
 
