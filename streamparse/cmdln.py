@@ -41,13 +41,14 @@ def main():
         --version           Show version.
         -e <env>            Set environment; as described in config.json [default: local].
         -n <topology_name>  The name of the topology.
-        -t <time>           Time (in milliseconds) to keep cluster running [default: 10000].
+        -t <time>           Time (in seconds) to keep cluster running [default: 5].
         --verbose           Verbose output.
         --debug             Debug output.
     """
     args = docopt(main.__doc__, version="sparse 0.1")
     if args["run"]:
-        run_local_topology(args["-n"], args["-t"], args["--debug"])
+        time = int(args["-t"])
+        run_local_topology(args["-n"], time, args["--debug"])
     elif args["list"]:
         print "invoke (local) tasks:"
         run("invoke -l")
