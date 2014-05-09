@@ -32,6 +32,7 @@ def main():
         sparse quickstart <project_dir>
         sparse deploy [-n <topology_name>] [-e <env>]
         sparse list
+        sparse kill <topology_name>
         sparse run [-n <topology_name>] [-e <env>] [-t <time>] [--debug]
         sparse (-h | --help)
         sparse --version
@@ -50,11 +51,7 @@ def main():
         time = int(args["-t"])
         run_local_topology(args["-n"], time, args["--debug"])
     elif args["list"]:
-        print "invoke (local) tasks:"
-        run("invoke -l")
-        print
-        print "fabric (remote) tasks:"
-        run("fab -l")
+        list_topologies()
     elif args["quickstart"]:
         quickstart(args['<project_dir>'])
     elif args["deploy"]:

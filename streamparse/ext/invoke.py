@@ -23,7 +23,7 @@ from .util import get_config, die
 from ..contextmanagers import ssh_tunnel
 
 
-__all__ = ["run_local_topology", "deploy_topology"]
+__all__ = ["list_topologies", "run_local_topology", "deploy_topology"]
 
 
 def stormdeps(topology=None):
@@ -58,7 +58,32 @@ def _get_topology(name=None):
     return (name, topology_file)
 
 
+def _get_nimbus_for_env(env):
+    """Get the Nimbus server's hostname and port from a streamparse project's
+    config file.
+    """
+    if ":" in env["nimbus"]:
+        host, port = env["nimbus"].split(":", 1)
+        port = int(port)
+    else:
+        host = env["nimbus"]
+        port = 6627
+
+    return (host, port)
+
+
 @task
+def list_topologies(env_name="prod"):
+    config = get_config()
+    env = config["envs"][env_name]
+    host, port = _get_nimbus_for_env(env)
+
+    with ssh_tunnel(env["user"], host, 6627, port):
+        cmd = ["lein",
+               "run -m streamparse.commands.list/-main"]
+        run(" ".join(cmd))
+
+
 def uberjar_for_deploy():
     print("Creating topology uber-JAR...")
     res = run("lein uberjar", hide="stdout")
