@@ -30,7 +30,7 @@ def main():
 
     Usage:
         sparse quickstart <project_dir>
-        sparse deploy [-e <env>]
+        sparse deploy [-n <topology_name>] [-e <env>]
         sparse list
         sparse run [-n <topology_name>] [-e <env>] [-t <time>] [--debug]
         sparse (-h | --help)
@@ -57,6 +57,8 @@ def main():
         run("fab -l")
     elif args["quickstart"]:
         quickstart(args['<project_dir>'])
+    elif args["deploy"]:
+        deploy_topology(args["-n"])
 
 
 if __name__ == "__main__":

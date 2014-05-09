@@ -15,13 +15,15 @@ import shutil
 import sys
 import json
 from glob import glob
+import subprocess
 
 from invoke import run, task
 
 from .util import get_config, die
+from ..contextmanagers import ssh_tunnel
 
 
-__all__ = ["stormlocal", "run_local_topology"]
+__all__ = ["run_local_topology", "deploy_topology"]
 
 
 def stormdeps(topology=None):
@@ -31,24 +33,14 @@ def stormdeps(topology=None):
     run("cat virtualenvs/{}".format(topology))
 
 
-@task
-def stormlocal(topology_file, time="5000", debug=False):
-    time = time or "5000"
-    if os.path.isdir("_resources/resources"):
-        shutil.rmtree("_resources/resources")
-    shutil.copytree("src", "_resources/resources")
-    cmd = ["lein run -s", topology_file, "-t", time]
-    if debug:
-        cmd.append("-d")
-    run(' '.join(cmd))
+def _get_topology(name=None):
+    """Fetch a topology name and definition file.  If the name is None, we'll
+    select the first .clj file in the topologies/ directory.
 
-
-@task
-def run_local_topology(name=None, time="5000", debug=False):
+    :returns: a `tuple` containing (topology_name, topology_file)
+    """
     config = get_config()
     topology_path = config["topology_specs"]
-    # Select the first topology definition file that we find in
-    # alphabetical order
     if name is None:
         topology_files = glob("{}/*.clj".format(topology_path))
         if not topology_files:
@@ -63,5 +55,58 @@ def run_local_topology(name=None, time="5000", debug=False):
                 "create a topology definition file first."
                 .format(topology_file))
 
+    return (name, topology_file)
+
+
+@task
+def uberjar_for_deploy():
+    print("Creating jar for topology...")
+    res = run("lein with-profile deploy uberjar", hide="stdout")
+    if not res.ok:
+        raise Exception("Unable to uberjar!\nSTDOUT:\n{}"
+                        "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+
+    return res.stdout.split("\n")[0]
+
+
+@task
+def run_local_topology(name=None, time=5, debug=False):
+    name, topology_file = _get_topology(name)
     print("Running {} topology...".format(name))
-    stormlocal(topology_file, time, debug)
+    if os.path.isdir("_resources/resources"):
+        shutil.rmtree("_resources/resources")
+    shutil.copytree("src", "_resources/resources")
+    cmd = ["lein run -m streamparse.commands.run/-main", topology_file,
+           "-t", str(time)]
+    if debug:
+        cmd.append("--debug")
+    print(" ".join(cmd))
+    run(" ".join(cmd))
+
+
+@task
+def deploy_topology(name=None, env="prod", debug=False):
+    config = get_config()
+    env = config["envs"][env]
+    name, topology_file = _get_topology(name)
+    if ":" in env["nimbus"]:
+        host, port = env["nimbus"].split(":", 1)
+        port = int(port)
+    else:
+        host = env["nimbus"]
+        port = 6627
+
+    # Prepare a JAR that doesn't have Storm dependencies packaged
+    topology_jar = uberjar_for_deploy()
+
+    print("Deploying {} topology...".format(name))
+    with ssh_tunnel(env["user"], host, 6627, port):
+        print("ssh tunnel to Nimbus established.")
+        os.environ["JVM_OPTS"] = "-Dstorm.jar={}".format(topology_jar)
+        cmd = ["lein",
+               "with-profile deploy",
+               "run -m streamparse.commands.submit_topology/-main",
+               topology_file]
+        print(" ".join(cmd))
+        run(" ".join(cmd))
+
