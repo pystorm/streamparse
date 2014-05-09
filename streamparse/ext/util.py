@@ -5,12 +5,15 @@ import sys
 
 from fabric.colors import red
 
+from ..decorators import memoized
+
 
 def die(msg, error_code=1):
     print("{}: {}".format(red("error"), msg))
     sys.exit(error_code)
 
 
+@memoized
 def get_config():
     if not os.path.exists("config.json"):
         die("No config.json found. You must run this command inside a "
