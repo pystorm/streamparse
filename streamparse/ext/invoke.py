@@ -12,85 +12,43 @@ Should be used like this::
 from __future__ import absolute_import, print_function
 import os
 import shutil
-import sys
-import json
-from glob import glob
-import subprocess
+from tempfile import NamedTemporaryFile
+import re
 
 from invoke import run, task
 
-from .util import get_config, die
 from ..contextmanagers import ssh_tunnel
+from .util import (get_env_config, get_topology_definition,
+                   get_nimbus_for_env_config, get_config)
+from .fabric import activate_env, create_or_update_virtualenvs
 
 
-__all__ = ["list_topologies",  "kill_topology", "run_local_topology", "deploy_topology"]
 
+__all__ = ["list_topologies",  "kill_topology", "run_local_topology",
+           "submit_topology"]
 
-def stormdeps(topology=None):
-    print("Storm dependencies (via lein):")
-    run("lein deps :tree")
-    print("Python dependencies (via pip):")
-    run("cat virtualenvs/{}".format(topology))
-
-
-def _get_topology(name=None):
-    """Fetch a topology name and definition file.  If the name is None, we'll
-    select the first .clj file in the topologies/ directory.
-
-    :returns: a `tuple` containing (topology_name, topology_file)
-    """
-    config = get_config()
-    topology_path = config["topology_specs"]
-    if name is None:
-        topology_files = glob("{}/*.clj".format(topology_path))
-        if not topology_files:
-            die("No topology definitions are defined in {}."
-                .format(topology_path))
-        topology_file = topology_files[0]
-        name = topology_file.rstrip(".clj").lstrip(topology_path)
-    else:
-        topology_file = "{}.clj".format(os.path.join(topology_path, name))
-        if not os.path.exists(topology_file):
-            die("Topology definition file not found {}. You need to "
-                "create a topology definition file first."
-                .format(topology_file))
-
-    return (name, topology_file)
-
-
-def _get_nimbus_for_env(env):
-    """Get the Nimbus server's hostname and port from a streamparse project's
-    config file.
-    """
-    if ":" in env["nimbus"]:
-        host, port = env["nimbus"].split(":", 1)
-        port = int(port)
-    else:
-        host = env["nimbus"]
-        port = 6627
-
-    return (host, port)
-
+# TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
+# from all these with something like
+# @task("setup")
 
 @task
 def list_topologies(env_name="prod"):
-    config = get_config()
-    env = config["envs"][env_name]
-    host, port = _get_nimbus_for_env(env)
+    env_name, env_config = get_env_config(env_name)
+    host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env["user"], host, 6627, port):
+    with ssh_tunnel(env_config["user"], host, 6627, port):
         cmd = ["lein",
                "run -m streamparse.commands.list/-main"]
         run(" ".join(cmd))
 
 
 @task
-def kill_topology(topology_name, env_name="prod"):
-    config = get_config()
-    env = config["envs"][env_name]
-    host, port = _get_nimbus_for_env(env)
+def kill_topology(topology_name=None, env_name="prod"):
+    topology_name, topology_file = get_topology_definition(topology_name)
+    env_name, env_config = get_env_config(env_name)
+    host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env["user"], host, 6627, port):
+    with ssh_tunnel(env_config["user"], host, 6627, port):
         cmd = ["lein",
                "run -m streamparse.commands.kill_topology/-main",
                topology_name]
@@ -99,7 +57,7 @@ def kill_topology(topology_name, env_name="prod"):
 
 @task
 def uberjar_for_deploy():
-    print("Creating topology uber-JAR...")
+    print("Creating topology uberjar...")
     res = run("lein uberjar", hide="stdout")
     if not res.ok:
         raise Exception("Unable to uberjar!\nSTDOUT:\n{}"
@@ -115,7 +73,7 @@ def uberjar_for_deploy():
 @task
 def run_local_topology(name=None, time=5, debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
-    name, topology_file = _get_topology(name)
+    name, topology_file = get_topology_definition(name)
     print("Running {} topology...".format(name))
     if os.path.isdir("_resources/resources"):
         shutil.rmtree("_resources/resources")
@@ -128,26 +86,38 @@ def run_local_topology(name=None, time=5, debug=False):
 
 
 @task
-def deploy_topology(name=None, env="prod", debug=False):
-    """Deploy a topology to a remote Storm cluster."""
+def submit_topology(name=None, env_name="prod", debug=False):
+    """Submit a topology to a remote Storm cluster."""
     config = get_config()
+    name, topology_file = get_topology_definition(name)
+    env_name, env_config = get_env_config(env_name)
+    host, port = get_nimbus_for_env_config(env_config)
 
-    # TODO: Update virtualenvs on Storm workers
+    activate_env(env_name)
+    create_or_update_virtualenvs(name,
+                                 "{}/{}.txt".format(config["virtualenv_specs"],
+                                                    name))
 
-    env = config["envs"][env]
-    name, topology_file = _get_topology(name)
-    if ":" in env["nimbus"]:
-        host, port = env["nimbus"].split(":", 1)
-        port = int(port)
-    else:
-        host = env["nimbus"]
-        port = 6627
+    # TODO: Super hacky way to replace "python" with our venv executable, need
+    # to fix this
+    with open(topology_file, "r") as fp:
+        contents = fp.read()
+    contents = re.sub(r'"python"',
+                     '"{}/{}/bin/python"'
+                      .format(env_config["virtualenv_path"], name),
+                      contents)
+    tmpfile = NamedTemporaryFile(dir=config["topology_specs"])
+    tmpfile.write(contents)
+    tmpfile.flush()
+    print("Created modified topology definition file {}.".format(tmpfile.name))
+
+    # replaced with /path/to/venv/bin/python instead
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = uberjar_for_deploy()
 
     print('Deploying "{}" topology...'.format(name))
-    with ssh_tunnel(env["user"], host, 6627, port):
+    with ssh_tunnel(env_config["user"], host, 6627, port):
         print("ssh tunnel to Nimbus {}:{} established."
               .format(host, port))
         jvm_opts = [
@@ -158,6 +128,8 @@ def deploy_topology(name=None, env="prod", debug=False):
         os.environ["JVM_OPTS"] = " ".join(jvm_opts)
         cmd = ["lein",
                "run -m streamparse.commands.submit_topology/-main",
-               topology_file]
+               tmpfile.name,
+               "--debug"]
         run(" ".join(cmd))
 
+    tmpfile.close()
