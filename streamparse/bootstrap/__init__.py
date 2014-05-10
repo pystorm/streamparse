@@ -5,7 +5,6 @@ import sys
 import shutil
 
 from fabric.colors import green, red, blue
-from invoke import run
 from jinja2 import Environment, FileSystemLoader
 
 import pkg_resources
@@ -50,7 +49,7 @@ def _touch(filename):
     filename = '{}/{}'.format(_path_prefix, filename) if _path_prefix != '' \
                else filename
     print '    {:<18} {}'.format(green('create'), filename)
-    with open(filename, 'w') as fp:
+    with open(filename, 'w'):
         pass
 
 

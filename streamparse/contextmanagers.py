@@ -1,7 +1,6 @@
 from __future__ import print_function
 from contextlib import contextmanager
 import subprocess
-import sys
 import time
 from SocketServer import UDPServer, TCPServer
 from socket import error as SocketError
@@ -18,7 +17,7 @@ def _port_in_use(port, server_type="tcp"):
 
     try:
         server(("localhost", port), None)
-    except SocketError as e:
+    except SocketError:
         return True
 
     return False
