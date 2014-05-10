@@ -12,7 +12,6 @@
   "Run the topology locally via LocalCluster. The topology definition is
   contained inside of topology-file which is assume to have a single var
   defined which contains the topology definition."
-  (println (str "Running " topology-file " for " run-for-secs))
   (try
     (let [topology-def (load-file topology-file) ; should only be a single var
           topology (apply topology (var-get topology-def))
