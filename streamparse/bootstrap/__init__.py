@@ -78,9 +78,6 @@ def quickstart(project_name):
     _mkdir(project_name)
     with _cd(project_name):
         _cp(_here('project', 'gitignore'), '.gitignore')
-        _mkdir('clj')
-        with _cd('clj'):
-            _cp(_here('project', 'clj', 'stormlocal.clj'), 'stormlocal.clj')
         _generate('config.jinja2.json', 'config.json')
         _cp(_here('project', 'fabfile.py'), 'fabfile.py')
         _generate('project.jinja2.clj', 'project.clj')
