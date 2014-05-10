@@ -63,6 +63,7 @@ def _create_or_update_virtualenv(virtualenvs_path, virtualenv_name,
     puts("Updating virtualenv: {}".format(virtualenv_name))
     cmd = "source {}/{}/bin/activate".format(virtualenvs_path, virtualenv_name)
     with prefix(cmd):
+        run("pip install streamparse")
         run("pip install -r {}".format(tmpfile))
 
     run("rm {}".format(tmpfile))
