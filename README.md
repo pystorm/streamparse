@@ -153,7 +153,7 @@ A few important notes about the `user` you specify for each of the
 environments in the `envs` key:
 
 * The user must have ssh access to the servers specified in the `nimbus` and `workers` keys.
-* The user must have write access to the `"virtualenv_path"` directory on the `"workers"` servers.
+* The user must have write access to the `virtualenv_path` directory on the `workers` servers.
 
 If you have only one topology defined in `topologies/` and one environment
 defined in your `config.json`, you can submit your topology via:
@@ -169,6 +169,11 @@ If you have more than one environment defined in `config.json`, you'll have to
 specify the environment like so:
 
     sparse submit --environment <environment_name>
+
+You can use both options together to submit a specific topology to a specific
+environment.
+
+    sparse submit --environment <environment_name> --name <topology_name>
 
 ## Monitoring
 
