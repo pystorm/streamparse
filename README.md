@@ -120,26 +120,55 @@ This will set a breakpoint when the Bolt receives its first data tuple.
 
 In both cases, debug uses ``pdb`` over a socket connection.
 
-## Packaging and submitting
+## Submitting
 
-*Note*: Not yet implemented.
+*Note*: Beta support only.
 
-To package your uberjar for submission to a Storm cluster, use:
+Before submitting your streamparse project, you need to configure at least one
+remote environment in your `config.json` file like so:
 
-    sparse package topologies/topology.clj
+```json
+{
+    "library": "",
+    "topology_specs": "topologies/",
+    "virtualenv_specs": "virtualenvs/",
+    "envs": {
+        "beta": {
+            "user": "user_with_ssh_access_to_all_servers",
+            "nimbus": "nimbus.example.com:6627",
+            "workers": [
+                "storm-worker1.example.com",
+                "storm-worker1.example.com",
+                "storm-worker1.example.com",
+                "storm-worker1.example.com"
+            ],
+            "log_path": "/path/to/logging",
+            "virtualenv_path": "/path/to/virtualenvs"
+        }
+    }
+}
+```
 
-This will create a project JAR file containing all your Python code inside
-``_target/``. Temporary build artifacts are stored in ``_build/``.
+A few important notes about the `user` you specify for each of the
+environments in the `envs` key:
 
-To submit your Storm topology to a locally-running Storm cluster, use:
+* The user must have ssh access to the servers specified in the `nimbus` and `workers` keys.
+* The user must have write access to the `"virtualenv_path"` directory on the `"workers"` servers.
 
-    sparse submit topologies/topology.clj
+If you have only one topology defined in `topologies/` and one environment
+defined in your `config.json`, you can submit your topology via:
 
-To submit your Storm topology to a remotely-running production Storm cluster, use:
+    sparse submit
 
-    sparse submit topologies/topology.clj --env=prod
+If you have more than one topology, you'll have to specify your topology like
+so:
 
-The submit task will automatically package your topology before submitting.
+    sparse submit --name <topology_name>
+
+If you have more than one environment defined in `config.json`, you'll have to
+specify the environment like so:
+
+    sparse submit --environment <environment_name>
 
 ## Monitoring
 
