@@ -138,9 +138,9 @@ remote environment in your `config.json` file like so:
             "nimbus": "nimbus.example.com:6627",
             "workers": [
                 "storm-worker1.example.com",
-                "storm-worker1.example.com",
-                "storm-worker1.example.com",
-                "storm-worker1.example.com"
+                "storm-worker2.example.com",
+                "storm-worker3.example.com",
+                "storm-worker4.example.com"
             ],
             "log_path": "/path/to/logging",
             "virtualenv_path": "/path/to/virtualenvs"
