@@ -32,6 +32,16 @@ __all__ = ["list_topologies",  "kill_topology", "run_local_topology",
 # @task("setup")
 
 @task
+def prepare_topology():
+    """Prepare a topology for running locally or deployment to a remote
+    cluster.
+    """
+    if os.path.isdir("_resources/resources"):
+        shutil.rmtree("_resources/resources")
+    shutil.copytree("src", "_resources/resources")
+
+
+@task
 def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
@@ -70,14 +80,13 @@ def uberjar_for_deploy():
     return lines[0]
 
 
-@task
+@task(pre=["prepare_topology"])
 def run_local_topology(name=None, time=5, debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
+    prepare_topology()
+
     name, topology_file = get_topology_definition(name)
     print("Running {} topology...".format(name))
-    if os.path.isdir("_resources/resources"):
-        shutil.rmtree("_resources/resources")
-    shutil.copytree("src", "_resources/resources")
     cmd = ["lein run -m streamparse.commands.run/-main", topology_file,
            "-t", str(time)]
     if debug:
@@ -85,9 +94,11 @@ def run_local_topology(name=None, time=5, debug=False):
     run(" ".join(cmd))
 
 
-@task
+@task(pre=["prepare_topology"])
 def submit_topology(name=None, env_name="prod", debug=False):
     """Submit a topology to a remote Storm cluster."""
+    prepare_topology()
+
     config = get_config()
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
