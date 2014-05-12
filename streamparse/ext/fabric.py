@@ -29,6 +29,10 @@ def _tail_logs(log_path):
 
 @task
 def tail_logs():
+    """Follow (tail -f) the log files on remote Storm workers.
+
+    Will use the `log_path` and `workers` properties from config.json.
+    """
     execute(_tail_logs, env.log_path, hosts=env.storm_workers)
 
 @task
@@ -52,28 +56,18 @@ def activate_env(env_name=None):
 
 
 @parallel
-def _create_or_update_virtualenv(virtualenvs_path, virtualenv_name,
+def _create_or_update_virtualenv(virtualenv_path, virtualenv_name,
                                 requirements_file):
-    """Create or update a virtualenv on a remote server.  Assumes that
-    virtualenv is on the path of the server.
-
-    :param virtualenvs_path: a `str` denoting where virtualenvs should be
-    stored on the server.
-    :param virtualenv_name: a `str` indicating the name of the virtualenv to
-    create or update.
-    :param requirements_file: a `str` which is the path to a local requirements
-    file to use for "pip install -r ..." on the server.
-    """
-    if not exists("{}/{}".format(virtualenvs_path, virtualenv_name)):
-        puts("virtualenv not found for {}, creating one.".format(virtualenvs_path))
-        run("virtualenv {}/{}".format(virtualenvs_path, virtualenv_name))
+    if not exists("{}/{}".format(virtualenv_path, virtualenv_name)):
+        puts("virtualenv not found for {}, creating one.".format(virtualenv_path))
+        run("virtualenv {}/{}".format(virtualenv_path, virtualenv_name))
 
     puts("Uploading requirements.txt to temporary file.")
     tmpfile = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
     put(requirements_file, tmpfile)
 
     puts("Updating virtualenv: {}".format(virtualenv_name))
-    cmd = "source {}/{}/bin/activate".format(virtualenvs_path, virtualenv_name)
+    cmd = "source {}/{}/bin/activate".format(virtualenv_path, virtualenv_name)
     with prefix(cmd):
         run("pip install streamparse")
         run("pip install -r {}".format(tmpfile))
@@ -83,12 +77,14 @@ def _create_or_update_virtualenv(virtualenvs_path, virtualenv_name,
 
 @task
 def create_or_update_virtualenvs(virtualenv_name, requirements_file):
-    """Create or update virtualenvs on remote servers.  Assumes that virtualenv
-    is on the path of the remote server(s).
+    """Create or update virtualenvs on remote servers.
 
-    :param virtualenv_name: a `str`, the name of the virtualenv.
-    :param requirements_file: a `str` path to the requirements.txt file to use
+    Assumes that virtualenv is on the path of the remote server(s).
+
+    :param virtualenv_name: the name of the virtualenv.
+    :param requirements_file: path to the requirements.txt file to use
     to update/install this virtualenv.
     """
-    execute(_create_or_update_virtualenv, env.virtualenv_path, virtualenv_name,
-            requirements_file, hosts=env.storm_workers)
+    execute(_create_or_update_virtualenv,
+            env.virtualenv_path, virtualenv_name, requirements_file,
+            hosts=env.storm_workers)
