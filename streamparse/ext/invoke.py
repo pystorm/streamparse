@@ -66,17 +66,20 @@ def kill_topology(topology_name=None, env_name="prod"):
 
 
 @task
-def uberjar_for_deploy():
-    print("Creating topology uberjar...")
-    res = run("lein uberjar", hide="stdout")
+def jar_for_deploy():
+    print("Cleaning from prior builds...")
+    res = run("lein clean", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to uberjar!\nSTDOUT:\n{}"
+        raise Exception("Unable to run 'lein clean'!\nSTDOUT:\n{}"
                         "\nSTDERR:\n{}".format(res.stdout, res.stderr))
-
-    # TODO: This is a lil dicey, should get the uberjar based on settings or
-    # something
+    print("Creating topology JAR...")
+    res = run("lein jar", hide="stdout")
+    if not res.ok:
+        raise Exception("Unable to run 'lein jar'!\nSTDOUT:\n{}"
+                        "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+    # XXX: This will fail if more than one JAR is built
     lines = [l.strip().lstrip("Created ") for l in res.stdout.split()
-             if "standalone.jar" in l]
+             if l.endswith(".jar")]
     return lines[0]
 
 
@@ -125,7 +128,7 @@ def submit_topology(name=None, env_name="prod", debug=False):
     # replaced with /path/to/venv/bin/python instead
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
-    topology_jar = uberjar_for_deploy()
+    topology_jar = jar_for_deploy()
 
     print('Deploying "{}" topology...'.format(name))
     with ssh_tunnel(env_config["user"], host, 6627, port):
