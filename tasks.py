@@ -16,3 +16,7 @@ def build(docs=False):
 @task
 def develop():
     run("python setup.py develop")
+
+@task
+def upload():
+    run("python setup.py sdist upload")
