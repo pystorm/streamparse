@@ -256,18 +256,6 @@ data maps.  Plus, we have plenty of examples for you to follow. And, we've
 provided a simple tool for introspecting your Python Spouts and Bolts and
 offering starting points for configuration.
 
-## Core focus of this library
+## Roadmap
 
-With Storm local building and packaging handled by ``lein``, this library has a
-reduced scope and will only focus on a few key areas core to writing, running,
-monitoring, and debugging clusters in Python. These are:
-
-* an enhanced Pythonic support library
-* decorators for your Bolts and Spouts, ``@bolt`` and ``@spout``
-* Python dependency management, utilizing virtualenv tooling
-* logging and log tailing using the ``logging`` module and ``fabric``
-* remote debugging that exposes ``pdb`` on each spout/bolt over a socket
-* post-mortem debugging support that saves stack trace objects for ``pdb.pm()``
-* out-of-box Sentry/Raven support
-* local execution using Storm ``LocalCluster``
-
+See the [[Roadmap|https://github.com/Parsely/streamparse/wiki/Roadmap]] on the wiki.
