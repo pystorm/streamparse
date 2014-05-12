@@ -258,6 +258,6 @@ offering starting points for configuration.
 
 ## Roadmap
 
-See the [Roadmap][roadmap]
+See the [Roadmap][roadmap].
 
-[roadmap]: https://github.com/Parsely/streamparse/wiki/Roadmap] on the wiki.
+[roadmap]: https://github.com/Parsely/streamparse/wiki/Roadmap
