@@ -20,12 +20,12 @@ from invoke import run, task
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
                    get_nimbus_for_env_config, get_config)
-from .fabric import activate_env, create_or_update_virtualenvs
+from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
 
 __all__ = ["list_topologies",  "kill_topology", "run_local_topology",
-           "submit_topology"]
+           "submit_topology", "tail_topology"]
 
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
 # from all these with something like
@@ -144,3 +144,8 @@ def submit_topology(name=None, env_name="prod", debug=False):
         run(" ".join(cmd))
 
     tmpfile.close()
+
+@task
+def tail_topology(env_name="prod"):
+    activate_env(env_name)
+    tail_logs()

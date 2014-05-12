@@ -30,6 +30,7 @@ def main():
         sparse submit [-e <env>] [-n <topology>] [-dv]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
+        sparse tail [-e <env>]
         sparse (-h | --help)
         sparse --version
 
@@ -66,6 +67,8 @@ def main():
         quickstart(args['<project_name>'])
     elif args["submit"]:
         submit_topology(args["--name"], args["--environment"])
+    elif args["tail"]:
+        tail_topology(args["--environment"])
 
 
 if __name__ == "__main__":

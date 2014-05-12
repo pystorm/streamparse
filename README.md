@@ -102,27 +102,9 @@ You can then run the local sample word count topology using:
 This will produce a lot of output and may also download Storm dependencies upon
 first run.
 
-## Debugging locally
-
-*Note*: Not yet implemented.
-
-You can debug a local topology's Spout by running:
-
-    sparse debug --spout=wordcount.sample_spout
-
-This will set a breakpoint when the Spout receives its first data tuple and let you trace through it.
-
-You can debug a local Storm topology's Bolt by running:
-
-    sparse debug --bolt=wordcount.sample_bolt
-
-This will set a breakpoint when the Bolt receives its first data tuple.
-
-In both cases, debug uses ``pdb`` over a socket connection.
-
 ## Submitting
 
-*Note*: Beta support only.
+*Note*: Beta support.
 
 Before submitting your streamparse project, you need to configure at least one
 remote environment in your `config.json` file like so:
@@ -175,26 +157,40 @@ environment.
 
     sparse submit --environment <environment_name> --name <topology_name>
 
-## Monitoring
+## Managing
 
-*Note*: Not yet implemented.
+*Note*: Beta support.
 
-To monitor a running Storm topology in production, use:
+To kill a running Storm topology, use:
 
-    sparse monitor --env=prod
+    sparse kill --environment=prod
+
+## Tail log files
+
+*Note*: Beta support.
 
 To tail all the log files for a running topology across a production Storm
 cluster, use:
 
-    sparse tail --env=prod
+    sparse tail --environment=prod
 
-## Managing
+## Debugging locally
 
 *Note*: Not yet implemented.
 
-To kill a running Storm topology, use:
+You can debug a local topology's Spout by running:
 
-    sparse kill --env=prod
+    sparse debug --spout=wordcount.sample_spout
+
+This will set a breakpoint when the Spout receives its first data tuple and let you trace through it.
+
+You can debug a local Storm topology's Bolt by running:
+
+    sparse debug --bolt=wordcount.sample_bolt
+
+This will set a breakpoint when the Bolt receives its first data tuple.
+
+In both cases, debug uses ``pdb`` over a socket connection.
 
 Topologies are automatically killed when you re-submit an existing topology to
 a cluster.

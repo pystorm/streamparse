@@ -17,8 +17,19 @@ from fabric.contrib.files import exists
 from .util import get_env_config
 
 
-__all__ = ["activate_env", "create_or_update_virtualenvs"]
+__all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs"]
 
+
+@task
+def _tail_logs(log_path):
+    # list log files found
+    run("ls {log_path}/*.log".format(log_path=log_path))
+    # tail -f all of them
+    run("tail -f {log_path}/*.log".format(log_path=log_path))
+
+@task
+def tail_logs():
+    execute(_tail_logs, env.log_path, hosts=env.storm_workers)
 
 @task
 def activate_env(env_name=None):
@@ -37,6 +48,7 @@ def activate_env(env_name=None):
     env.user = env_config["user"]
     env.log_path = env_config["log_path"]
     env.virtualenv_path = env_config["virtualenv_path"]
+    env.disable_known_hosts = True
 
 
 @parallel
