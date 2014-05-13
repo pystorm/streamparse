@@ -2,12 +2,16 @@ from invoke import run, task
 import os
 
 @task
+def test(docs=False):
+    run("nosetests --processes=-1")
+
+@task
 def lint():
     for src in os.listdir("streamparse"):
         if src.endswith(".py"):
             run("pyflakes streamparse/{}".format(src))
 
-@task
+@task(pre=["test"])
 def build(docs=False):
     run("python setup.py build")
     if docs:

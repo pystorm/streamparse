@@ -1,2 +1,3 @@
 pyflakes
 pep8
+nose
