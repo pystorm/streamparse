@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 from base import Component
-from util import read_handshake, read_tuple, send_message, json, _stdout
+from ipc import read_handshake, read_tuple, send_message, json, _stdout
 
 
 _ANCHOR_TUPLE = None
