@@ -1,3 +1,7 @@
+### 0.0.7 - May 13, 2014
+
+bugfix release
+
 ### 0.0.6 - May 12, 2014
 
 - added `sparse submit` for topology building and sending to remote cluster
