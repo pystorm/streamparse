@@ -17,8 +17,7 @@
           topology (apply topology (var-get topology-def))
           topology-name (str (:name (meta topology-def)))]
        (StormSubmitter/submitTopology topology-name
-                                      {TOPOLOGY-DEBUG debug
-                                       TOPOLOGY-WORKERS 3}
+                                      {TOPOLOGY-DEBUG debug}
                                       topology))
     (catch Exception e
       ((println (str "Caught exception: " (.getMessage e) \newline))
