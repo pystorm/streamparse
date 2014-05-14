@@ -1,6 +1,4 @@
 """Base Bolt classes."""
-from __future__ import print_function
-
 from base import Component
 from ipc import read_handshake, read_tuple, send_message, json, _stdout
 
@@ -90,8 +88,8 @@ class Bolt(Component):
         for tup in tuples:
             msg['tuple'] = tup
             lines.append(json.dumps(msg))
-            lines.append('end')
-        print('\n'.join(lines), file=_stdout)
+        _stdout.write("{}\nend\n".format("\nend\n".join(lines)))
+        _stdout.flush()
 
     def ack(self, tup):
         """Indicate that processing of a tuple has succeeded.

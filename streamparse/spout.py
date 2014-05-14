@@ -1,6 +1,4 @@
 """Base Spout classes."""
-from __future__ import print_function
-
 from ipc import read_handshake, read_command, send_message, json, _stdout
 from base import Component
 
@@ -93,8 +91,8 @@ class Spout(Component):
         for tup in tuples:
             msg['tuple'] = tup
             lines.append(json.dumps(msg))
-            lines.append('end')
-        print('\n'.join(lines), file=_stdout)
+        _stdout.write("{}\nend\n".format("\nend\n".join(lines)))
+        _stdout.flush()
 
     def run(self):
         """Main run loop for all spouts. Performs initial handshake with Storm
