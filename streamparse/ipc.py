@@ -1,5 +1,4 @@
 """Utilities for interprocess communication between Python and Storm."""
-from __future__ import print_function
 try:
     import simplejson as json
 except ImportError:
@@ -153,6 +152,5 @@ def read_handshake():
 
 def send_message(message):
     """Send a message to Storm via stdout"""
-    print(json.dumps(message), file=_stdout)
-    print('end', file=_stdout)
+    _stdout.write("{}\nend\n".format(json.dumps(message)))
     _stdout.flush()
