@@ -53,6 +53,7 @@ def activate_env(env_name=None):
     env.log_path = env_config["log_path"]
     env.virtualenv_path = env_config["virtualenv_path"]
     env.disable_known_hosts = True
+    env.forward_agent = True
 
 
 @parallel
