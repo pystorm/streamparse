@@ -142,8 +142,9 @@ def submit_topology(name=None, env_name="prod", debug=False):
         os.environ["JVM_OPTS"] = " ".join(jvm_opts)
         cmd = ["lein",
                "run -m streamparse.commands.submit_topology/-main",
-               tmpfile.name,
-               "--debug"]
+               tmpfile.name]
+        if debug:
+            cmd.append("--debug")
         run(" ".join(cmd))
 
     tmpfile.close()
