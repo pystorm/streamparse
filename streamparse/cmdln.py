@@ -1,9 +1,12 @@
+from __future__ import print_function, absolute_import
+
 from docopt import docopt
 
-from ext.fabric import *
-from ext.invoke import *
-from bootstrap import quickstart
+from .ext.fabric import *
+from .ext.invoke import *
+from .bootstrap import quickstart
 
+from streamparse import __version__ as VERSION
 
 # XXX: these are commands we're working on still
 TODO_CMDS = """
@@ -54,7 +57,7 @@ def main():
                                     running [default: 5].
         -d --debug                  Debug the given command.
     """
-    args = docopt(main.__doc__, version="sparse 0.1")
+    args = docopt(main.__doc__, version="sparse " + VERSION)
 
     if args["run"]:
         time = int(args["--time"])
