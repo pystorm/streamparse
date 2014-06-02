@@ -17,7 +17,11 @@
           topology (apply topology (var-get topology-def))
           topology-name (str (:name (meta topology-def)))]
        (StormSubmitter/submitTopology topology-name
-                                      {TOPOLOGY-DEBUG debug}
+                                      {TOPOLOGY-DEBUG false
+                                       TOPOLOGY-ACKER-EXECUTORS 8
+                                       TOPOLOGY-MAX-SPOUT-PENDING 5000
+                                       TOPOLOGY-MESSAGE-TIMEOUT-SECS 60
+                                       TOPOLOGY-WORKERS 8}
                                       topology))
     (catch Exception e
       ((println (str "Caught exception: " (.getMessage e) \newline))
