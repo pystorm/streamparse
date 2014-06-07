@@ -32,8 +32,8 @@ class Bolt(Component):
         pass
 
     def process(self, tup):
-        """Process a single tuple :class:`base.Tuple` of input, should be
-        overridden by subclasses.  :class:`base.Tuple` objects contain metadata
+        """Process a single tuple :class:`ipc.Tuple` of input, should be
+        overridden by subclasses.  :class:`ipc.Tuple` objects contain metadata
         about which component, stream and task it came from.  The actual values
         of the tuple can be accessed by calling `tup.values`.
 
