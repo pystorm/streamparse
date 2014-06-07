@@ -3,7 +3,6 @@ from collections import defaultdict
 import os
 import signal
 import sys
-import traceback
 import threading
 import time
 
