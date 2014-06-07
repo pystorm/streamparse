@@ -52,8 +52,9 @@ class Tuple(object):
         self.values = values
 
     def __repr__(self):
-        return '<{}: {}> {}'.format(self.__class__.__name__, self.id,
-                                    self.values)
+        return ('Tuple(id={}, component={}, stream={}, task={}, values={})'
+                .format(self.id, self.component, self.stream, self.task,
+                        self.values))
 
 
 # Message recieving
