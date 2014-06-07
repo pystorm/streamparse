@@ -7,7 +7,7 @@ import threading
 import time
 
 from base import Component
-from ipc import read_handshake, read_tuple, send_message, json, _stdout
+from ipc import read_handshake, read_tuple, send_message, json, _stdout, Tuple
 
 
 _ANCHOR_TUPLE = None
@@ -101,16 +101,18 @@ class Bolt(Component):
     def ack(self, tup):
         """Indicate that processing of a tuple has succeeded.
 
-        :param tup: a :class:`base.Tuple` object.
+        :param tup: a `str` or :class:`ipc.Tuple` object.
         """
-        send_message({'command': 'ack', 'id': tup.id})
+        tup_id = tup.id if isinstance(tup, Tuple) else tup
+        send_message({'command': 'ack', 'id': tup_id})
 
     def fail(self, tup):
         """Indicate that processing of a tuple has failed.
 
-        :param tup: a :class:`base.Tuple` object.
+        :param tup: a `str` or :class:`ipc.Tuple` object.
         """
-        send_message({'command': 'fail', 'id': tup.id})
+        tup_id = tup.id if isinstance(tup, Tuple) else tup
+        send_message({'command': 'fail', 'id': tup_id})
 
     def run(self):
         """Main run loop for all bolts. Performs initial handshake with Storm
