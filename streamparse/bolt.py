@@ -2,6 +2,7 @@
 from collections import defaultdict
 import os
 import signal
+import sys
 import traceback
 import threading
 import time
@@ -158,7 +159,8 @@ class BatchingBolt(Bolt):
     SECS_BETWEEN_BATCHES = 2
 
     def __init__(self):
-        signal.signal(signal.SIGINT, self._handle_signal_interrupt)
+        self.exc_info = None
+        signal.signal(signal.SIGINT, self._handle_worker_exception)
 
         self._batch = defaultdict(list)
         self._should_stop = threading.Event()
@@ -174,13 +176,6 @@ class BatchingBolt(Bolt):
             group_key = self.group_key(tup)
             self._batch[group_key].append(tup)
 
-    def process_batch(self, key, tups):
-        """Process a batch of tuples. Should be overridden by subclasses.
-
-        :param key: the group key for the list of batches.
-        :param tups: a `list` of tuples for the group."""
-        raise NotImplementedError()
-
     def group_key(self, tup):
         """Returns a key to be used split batches of tuples by key. By default,
         returns None so that all tuples are placed in a single batch. Can be
@@ -189,25 +184,32 @@ class BatchingBolt(Bolt):
         :param tup: a `ipc.Tuple` instance."""
         return None
 
+    def process_batch(self, key, tups):
+        """Process a batch of tuples. Should be overridden by subclasses.
+
+        :param key: the group key for the list of batches.
+        :param tups: a `list` of :class:`ipc.Tuple`s for the group."""
+        raise NotImplementedError()
+
     def _batcher(self):
         """Entry point for the batcher thread."""
         try:
-            while not self._should_stop.is_set():
+            while True:
                 time.sleep(self.SECS_BETWEEN_BATCHES)
                 with self._batch_lock:
                     if not self._batch:
                         # No tuples to save
                         continue
-                    for key, tups in self._batch.iteritems():
-                        self.process_batch(key, tups)
-                        [self.ack(tup) for tup in tups]
-                    self._batch = defaultdict(list)
+                for key, tups in self._batch.iteritems():
+                    self.process_batch(key, tups)
+                    [self.ack(tup) for tup in tups]
+                self._batch = defaultdict(list)
         except Exception:
-            self.log("Exception in child thread.\n{}"
-                     .format(traceback.format_exc()))
-            # Kill the parent thread
-            os.kill(os.getpid(), signal.SIGINT)
+            self.exc_info = sys.exc_info()
+            os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
 
-    def _handle_signal_interrupt(self, signum, frame):
-        self.log("Received interrupt signal: {}".format(signum))
-        self._should_stop.set()
+    def _handle_worker_exception(self, signum, frame):
+        """Exceptions in the _batcher thread will send a SIGINT to the main
+        thread which we catch here, and then raise in the main thread.
+        """
+        raise self.exc_info[1], None, self.exc_info[2]
