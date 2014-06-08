@@ -151,10 +151,22 @@ class BasicBolt(Bolt):
 
 
 class BatchingBolt(Bolt):
-    """A bolt implementation that batches input tuples for periodic processing.
-    Can vastly help with performance when writing to data stores that may not
-    be able to handle the number of writes provided by tuples being processed
-    in the topology."""
+    """A bolt which batches tuples for processing.
+
+    Batching tuples is unexpectedly complex to do correctly. The main problem
+    is that all bolts are single-threaded. The difficult comes when the topology
+    is shutting down because Storm stops feeding the bolt tuples. If the bolt
+    is blocked waiting on stdin, then it can't process any waiting tuples,
+    or even ack ones that were asynchronously written to a data store.
+
+    This bolt helps with that grouping tuples based on a time interval and then
+    processing them on a worker thread. The bolt also handles ack'ing tuples
+    after processing has finished, much like the BasicBolt.
+
+    To use this class, you must implement ``process_batch``. ``group_key`` can
+    be optionally implemented so that tuples are grouped before ``process_batch``
+    is even called.
+    """
     SECS_BETWEEN_BATCHES = 2
 
     def __init__(self):
@@ -169,18 +181,23 @@ class BatchingBolt(Bolt):
         self._batcher.start()
 
     def process(self, tup):
-        """Add a tuple a specific batch by group key. Do not override this
-        method in subclasses."""
+        """Add a tuple to the batch, grouped by group key.
+
+        Do not override this method!
+        """
         with self._batch_lock:
             group_key = self.group_key(tup)
             self._batch[group_key].append(tup)
 
     def group_key(self, tup):
-        """Returns a key to be used split batches of tuples by key. By default,
-        returns None so that all tuples are placed in a single batch. Can be
-        overridden by subclasses.
+        """Return the group key used to group tuples within a batch.
 
-        :param tup: a `ipc.Tuple` instance."""
+        By default, returns None, which put all tuples in a single
+        batch. Override this function to enable batching.
+
+        :param tup: a `ipc.Tuple` instance.
+        :returns: Any hashable value (will be used in a dict)
+        """
         return None
 
     def process_batch(self, key, tups):
@@ -208,7 +225,9 @@ class BatchingBolt(Bolt):
             os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
 
     def _handle_worker_exception(self, signum, frame):
-        """Exceptions in the _batcher thread will send a SIGINT to the main
+        """Handle an exception raised in the worker thread.
+
+        Exceptions in the _batcher thread will send a SIGINT to the main
         thread which we catch here, and then raise in the main thread.
         """
         raise self.exc_info[1], None, self.exc_info[2]
