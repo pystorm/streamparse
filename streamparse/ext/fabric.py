@@ -11,6 +11,8 @@ Should be used like this::
 """
 from __future__ import absolute_import, print_function
 
+import os
+
 from fabric.api import *
 from fabric.contrib.files import exists
 
@@ -51,24 +53,26 @@ def activate_env(env_name=None):
     env.storm_workers = env_config["workers"]
     env.user = env_config["user"]
     env.log_path = env_config["log_path"]
-    env.virtualenv_path = env_config["virtualenv_path"]
+    env.virtualenv_root = env_config["virtualenv_root"]
     env.disable_known_hosts = True
     env.forward_agent = True
 
 
 @parallel
-def _create_or_update_virtualenv(virtualenv_path, virtualenv_name,
-                                requirements_file):
-    if not exists("{}/{}".format(virtualenv_path, virtualenv_name)):
-        puts("virtualenv not found for {}, creating one.".format(virtualenv_path))
-        run("virtualenv {}/{}".format(virtualenv_path, virtualenv_name))
+def _create_or_update_virtualenv(virtualenv_root,
+                                 virtualenv_name,
+                                 requirements_file):
+    virtualenv_path = os.path.join(virtualenv_root, virtualenv_name)
+    if not exists(virtualenv_path):
+        puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
+        run("virtualenv {}".format(virtualenv_path))
 
     puts("Uploading requirements.txt to temporary file.")
     tmpfile = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
     put(requirements_file, tmpfile)
 
     puts("Updating virtualenv: {}".format(virtualenv_name))
-    cmd = "source {}/{}/bin/activate".format(virtualenv_path, virtualenv_name)
+    cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
     with prefix(cmd):
         run("pip install streamparse")
         run("pip install -r {}".format(tmpfile))
@@ -87,5 +91,7 @@ def create_or_update_virtualenvs(virtualenv_name, requirements_file):
     to update/install this virtualenv.
     """
     execute(_create_or_update_virtualenv,
-            env.virtualenv_path, virtualenv_name, requirements_file,
+            env.virtualenv_root,
+            virtualenv_name,
+            requirements_file,
             hosts=env.storm_workers)

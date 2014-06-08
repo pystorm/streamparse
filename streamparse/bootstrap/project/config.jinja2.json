@@ -8,7 +8,7 @@
             "nimbus": "",
             "workers": [],
             "log_path": "",
-            "virtualenv_path": ""
+            "virtualenv_root": ""
         }
     }
 }

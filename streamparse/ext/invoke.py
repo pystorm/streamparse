@@ -118,7 +118,7 @@ def submit_topology(name=None, env_name="prod", debug=False):
         contents = fp.read()
     contents = re.sub(r'"python"',
                      '"{}/{}/bin/python"'
-                      .format(env_config["virtualenv_path"], name),
+                      .format(env_config["virtualenv_root"], name),
                       contents)
     tmpfile = NamedTemporaryFile(dir=config["topology_specs"])
     tmpfile.write(contents)
