@@ -7,6 +7,13 @@ Tuples
 
 .. autoclass:: streamparse.ipc.Tuple
 
+You should never have to instantiate an instance of a
+:class:`streamparse.ipc.Tuple` yourself as streamparse handles this for you
+prior to, for example, a :class:`streamparse.bolt.Bolt`'s ``process()`` method
+being called.
+
+None of the emit methods for bolts or spouts require that you pass a
+:class:`streamparse.ipc.Tuple` instance.
 
 Spouts
 ------
