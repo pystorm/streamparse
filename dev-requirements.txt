@@ -1,3 +1,4 @@
 pyflakes
 pep8
 nose
+sphinx_rtd_theme
