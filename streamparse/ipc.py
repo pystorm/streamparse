@@ -40,7 +40,19 @@ class LogStream(object):
 
 
 class Tuple(object):
-    """Storm's primitive data type passed around via streams."""
+    """Storm's primitive data type passed around via streams.
+
+    :ivar id: the ID of the tuple.
+    :type id: str
+    :ivar component: component that the tuple was generated from.
+    :type component: str
+    :ivar stream: the stream that the tuple was emitted into.
+    :type stream: str
+    :ivar task: the task the tuple was generated from.
+    :type task: int
+    :ivar values: the payload of the tuple where data is stored.
+    :type values: list
+    """
 
     __slots__ = ['id', 'component', 'stream', 'task', 'values']
 

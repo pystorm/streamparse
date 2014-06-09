@@ -13,17 +13,22 @@ class Spout(Component):
         the main run loop. A good place to initialize connections to data
         sources.
 
-        :param storm_conf: a ``dict`` containing the Storm configuration for
-        this spout.  This is the configuration provided to the topology, merged
-        in with cluster configuration on the worker node.
-        :param context: a ``dict`` containing information about the component's
-        place within the topology such as: task IDs, inputs, outputs etc."""
+        :param storm_conf: the Storm configuration for this Bolt.  This is the
+                           configuration provided to the topology, merged in
+                           with cluster configuration on the worker node.
+        :type storm_conf: dict
+        :param context: information about the component's place within the
+                        topology such as: task IDs, inputs, outputs etc.
+        :type context: dict
+        """
         pass
 
     def ack(self, tup_id):
         """Called when a bolt acknowledges a tuple in the topology.
 
-        :param tup_id: a ``str`` representing the tuple that was acknowledged.
+        :param tup_id: the ID of the tuple that has been fully acknowledged in
+                       the topology.
+        :type tup_id: str
         """
         pass
 
@@ -31,7 +36,10 @@ class Spout(Component):
         """Called when a tuple fails in the topology, a Spout can choose to
         emit the tuple again or ignore the fail.  Default is to ignore.
 
-        :param tup_id: a ``str`` representing the tuple that was failed.
+        :param tup_id: the ID of the tuple that has failed in the topology
+                       either due to a bolt calling ``fail()`` or a tuple
+                       timing out.
+        :type tup_id: str
         """
         pass
 
@@ -41,14 +49,18 @@ class Spout(Component):
     def emit(self, tup, tup_id=None, stream=None, direct_task=None):
         """Emit a spout tuple message.
 
-        :param tup: a ``list`` representing the tuple to send to Storm.  Should
-        contain only JSON-serializable data.
-        :param tup_id: ``str`` or ``int`` which is the id for the tuple. Leave
-        this blank for an unreliable emit.
-        :param stream: ``str`` ID of the stream this tuple should be emitted
-        to.  Leave empty to emit to the default stream.
-        :param direct_task: ``int`` indicating the task to send the tuple to if
-        performing a direct emit.
+        :param tup: the tuple to send to Storm.  Should contain only
+                    JSON-serializable data.
+        :type tup: list
+        :param tup_id: the ID for the tuple. Leave this blank for an
+                       unreliable emit.
+        :type tup_id: str
+        :param stream: ID of the stream this tuple should be emitted to.
+                       Leave empty to emit to the default stream.
+        :type stream: str
+        :param direct_task: the task to send the tuple to if performing a
+                            direct emit.
+        :type direct_task: int
         """
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead'
@@ -69,13 +81,18 @@ class Spout(Component):
         STDOUT instead of writing one at a time.
 
         :param tuples: a two-dimensional ``list`` representing the tuples to
-        send to Storm.  Tuples should contain only JSON-serializable data.
-        :param tup_id: ``str`` or ``int`` which is the id for the tuple.  Leave
-        this blank for unreliable emits.
-        :param stream: ``str`` ID of the stream these tuples should be emitted
-        to.  Leave empty to emit to the default stream.
-        :param direct_task: ``int`` indicating the task to send the tuple to if
-        performing a direct emit.
+                       send to Storm.  Tuples should contain only
+                       JSON-serializable data.
+        :type tuples: list
+        :param tup_id: the id for the tuple.  Leave this blank for unreliable
+                       emits.
+        :type tup_id: str
+        :param stream: ID of the stream these tuples should be emitted to.
+                       Leave empty to emit to the default stream.
+        :type stream: str
+        :param direct_task: the task to send the tuple to if
+                            performing a direct emit.
+        :type direct_task: int
         """
         msg = {
             'command': 'emit',

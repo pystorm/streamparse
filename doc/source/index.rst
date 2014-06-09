@@ -3,14 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to streamparse's documentation!
-***************************************
+streamparse
+===========
 
-Contents:
+streamparse lets you run Python code against real-time streams of data.
+Integrates with Apache Storm.
 
 .. toctree::
    :maxdepth: 2
 
+   quickstart
+   api
+
+.. image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif
 
 
 Indices and tables

@@ -28,7 +28,10 @@ class Component(object):
     def log(self, message, level='info'):
         """Log a message to Storm optionally providing a logging level.
 
-        :param message: any object that supports ``__str__()``.
-        :param level: a ``str`` representing the log level.
+        :param message: the log message to send to Storm.
+        :type message: str
+        :param level: the logging level that Storm should use when writing the
+                      ``message``.
+        :type level: str
         """
         send_message({'command': 'log', 'msg': str(message), 'level': level})
