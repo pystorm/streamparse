@@ -1,6 +1,4 @@
 docopt
-
-# fabric still in development
+jinja2
 fabric
-# invoke still in development
 invoke
