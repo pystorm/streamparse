@@ -231,10 +231,10 @@ class BatchingBolt(Bolt):
                     if not self._batch:
                         # No tuples to save
                         continue
-                for key, tups in self._batch.iteritems():
-                    self.process_batch(key, tups)
-                    [self.ack(tup) for tup in tups]
-                self._batch = defaultdict(list)
+                    for key, tups in self._batch.iteritems():
+                        self.process_batch(key, tups)
+                        [self.ack(tup) for tup in tups]
+                    self._batch = defaultdict(list)
         except Exception:
             self.exc_info = sys.exc_info()
             os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
