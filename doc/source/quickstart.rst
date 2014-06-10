@@ -382,7 +382,7 @@ in our ``config.json`` file:
                     "storm3.my-cluster.com"
                 ],
                 "log_path": "",
-                "virtualenv_path": "/data/virtualenvs/"
+                "virtualenv_root": "/data/virtualenvs/"
             }
         }
     }
@@ -397,7 +397,7 @@ config variable and building a virtualenv using the the project's local
 This implies a few requirements about the user you specify per environment:
 
 1. Must have ssh access to all servers in your Storm cluster
-2. Must have write access to the ``virtualenv_path`` on all servers in your
+2. Must have write access to the ``virtualenv_root`` on all servers in your
    Storm cluster
 
 streamparse also assumes that virtualenv is installed on all Storm servers.

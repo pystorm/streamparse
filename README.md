@@ -125,7 +125,7 @@ remote environment in your `config.json` file like so:
                 "storm-worker4.example.com"
             ],
             "log_path": "/path/to/logging",
-            "virtualenv_path": "/path/to/virtualenvs"
+            "virtualenv_root": "/path/to/virtualenvs"
         }
     }
 }
@@ -135,7 +135,7 @@ A few important notes about the `user` you specify for each of the
 environments in the `envs` key:
 
 * The user must have ssh access to the servers specified in the `nimbus` and `workers` keys.
-* The user must have write access to the `virtualenv_path` directory on the `workers` servers.
+* The user must have write access to the `virtualenv_root` directory on the `workers` servers.
 
 If you have only one topology defined in `topologies/` and one environment
 defined in your `config.json`, you can submit your topology via:
