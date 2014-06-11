@@ -35,3 +35,4 @@ def develop():
 def upload():
     run('git checkout-index -a --prefix {}/'.format('_release'))
     run("cd _release && python setup.py sdist upload")
+    run("rm -Rf _release")
