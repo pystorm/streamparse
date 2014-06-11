@@ -1,14 +1,14 @@
 (ns streamparse.commands.submit_topology
   "Submit a topology to a Storm cluster."
   (:require [clojure.string :as string]
-            [clojure.tools.cli :refer [cli]]
+            [streamparse.cli :refer [cli]]
             [clojure.stacktrace :refer [print-stack-trace]])
   (:use [backtype.storm clojure config])
   (:import  [backtype.storm StormSubmitter])
   (:gen-class))
 
 
-(defn submit-topology! [topology-file debug]
+(defn submit-topology! [topology-file options]
   "Submit a topology to a Storm cluster. The topology definition is contained
   inside of topology-file which is assumed to have a single var defined which
   contains the topology definition."
@@ -17,11 +17,7 @@
           topology (apply topology (var-get topology-def))
           topology-name (str (:name (meta topology-def)))]
        (StormSubmitter/submitTopology topology-name
-                                      {TOPOLOGY-DEBUG false
-                                       TOPOLOGY-ACKER-EXECUTORS 8
-                                       TOPOLOGY-MAX-SPOUT-PENDING 5000
-                                       TOPOLOGY-MESSAGE-TIMEOUT-SECS 60
-                                       TOPOLOGY-WORKERS 8}
+                                      options
                                       topology))
     (catch Exception e
       ((println (str "Caught exception: " (.getMessage e) \newline))
@@ -35,18 +31,41 @@
         ""]
         (string/join \newline)))
 
+(defn -parse-topo-option [val-str]
+  "Parse topology --option in option.key=val form."
+  (let [[key val] (string/split val-str #"=")
+       parsed-val (read-string val)]
+       {key parsed-val}))
 
-(defn -main [& args]
+(defn -assoc-topo-option [previous key val]
+  "Associate topology --option with option map."
+  (assoc previous key
+    (if-let [oldval (get previous key)]
+      (merge oldval val)
+      val)))
+
+(defn -main [& sysargs]
   (let [[opts args banner]
-         (cli args
+         (cli sysargs
               ["-h" "--help" "Show this help screen." :flag true :default false]
               ["-n" "--host" "Hostname for Nimbus." :default "localhost"]
               ["-p" "--port" "Port for Nimbus." :default 6627 :parse-fn #(Integer/parseInt %)]
-              ["-d" "--debug" "Enable debugging for the cluster." :flag true :default false])]
-
+              ["-d" "--debug" "Enable debugging for the cluster." :flag true :default false]
+              ["-o" "--option" "Override topology config option."
+                :parse-fn -parse-topo-option :assoc-fn -assoc-topo-option])]
     (when (or (= (count args) 0) (:help opts))
       (println (usage))
       (println banner)
       (System/exit 0))
-    (let [topology-spec-file (first args)]
-      (submit-topology! topology-spec-file (:debug opts)))))
+    (let [topology-spec-file (first args)
+          ;; set some default options
+          defaults  {TOPOLOGY-DEBUG (:debug opts)
+                     TOPOLOGY-WORKERS 2
+                     TOPOLOGY-ACKER-EXECUTORS 2
+                     TOPOLOGY-MAX-SPOUT-PENDING 5000
+                     TOPOLOGY-MESSAGE-TIMEOUT-SECS 60}
+          ;; overlay provided options
+          options (merge defaults (:option opts))
+          ]
+      (println opts)
+      (submit-topology! topology-spec-file options))))

@@ -1,7 +1,7 @@
 (ns streamparse.commands.list
   "List topologies command for streamparse."
   (:require [clojure.string :as string]
-            [clojure.tools.cli :refer [cli]]
+            [streamparse.cli :refer [cli]]
             [clojure.pprint :refer [print-table]]
             [clojure.data.json :as json]
             [backtype.storm.thrift :refer :all])

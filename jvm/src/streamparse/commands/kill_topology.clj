@@ -1,7 +1,7 @@
 (ns streamparse.commands.kill_topology
   "List topologies command for streamparse."
   (:require [clojure.string :as string]
-            [clojure.tools.cli :refer [cli]]
+            [streamparse.cli :refer [cli]]
             [clojure.data.json :as json]
             [backtype.storm.thrift :refer :all])
   (:import [backtype.storm.generated KillOptions NotAliveException])

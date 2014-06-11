@@ -1,14 +1,14 @@
 (ns streamparse.commands.run
   "Run a topology on a Storm LocalCluster."
   (:require [clojure.string :as string]
-            [clojure.tools.cli :refer [cli]]
+            [streamparse.cli :refer [cli]]
             [clojure.stacktrace :refer [print-stack-trace]])
   (:use [backtype.storm clojure config])
   (:import  [backtype.storm LocalCluster])
   (:gen-class))
 
 
-(defn run-local! [topology-file debug run-for-secs]
+(defn run-local! [topology-file options run-for-secs]
   "Run the topology locally via LocalCluster. The topology definition is
   contained inside of topology-file which is assume to have a single var
   defined which contains the topology definition."
@@ -19,7 +19,7 @@
           cluster (LocalCluster.)]
       (.submitTopology cluster
                        topology-name
-                       {TOPOLOGY-DEBUG debug}
+                       options
                        topology)
       ;; sleep for a few seconds to let the topology run locally
       (Thread/sleep run-for-secs)
@@ -37,17 +37,40 @@
         ""]
         (string/join \newline)))
 
+(defn -parse-topo-option [val-str]
+  "Parse topology --option in option.key=val form."
+  (let [[key val] (string/split val-str #"=")
+       parsed-val (read-string val)]
+       {key parsed-val}))
+
+(defn -assoc-topo-option [previous key val]
+  "Associate topology --option with option map."
+  (assoc previous key
+    (if-let [oldval (get previous key)]
+      (merge oldval val)
+      val)))
 
 (defn -main [& args]
   (let [[opts args banner]
          (cli args
               ["-h" "--help" "Show this help screen." :flag true :default false]
               ["-d" "--debug" "Run with debug mode." :flag true :default false]
-              ["-t" "--time" "Amount of seconds to run cluser before shutting down." :default 5 :parse-fn #(Integer/parseInt %)])]
+              ["-t" "--time" "Amount of seconds to run cluser before shutting down." :default 5 :parse-fn #(Integer/parseInt %)]
+              ["-o" "--option" "Override topology config option."
+                :parse-fn -parse-topo-option :assoc-fn -assoc-topo-option])
+        ]
     (when (or (= (count args) 0) (:help opts))
       (println (usage))
       (println banner)
       (System/exit 0))
     (let [topology-spec-file (first args)
+          ;; set some default options
+          defaults  {TOPOLOGY-DEBUG (:debug opts)
+                     TOPOLOGY-WORKERS 2
+                     TOPOLOGY-ACKER-EXECUTORS 2
+                     TOPOLOGY-MAX-SPOUT-PENDING 5000
+                     TOPOLOGY-MESSAGE-TIMEOUT-SECS 60}
+          ;; overlay provided options
+          options (merge defaults (:option opts))
           run-for-secs (* (:time opts) 1000)]
-      (run-local! topology-spec-file (:debug opts) run-for-secs))))
+      (run-local! topology-spec-file options run-for-secs))))

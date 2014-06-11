@@ -12,15 +12,15 @@
   :min-lein-version "2.0.0"
   :dependencies [[commons-collections/commons-collections "3.2.1"]]
   :profiles {:dev
-              {:dependencies [[org.apache.storm/storm-core "0.9.1-incubating" :exclusions [org.clojure/tools.cli]]
-                              [storm/tools.cli "0.2.2" :exclusions [org.clojure/tools.cli]]
-                              [org.clojure/clojure "1.4.0"]
-                              [org.clojure/tools.cli "0.3.1"]
+              {:dependencies [
+                              [org.apache.storm/storm-core "0.9.1-incubating"]
+                              [org.clojure/clojure "1.5.0"]
                               [org.clojure/data.json "0.2.4"]
                               [org.testng/testng "6.8.5"]
                               [org.easytesting/fest-assert-core "2.0M8"]
                               [org.mockito/mockito-all "1.9.0"]
-                              [org.jmock/jmock "2.6.0"]]}}
+                              [org.jmock/jmock "2.6.0"]]
+               }}
   :source-paths ["src"]
   :test-paths ["test"]
   :resource-paths ["resources"]
