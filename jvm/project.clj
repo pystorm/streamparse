@@ -14,7 +14,6 @@
   :profiles {:dev
               {:dependencies [
                               [org.apache.storm/storm-core "0.9.1-incubating"]
-                              [org.clojure/clojure "1.5.0"]
                               [org.clojure/data.json "0.2.4"]
                               [org.testng/testng "6.8.5"]
                               [org.easytesting/fest-assert-core "2.0M8"]

@@ -4,8 +4,7 @@
   :target-path "_build"
   :min-lein-version "2.0.0"
   :jvm-opts ["-client"]
-  :dependencies  [[org.clojure/clojure "1.5.1"]
-                  [org.apache.storm/storm-core "0.9.1-incubating"]
+  :dependencies  [[org.apache.storm/storm-core "0.9.1-incubating"]
                   [com.parsely/streamparse "0.0.3-SNAPSHOT"]]
   :jar-exclusions     [#"log4j\.properties" #"backtype" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
   :uberjar-exclusions [#"log4j\.properties" #"backtype" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]

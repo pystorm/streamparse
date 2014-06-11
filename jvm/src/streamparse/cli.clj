@@ -1,5 +1,4 @@
-(ns ^{:author "Gareth Jones, Sung Pae, streamparse authors"
-      :doc "Tools for working with command line arguments. (cloned from org.clojure/tools.cli)"}
+(ns
   streamparse.cli
   (:require [clojure.pprint :as pp]
             [clojure.string :as s]))
