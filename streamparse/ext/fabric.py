@@ -11,7 +11,6 @@ Should be used like this::
 """
 from __future__ import absolute_import, print_function
 
-import re
 import os
 
 from fabric.api import *
@@ -97,8 +96,13 @@ def create_or_update_virtualenvs(virtualenv_name, requirements_file):
     """
     # Check to ensure streamparse is in requirements
     with open(requirements_file, "r") as fp:
-        requirements = fp.read()
-        if not re.search(r"^streamparse", requirements):
+        found_streamparse = False
+        for line in fp:
+            if "streamparse" in line:
+                found_streamparse = True
+                break
+
+        if not found_streamparse:
             die("Could not find streamparse in your requirements file ({}). "
                 "streamparse is required for all topologies."
                 .format(requirements_file))
