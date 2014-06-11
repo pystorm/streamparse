@@ -84,21 +84,32 @@ def jar_for_deploy():
 
 
 @task(pre=["prepare_topology"])
-def run_local_topology(name=None, time=5, debug=False):
+def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
     prepare_topology()
 
     name, topology_file = get_topology_definition(name)
     print("Running {} topology...".format(name))
-    cmd = ["lein run -m streamparse.commands.run/-main", topology_file,
-           "-t", str(time)]
+    cmd = ["lein",
+           "run -m streamparse.commands.run/-main",
+           topology_file]
+    cmd.append("-t {}".format(time))
     if debug:
         cmd.append("--debug")
-    run(" ".join(cmd))
+    cmd.append('--option "topology.workers={}"'.format(par))
+    cmd.append('--option "topology.acker.executors={}"'.format(par))
+    if options is None:
+        options = []
+    for option in options:
+        cmd.append('--option {}'.format(option))
+    full_cmd = " ".join(cmd)
+    print("Running lein command to run local cluster:")
+    print(full_cmd)
+    run(full_cmd)
 
 
 @task(pre=["prepare_topology"])
-def submit_topology(name=None, env_name="prod", debug=False):
+def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
 
@@ -145,7 +156,16 @@ def submit_topology(name=None, env_name="prod", debug=False):
                tmpfile.name]
         if debug:
             cmd.append("--debug")
-        run(" ".join(cmd))
+        cmd.append('--option "topology.workers={}"'.format(par))
+        cmd.append('--option "topology.acker.executors={}"'.format(par))
+        if options is None:
+            options = []
+        for option in options:
+            cmd.append('--option {}'.format(option))
+        full_cmd = " ".join(cmd)
+        print("Running lein command to submit topology to nimbus:")
+        print(full_cmd)
+        run(full_cmd)
 
     tmpfile.close()
 

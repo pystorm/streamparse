@@ -29,8 +29,8 @@ def main():
 
     Usage:
         sparse quickstart <project_name>
-        sparse run [-n <topology>] [-t <time>] [-dv]
-        sparse submit [-e <env>] [-n <topology>] [-dv]
+        sparse run [-n <topology>] [-o <option>]... [-p <par>] [-t <time>] [-dv]
+        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dv]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>]
@@ -53,6 +53,14 @@ def main():
                                     have only one topology defined in your
                                     topologies/ directory, streamparse
                                     will use it automatically.
+        -o --option <option>...     Topology option to use upon submit, e.g.
+                                    "-o topology.debug=true" is equivalent to
+                                    "--debug". May be repeated for multiple options.
+                                    See "Topology Configuration" listing in Storm
+                                    UI to confirm effects.
+        -p --par <par>              Parallelism of topology; conveniently sets
+                                    number of Storm workers and acker bolts
+                                    at once to passed value [default: 2].
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
         -d --debug                  Debug the given command.
@@ -61,7 +69,9 @@ def main():
 
     if args["run"]:
         time = int(args["--time"])
-        run_local_topology(args["--name"], time, args["--debug"])
+        par = int(args["--par"])
+        options = args["--option"]
+        run_local_topology(args["--name"], time, par, options, args["--debug"])
     elif args["list"]:
         list_topologies(args["--environment"])
     elif args["kill"]:
@@ -69,7 +79,9 @@ def main():
     elif args["quickstart"]:
         quickstart(args['<project_name>'])
     elif args["submit"]:
-        submit_topology(args["--name"], args["--environment"])
+        par = int(args["--par"])
+        options = args["--option"]
+        submit_topology(args["--name"], args["--environment"], par, options, args["--debug"])
     elif args["tail"]:
         tail_topology(args["--environment"])
 
