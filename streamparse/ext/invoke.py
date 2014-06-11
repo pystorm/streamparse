@@ -170,6 +170,6 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
     tmpfile.close()
 
 @task
-def tail_topology(env_name="prod"):
+def tail_topology(env_name="prod", pattern=None):
     activate_env(env_name)
-    tail_logs()
+    tail_logs(pattern)

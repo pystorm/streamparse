@@ -33,7 +33,7 @@ def main():
         sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dv]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
-        sparse tail [-e <env>]
+        sparse tail [-e <env>] [--pattern <regex>]
         sparse (-h | --help)
         sparse --version
 
@@ -63,6 +63,7 @@ def main():
                                     at once to passed value [default: 2].
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
+        --pattern <regex>           Apply pattern to files for "tail" subcommand.
         -d --debug                  Debug the given command.
     """
     args = docopt(main.__doc__, version="sparse " + VERSION)
@@ -83,7 +84,7 @@ def main():
         options = args["--option"]
         submit_topology(args["--name"], args["--environment"], par, options, args["--debug"])
     elif args["tail"]:
-        tail_topology(args["--environment"])
+        tail_topology(args["--environment"], args["--pattern"])
 
 
 if __name__ == "__main__":

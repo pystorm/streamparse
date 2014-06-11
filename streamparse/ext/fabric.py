@@ -23,19 +23,24 @@ __all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs"]
 
 
 @task
-def _tail_logs(log_path):
+def _tail_logs(pattern=None):
     # list log files found
-    run("ls {log_path}/*.log".format(log_path=log_path))
+    ls_cmd = "cd {log_path} && ls".format(log_path=env.log_path)
+    if pattern is not None:
+        ls_cmd += " | egrep '{pattern}'".format(
+            pattern=pattern)
+    run(ls_cmd)
     # tail -f all of them
-    run("tail -f {log_path}/*.log".format(log_path=log_path))
+    tail_pipe = " | xargs tail -f"
+    run(ls_cmd + tail_pipe)
 
 @task
-def tail_logs():
+def tail_logs(pattern=None):
     """Follow (tail -f) the log files on remote Storm workers.
 
     Will use the `log_path` and `workers` properties from config.json.
     """
-    execute(_tail_logs, env.log_path, hosts=env.storm_workers)
+    execute(_tail_logs, pattern, hosts=env.storm_workers)
 
 @task
 def activate_env(env_name=None):
