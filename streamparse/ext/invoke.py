@@ -118,6 +118,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
+    config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
     activate_env(env_name)
     create_or_update_virtualenvs(name,
                                  "{}/{}.txt".format(config["virtualenv_specs"],
