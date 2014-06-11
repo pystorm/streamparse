@@ -8,3 +8,4 @@ dist/
 doc/_build/
 .DS_Store
 .env
+_release/
