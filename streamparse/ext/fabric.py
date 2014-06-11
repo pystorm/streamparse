@@ -11,12 +11,13 @@ Should be used like this::
 """
 from __future__ import absolute_import, print_function
 
+import re
 import os
 
 from fabric.api import *
 from fabric.contrib.files import exists
 
-from .util import get_env_config
+from .util import get_env_config, die
 
 
 __all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs"]
@@ -79,7 +80,6 @@ def _create_or_update_virtualenv(virtualenv_root,
     puts("Updating virtualenv: {}".format(virtualenv_name))
     cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
     with prefix(cmd):
-        run("pip install streamparse")
         run("pip install -r {}".format(tmpfile))
 
     run("rm {}".format(tmpfile))
@@ -95,6 +95,14 @@ def create_or_update_virtualenvs(virtualenv_name, requirements_file):
     :param requirements_file: path to the requirements.txt file to use
     to update/install this virtualenv.
     """
+    # Check to ensure streamparse is in requirements
+    with open(requirements_file, "r") as fp:
+        requirements = fp.read()
+        if not re.search(r"^streamparse", requirements):
+            die("Could not find streamparse in your requirements file ({}). "
+                "streamparse is required for all topologies."
+                .format(requirements_file))
+
     execute(_create_or_update_virtualenv,
             env.virtualenv_root,
             virtualenv_name,
