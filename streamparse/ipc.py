@@ -10,7 +10,7 @@ from collections import deque
 
 
 config = context = None
-storm_log = logging.getLogger('pystorm')
+storm_log = logging.getLogger('streamparse')
 
 _MAX_MESSAGE_SIZE = 16777216
 _MAX_BLANK_MSGS = 500
@@ -21,6 +21,7 @@ _pending_commands = deque()
 _pending_task_ids = deque()
 # we'll redirect stdout, but we'll save original for communication to Storm
 _stdout = sys.stdout
+_stderr = sys.stderr
 
 
 class StormIPCException(Exception):
@@ -36,7 +37,15 @@ class LogStream(object):
 
     def write(self, message):
         for line in message.split('\n'):
-            self.logger.error(line)
+            try:
+                self.logger.info(line)
+            except:
+                # There's been an issue somewhere in the logging sub-system
+                # so we'll put stderr and stdout back to their originals and
+                # raise the exception which will cause Storm to choke
+                sys.stdout = _stdout
+                sys.stderr = _stderr
+                raise
 
 
 class Tuple(object):
@@ -147,8 +156,8 @@ def read_handshake():
     """Read and process an initial handshake message from Storm."""
     # Redirect stdout and stderr to ensure that print statements/functions
     # won't crash the Storm Java worker
-    sys.stdout = LogStream(logging.getLogger('pystorm.stdout'))
-    sys.stderr = LogStream(logging.getLogger('pystorm.stderr'))
+    sys.stdout = LogStream(logging.getLogger('streamparse.stdout'))
+    sys.stderr = LogStream(logging.getLogger('streamparse.stderr'))
 
     msg = read_message()
     storm_log.info('Received initial handshake from Storm: %r', msg)
