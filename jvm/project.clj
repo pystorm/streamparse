@@ -10,7 +10,8 @@
             :url "https://raw.githubusercontent.com/Parsely/streamparse/master/LICENSE"
             :distribution :repo}
   :min-lein-version "2.0.0"
-  :dependencies [[commons-collections/commons-collections "3.2.1"]]
+  :dependencies [[commons-collections/commons-collections "3.2.1"]
+                 [org.clojars.hsestupin/storm-spirit "0.1.0"]]
   :profiles {:dev
               {:dependencies [
                               [org.apache.storm/storm-core "0.9.1-incubating"]
