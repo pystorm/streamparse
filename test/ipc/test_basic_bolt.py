@@ -5,7 +5,7 @@ import os
 import sys
 import time
 
-from util import ShellProcess
+from test.ipc.util import ShellProcess
 
 
 _ROOT = os.path.dirname(os.path.realpath(__file__))
