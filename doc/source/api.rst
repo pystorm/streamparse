@@ -22,7 +22,7 @@ Spouts are data sources for topologies, they can read from any data source and
 emit tuples into streams.
 
 .. autoclass:: streamparse.spout.Spout
-    :members: initialize, emit, emit_many, ack, fail, log
+    :members: initialize, emit, emit_many, ack, fail, log, next_tuple
 
 
 Bolts

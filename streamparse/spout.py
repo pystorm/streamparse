@@ -44,6 +44,12 @@ class Spout(Component):
         pass
 
     def next_tuple(self):
+        """Implement this function to emit tuples as necessary.
+
+        This function should not block, or Storm will think the
+        spout is dead. Instead, let it return and streamparse will
+        send a noop to storm, which lets it know the spout is functioning.
+        """
         raise NotImplementedError()
 
     def emit(self, tup, tup_id=None, stream=None, direct_task=None):
