@@ -11,8 +11,10 @@ from ipc import read_handshake, read_tuple, send_message, json, _stdout, Tuple
 
 
 class Bolt(Component):
-    """The base class for all streamparse bolts. For more information on bolts,
-    consult Storm's `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+    """The base class for all streamparse bolts.
+
+    For more information on bolts, consult Storm's
+    `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
     """
 
     def initialize(self, storm_conf, context):
@@ -31,10 +33,11 @@ class Bolt(Component):
         pass
 
     def process(self, tup):
-        """Process a single tuple :class:`Tuple` of input, should be
-        overridden by subclasses.  :class:`Tuple` objects contain metadata
-        about which component, stream and task it came from.  The actual values
-        of the tuple can be accessed by calling ``tup.values``.
+        """Process a single tuple :class:`Tuple` of input
+
+        This should be overridden by subclasses.  :class:`Tuple` objects
+        contain metadata about which component, stream and task it came from.
+        The actual values of the tuple can be accessed by calling ``tup.values``.
 
         :param tup: the tuple to be processed.
         :type tup: Tuple
@@ -69,10 +72,11 @@ class Bolt(Component):
         send_message(msg)
 
     def emit_many(self, tuples, stream=None, anchors=[], direct_task=None):
-        """A more efficient way to send many tuples, dumps out all tuples to
-        STDOUT instead of writing one at a time.
+        """A more efficient way to send many tuples.
 
-        :param tuples: a ``list``s containing ``list``s of tuple payload data
+        Dumps out all tuples to STDOUT instead of writing one at a time.
+
+        :param tuples: a ``list`` containing ``list`` s of tuple payload data
                        to send to Storm. All tuples should contain only
                        JSON-serializable data.
         :type tuples: list
@@ -120,10 +124,13 @@ class Bolt(Component):
         send_message({'command': 'fail', 'id': tup_id})
 
     def run(self):
-        """Main run loop for all bolts. Performs initial handshake with Storm
-        and reads tuples handing them off to subclasses.  Any exceptions are
-        caught and logged back to Storm prior to the Python process exits.
-        Subclasses should not override this method.
+        """Main run loop for all bolts.
+
+        Performs initial handshake with Storm and reads tuples handing them off
+        to subclasses.  Any exceptions are caught and logged back to Storm
+        prior to the Python process exiting.
+
+        Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
         tup = None
@@ -137,11 +144,10 @@ class Bolt(Component):
 
 
 class BasicBolt(Bolt):
-    """A bolt implementation that automatically acknowledges all tuples after
-    :func:`process` completes."""
+    """A bolt that automatically acknowledges tuples after :func:`process`."""
 
     def emit(self, tup, stream=None, anchors=[], direct_task=None):
-        """Override to anchor to the current tuple if no anchors are specified"""
+        """Overridden to anchor to the current tuple if no anchors are specified"""
         anchors = anchors or [self.__current_tup]
         super(BasicBolt, self).emit(
             tup, stream=stream, anchors=anchors, direct_task=direct_task
@@ -215,7 +221,7 @@ class BatchingBolt(Bolt):
 
         :param key: the group key for the list of batches.
         :type key: hashable
-        :param tups: a `list` of :class:`ipc.Tuple`s for the group.
+        :param tups: a `list` of :class:`ipc.Tuple` for the group.
         :type tups: list
         """
         raise NotImplementedError()

@@ -4,8 +4,10 @@ from base import Component
 
 
 class Spout(Component):
-    """Base class for all streamparse spouts.  For more information on spouts,
-    consult Storm's `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+    """Base class for all streamparse spouts.
+
+    For more information on spouts, consult Storm's
+    `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
     """
 
     def initialize(self, storm_conf, context):
@@ -33,8 +35,10 @@ class Spout(Component):
         pass
 
     def fail(self, tup_id):
-        """Called when a tuple fails in the topology, a Spout can choose to
-        emit the tuple again or ignore the fail.  Default is to ignore.
+        """Called when a tuple fails in the topology
+
+        A Spout can choose to emit the tuple again or ignore the fail. The
+        default is to ignore.
 
         :param tup_id: the ID of the tuple that has failed in the topology
                        either due to a bolt calling ``fail()`` or a tuple
@@ -83,8 +87,9 @@ class Spout(Component):
         send_message(msg)
 
     def emit_many(self, tuples, tup_id=None, stream=None, direct_task=None):
-        """A more efficient way to send many tuples, dumps out all tuples to
-        STDOUT instead of writing one at a time.
+        """A more efficient way to send many tuples.
+
+        Dumps out all tuples to STDOUT instead of writing one at a time.
 
         :param tuples: a two-dimensional ``list`` representing the tuples to
                        send to Storm.  Tuples should contain only
@@ -118,10 +123,13 @@ class Spout(Component):
         _stdout.flush()
 
     def run(self):
-        """Main run loop for all spouts. Performs initial handshake with Storm
-        and reads tuples handing them off to subclasses.  Any exceptions are
-        caught and logged back to Storm prior to the Python process exits.
-        Subclasses should not override this method.
+        """Main run loop for all spouts.
+
+        Performs initial handshake with Storm and reads tuples handing them off
+        to subclasses.  Any exceptions are caught and logged back to Storm
+        prior to the Python process exiting.
+
+        Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
         try:

@@ -33,7 +33,6 @@ Bolts
     :show-inheritance:
 
 .. autoclass:: streamparse.bolt.BasicBolt
-    :members:
     :show-inheritance:
 
 .. autoclass:: streamparse.bolt.BatchingBolt
