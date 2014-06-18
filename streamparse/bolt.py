@@ -142,7 +142,7 @@ class BasicBolt(Bolt):
 
     def emit(self, tup, stream=None, anchors=[], direct_task=None):
         """Override to anchor to the current tuple if no anchors are specified"""
-        anchors = anchors of [self.__current_tup]
+        anchors = anchors or [self.__current_tup]
         super(BasicBolt, self).emit(
             tup, stream=stream, anchors=anchors, direct_task=direct_task
         )
