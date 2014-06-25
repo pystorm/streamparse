@@ -30,7 +30,7 @@ def main():
     Usage:
         sparse quickstart <project_name>
         sparse run [-n <topology>] [-o <option>]... [-p <par>] [-t <time>] [-dv]
-        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dv]
+        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [--pattern <regex>]
@@ -64,6 +64,9 @@ def main():
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
         --pattern <regex>           Apply pattern to files for "tail" subcommand.
+        -f --force                  Force a topology to submit by killing any
+                                    currently running topologies of the same
+                                    name.
         -d --debug                  Debug the given command.
     """
     args = docopt(main.__doc__, version="sparse " + VERSION)
@@ -82,7 +85,8 @@ def main():
     elif args["submit"]:
         par = int(args["--par"])
         options = args["--option"]
-        submit_topology(args["--name"], args["--environment"], par, options, args["--debug"])
+        submit_topology(args["--name"], args["--environment"], par, options,
+                        args["--force"], args["--debug"])
     elif args["tail"]:
         tail_topology(args["--environment"], args["--pattern"])
 
