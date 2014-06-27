@@ -11,23 +11,26 @@ to do "real-time map/reduce style computation" against live streams of data. It
 can also be a powerful way to scale long-running, highly parallel Python
 processes in production.
 
+
 ## Documentation
 
 [http://streamparse.readthedocs.org/en/latest/](http://streamparse.readthedocs.org/en/latest/)
+
 
 ## User Group
 
 Follow the project's progress, get involved, submit ideas and ask for help
 via our Google Group, [streamparse@googlegroups.com](https://groups.google.com/forum/#!forum/streamparse).
 
+
 ## Contributors
 
 Alphabetical, by last name:
 
-* [Keith Bourgoin @kbourgoin](https://twitter.com/kbourgoin)
-* [Jeffrey Godwyll @rey12rey](https://twitter.com/rey12rey)
-* [Andrew Montalenti @amontalenti](https://twitter.com/amontalenti)
-* [Mike Sukmanowsky @msukmanowsky](https://twitter.com/msukmanowsky)
+* Keith Bourgoin ([@kbourgoin](https://twitter.com/kbourgoin))
+* Jeffrey Godwyll ([@rey12rey](https://twitter.com/rey12rey))
+* Andrew Montalenti ([@amontalenti](https://twitter.com/amontalenti))
+* Mike Sukmanowsky ([@msukmanowsky](https://twitter.com/msukmanowsky))
 
 
 ## Roadmap
