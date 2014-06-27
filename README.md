@@ -1,5 +1,7 @@
 # streamparse
 
+[![Build Status](https://travis-ci.org/Parsely/streamparse.svg?branch=master)](https://travis-ci.org/Parsely/streamparse)
+
 streamparse lets you run Python code against real-time streams of data. It also
 integrates Python smoothly with Apache Storm.
 
