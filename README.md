@@ -11,6 +11,8 @@ to do "real-time map/reduce style computation" against live streams of data. It
 can also be a powerful way to scale long-running, highly parallel Python
 processes in production.
 
+![Demo](https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif)
+
 
 ## Documentation
 
