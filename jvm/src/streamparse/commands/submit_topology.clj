@@ -14,7 +14,8 @@
   contains the topology definition."
   (try
     (let [topology-def (load-file topology-file) ; should only be a single var
-          topology (apply topology (var-get topology-def))
+          topology-var (var-get topology-def)
+          topology (apply topology (if (fn? topology-var) (topology-var options) topology-var))
           topology-name (str (:name (meta topology-def)))]
        (StormSubmitter/submitTopology topology-name
                                       options

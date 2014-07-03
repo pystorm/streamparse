@@ -124,7 +124,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
         name, "{}/{}.txt".format(config["virtualenv_specs"], name)
     )
     python_path = '/'.join([env_config["virtualenv_root"],
-                           env_name, "bin", "python"])
+                           name, "bin", "python"])
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
@@ -146,7 +146,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
             cmd.append("--debug")
         cmd.append("--option 'topology.workers={}'".format(par))
         cmd.append("--option 'topology.acker.executors={}'".format(par))
-        cmd.append("--option 'topology.python.path=\"{}\"".format(python_path))
+        cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
         if options is None:
             options = []
         for option in options:
