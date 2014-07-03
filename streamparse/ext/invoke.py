@@ -124,7 +124,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
         name, "{}/{}.txt".format(config["virtualenv_specs"], name)
     )
     python_path = '/'.join([env_config["virtualenv_root"],
-                           env_name, "bin/python"])
+                           env_name, "bin", "python"])
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
