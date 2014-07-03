@@ -96,8 +96,8 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     cmd.append("-t {}".format(time))
     if debug:
         cmd.append("--debug")
-    cmd.append('--option "topology.workers={}"'.format(par))
-    cmd.append('--option "topology.acker.executors={}"'.format(par))
+    cmd.append("--option 'topology.workers={}'".format(par))
+    cmd.append("--option 'topology.acker.executors={}'".format(par))
     if options is None:
         options = []
     for option in options:
@@ -120,24 +120,12 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
     activate_env(env_name)
-    create_or_update_virtualenvs(name,
-                                 "{}/{}.txt".format(config["virtualenv_specs"],
-                                                    name))
-
-    # TODO: Super hacky way to replace "python" with our venv executable, need
-    # to fix this
-    with open(topology_file, "r") as fp:
-        contents = fp.read()
-    contents = re.sub(r'"python"',
-                     '"{}/{}/bin/python"'
-                      .format(env_config["virtualenv_root"], name),
-                      contents)
-    tmpfile = NamedTemporaryFile(dir=config["topology_specs"])
-    tmpfile.write(contents)
-    tmpfile.flush()
-    print("Created modified topology definition file {}.".format(tmpfile.name))
-
-    # replaced with /path/to/venv/bin/python instead
+    create_or_update_virtualenvs(
+        name, "{}/{}.txt".format(config["virtualenv_specs"], name)
+    )
+    python_path = os.path.join(
+        env_config["virtualenv_root"], env_name, "bin/python"
+    )
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
@@ -154,11 +142,12 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
         os.environ["JVM_OPTS"] = " ".join(jvm_opts)
         cmd = ["lein",
                "run -m streamparse.commands.submit_topology/-main",
-               tmpfile.name]
+               toplogy_file]
         if debug:
             cmd.append("--debug")
-        cmd.append('--option "topology.workers={}"'.format(par))
-        cmd.append('--option "topology.acker.executors={}"'.format(par))
+        cmd.append("--option 'topology.workers={}'".format(par))
+        cmd.append("--option 'topology.acker.executors={}'".format(par))
+        cmd.append("--option 'topology.python.path=\"{}\"".format(python_path))
         if options is None:
             options = []
         for option in options:
@@ -168,7 +157,6 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
         print(full_cmd)
         run(full_cmd)
 
-    tmpfile.close()
 
 @task
 def tail_topology(env_name="prod", pattern=None):
