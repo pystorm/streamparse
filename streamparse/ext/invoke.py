@@ -123,9 +123,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
     create_or_update_virtualenvs(
         name, "{}/{}.txt".format(config["virtualenv_specs"], name)
     )
-    python_path = os.path.join(
-        env_config["virtualenv_root"], env_name, "bin/python"
-    )
+    python_path = '/'.join([env_config["virtualenv_root"],
+                           env_name, "bin/python"])
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
@@ -142,7 +141,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
         os.environ["JVM_OPTS"] = " ".join(jvm_opts)
         cmd = ["lein",
                "run -m streamparse.commands.submit_topology/-main",
-               toplogy_file]
+               topology_file]
         if debug:
             cmd.append("--debug")
         cmd.append("--option 'topology.workers={}'".format(par))
