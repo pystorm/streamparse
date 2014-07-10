@@ -72,17 +72,17 @@ class ShellBatchingBoltTester(unittest.TestCase):
             "task": 0,
             "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252],
         }
-        for i in xrange(5):
+        for i in range(5):
             msg["id"] = str(i)
             ShellBatchingBoltTester.shell_proc.write_message(msg)
         time.sleep(2.5)
         # Ensure that we have a series of emits followed by a series of acks
-        for i in xrange(5):
+        for i in range(5):
             res = ShellBatchingBoltTester.shell_proc.read_message()
             self.assertEqual(res.get("command"), "emit")
             self.assertEqual(res.get("tuple"),
-                             ["snow white and the seven dwarfs",str(i)])
-        for i in xrange(5):
+                             ["snow white and the seven dwarfs", str(i)])
+        for i in range(5):
             res = ShellBatchingBoltTester.shell_proc.read_message()
             self.assertEqual(res.get("command"), "ack")
             self.assertEqual(res.get("id"), str(i))
@@ -126,7 +126,7 @@ class ShellBatchingBoltTester(unittest.TestCase):
 
         results = []
         # should have series of emits, then series of acks repeated twice
-        for i in xrange(2*2*2):
+        for i in range(2*2*2):
             results.append(ShellBatchingBoltTester.shell_proc.read_message())
 
         expected_commands = ["emit"] * 2

@@ -5,7 +5,7 @@ Base Spout classes.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from .base import Component
-from .ipc import read_handshake, read_command, send_message, json, _stdout
+from .ipc import read_handshake, read_command, send_message, json, _stdout, PY3
 
 
 class Spout(Component):
@@ -124,7 +124,11 @@ class Spout(Component):
         for tup in tuples:
             msg['tuple'] = tup
             lines.append(json.dumps(msg))
-        _stdout.write("{}\nend\n".format("\nend\n".join(lines)))
+        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
+        if PY3:
+            _stdout.buffer.write(wrapped_msg)
+        else:
+            _stdout.write(wrapped_msg)
         _stdout.flush()
 
     def run(self):

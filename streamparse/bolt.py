@@ -9,7 +9,8 @@ import threading
 import time
 
 from .base import Component
-from .ipc import read_handshake, read_tuple, send_message, json, _stdout, Tuple
+from .ipc import (read_handshake, read_tuple, send_message, json, _stdout,
+                  Tuple, PY3)
 
 
 class Bolt(Component):
@@ -109,7 +110,11 @@ class Bolt(Component):
         for tup in tuples:
             msg['tuple'] = tup
             lines.append(json.dumps(msg))
-        _stdout.write("{}\nend\n".format("\nend\n".join(lines)))
+        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
+        if PY3:
+            _stdout.buffer.write(wrapped_msg)
+        else:
+            _stdout.write(wrapped_msg)
         _stdout.flush()
 
     def ack(self, tup):
@@ -248,7 +253,8 @@ class BatchingBolt(Bolt):
                         continue
                     for key, tups in self._batch.iteritems():
                         self.process_batch(key, tups)
-                        [self.ack(tup) for tup in tups]
+                        for tup in tups:
+                            self.ack(tup)
                     self._batch = defaultdict(list)
         except Exception:
             self.exc_info = sys.exc_info()
@@ -260,4 +266,4 @@ class BatchingBolt(Bolt):
         Exceptions in the _batcher thread will send a SIGINT to the main
         thread which we catch here, and then raise in the main thread.
         """
-        raise self.exc_info[1]().with_traceback(self.exc_info[2])
+        raise self.exc_info[1].with_traceback(self.exc_info[2])

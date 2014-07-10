@@ -25,7 +25,7 @@ class ShellProcess(object):
     def read_string(self):
         res = ""
         while True:
-            in_line = self.in_buf.readline()[0:-1]
+            in_line = self.in_buf.readline().decode('utf-8')[0:-1]
             if not in_line:
                 raise Exception("Pipe to subprocess seems to be broken!")
 

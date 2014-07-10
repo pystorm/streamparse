@@ -13,8 +13,8 @@ import logging
 import os
 import sys
 from collections import deque
-from io import open
 
+PY3 = sys.version_info >= (3, 0)
 
 config = context = None
 storm_log = logging.getLogger('streamparse')
@@ -27,8 +27,8 @@ _pending_commands = deque()
 # queue up task IDs we read while trying to read commands/tuples
 _pending_task_ids = deque()
 # we'll redirect stdout, but we'll save original for communication to Storm
-_stdout = codecs.getwriter('utf8')(sys.stdout)
-_stderr = codecs.getwriter('utf8')(sys.stderr)
+_stdout = sys.stdout
+_stderr = sys.stderr
 
 
 class StormIPCException(Exception):
@@ -182,5 +182,9 @@ def read_handshake():
 
 def send_message(message):
     """Send a message to Storm via stdout"""
-    _stdout.write("{}\nend\n".format(json.dumps(message)))
+    wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
+    if PY3:
+        _stdout.buffer.write(wrapped_msg)
+    else:
+        _stdout.write(wrapped_msg)
     _stdout.flush()

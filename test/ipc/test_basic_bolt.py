@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-import subprocess
-import unittest
 import os
+import subprocess
 import time
+import unittest
 
-from .util import ShellProcess
+from test.ipc.util import ShellProcess
 
 
 _ROOT = os.path.dirname(os.path.realpath(__file__))
