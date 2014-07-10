@@ -19,7 +19,16 @@ import sys
 
 from setuptools import setup, find_packages
 
-from streamparse import __version__
+# Get version without importing, which avoids dependency issues
+exec(compile(open('streamparse/version.py').read(), 'streamparse/version.py',
+             'exec'))
+# (we use the above instead of execfile for Python 3.x compatibility)
+
+
+def readme():
+    ''' Returns README.rst contents as str '''
+    with open('README.rst') as f:
+        return f.read()
 
 install_requires = [
     'invoke',
@@ -45,7 +54,9 @@ setup(
     author='Parsely, Inc.',
     author_email='hello@parsely.com',
     url='https://github.com/Parsely/streamparse',
-    description='streamparse lets you run Python code against real-time streams of data. Integrates with Apache Storm.',
+    description=('streamparse lets you run Python code against real-time ' +
+                 'streams of data. Integrates with Apache Storm.'),
+    long_description=readme(),
     license='Apache License 2.0',
     packages=find_packages(),
     entry_points={
