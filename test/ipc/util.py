@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+
 import json
 
 
@@ -14,7 +16,7 @@ class ShellProcess(object):
         self.write_string(json.dumps(msg))
 
     def write_string(self, string):
-        self.out_buf.write("{}\nend\n".format(string))
+        self.out_buf.write("{}\nend\n".format(string).encode('utf-8'))
         self.out_buf.flush()
 
     def read_message(self):

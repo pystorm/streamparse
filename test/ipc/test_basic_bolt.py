@@ -1,11 +1,11 @@
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
+
 import subprocess
 import unittest
 import os
-import sys
 import time
 
-from test.ipc.util import ShellProcess
+from .util import ShellProcess
 
 
 _ROOT = os.path.dirname(os.path.realpath(__file__))
@@ -18,9 +18,12 @@ class BasicBoltTester(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         args = ["python", here("dummy_basic_bolt.py")]
+        my_env = os.environ
+        my_env['PYTHONIOENCODING'] = 'utf-8'
         cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                    stderr=subprocess.PIPE,
+                                    env=my_env)
         print("Waiting for subprocess to start...")
         time.sleep(1)  # time for the subprocess to start
         if cls.proc.poll() is not None:

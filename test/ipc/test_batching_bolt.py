@@ -1,9 +1,9 @@
-from __future__ import print_function, absolute_import
-import subprocess
-import unittest
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
-import sys
+import subprocess
 import time
+import unittest
 
 from .util import ShellProcess
 
@@ -17,9 +17,12 @@ class ShellBatchingBoltTester(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         args = ["python", here("dummy_batching_bolt.py")]
+        my_env = os.environ
+        my_env['PYTHONIOENCODING'] = 'utf-8'
         cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                    stderr=subprocess.PIPE,
+                                    env=my_env)
         print("Waiting for subprocess to start...")
         time.sleep(1)  # time for the subprocess to start
         if cls.proc.poll() is not None:

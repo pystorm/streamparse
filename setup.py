@@ -30,6 +30,7 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+
 install_requires = [
     'invoke',
     'fabric',
@@ -42,7 +43,11 @@ lint_requires = [
     'pyflakes'
 ]
 
-tests_require = ['mock', 'nose', 'unittest2']
+if sys.version_info < (3, 0):
+    tests_require = ['mock', 'nose', 'unittest2']
+else:
+    tests_require = ['mock', 'nose']
+
 dependency_links = []
 setup_requires = []
 if 'nosetests' in sys.argv[1:]:

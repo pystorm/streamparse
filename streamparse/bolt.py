@@ -47,7 +47,7 @@ class Bolt(Component):
         """
         raise NotImplementedError()
 
-    def emit(self, tup, stream=None, anchors=[], direct_task=None):
+    def emit(self, tup, stream=None, anchors=None, direct_task=None):
         """Emit a new tuple to a stream.
 
         :param tup: the Tuple payload to send to Storm, should contain only
@@ -62,6 +62,8 @@ class Bolt(Component):
         :param direct_task: the task to send the tuple to.
         :type direct_task: int
         """
+        if anchors is None:
+            anchors = []
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead'
                             .format(type(tup)))
@@ -74,7 +76,7 @@ class Bolt(Component):
 
         send_message(msg)
 
-    def emit_many(self, tuples, stream=None, anchors=[], direct_task=None):
+    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
         """A more efficient way to send many tuples.
 
         Dumps out all tuples to STDOUT instead of writing one at a time.
@@ -92,6 +94,8 @@ class Bolt(Component):
         :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
         """
+        if anchors is None:
+            anchors = []
         msg = {
             'command': 'emit',
             'anchors': [a.id for a in anchors],
@@ -149,10 +153,12 @@ class Bolt(Component):
 class BasicBolt(Bolt):
     """A bolt that automatically acknowledges tuples after :func:`process`."""
 
-    def emit(self, tup, stream=None, anchors=[], direct_task=None):
+    def emit(self, tup, stream=None, anchors=None, direct_task=None):
         """
         Overridden to anchor to the current tuple if no anchors are specified
         """
+        if anchors is None:
+            anchors = []
         anchors = anchors or [self.__current_tup]
         super(BasicBolt, self).emit(
             tup, stream=stream, anchors=anchors, direct_task=direct_task

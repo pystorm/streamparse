@@ -8,6 +8,7 @@ try:
     import simplejson as json
 except ImportError:
     import json
+import codecs
 import logging
 import os
 import sys
@@ -26,8 +27,8 @@ _pending_commands = deque()
 # queue up task IDs we read while trying to read commands/tuples
 _pending_task_ids = deque()
 # we'll redirect stdout, but we'll save original for communication to Storm
-_stdout = sys.stdout
-_stderr = sys.stderr
+_stdout = codecs.getwriter('utf8')(sys.stdout)
+_stderr = codecs.getwriter('utf8')(sys.stderr)
 
 
 class StormIPCException(Exception):
