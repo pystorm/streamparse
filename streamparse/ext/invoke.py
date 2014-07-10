@@ -9,12 +9,14 @@ Should be used like this::
 
     # your other tasks
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
-import shutil
-from tempfile import NamedTemporaryFile
 import re
+import shutil
 import time
+from io import open
+from tempfile import NamedTemporaryFile
 
 from invoke import run, task
 

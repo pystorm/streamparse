@@ -1,6 +1,11 @@
-"""Base Spout classes."""
-from ipc import read_handshake, read_command, send_message, json, _stdout
-from base import Component
+"""
+Base Spout classes.
+"""
+
+from __future__ import absolute_import, print_function, unicode_literals
+
+from .base import Component
+from .ipc import read_handshake, read_command, send_message, json, _stdout
 
 
 class Spout(Component):

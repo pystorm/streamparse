@@ -1,4 +1,9 @@
-"""Utilities for interprocess communication between Python and Storm."""
+"""
+Utilities for interprocess communication between Python and Storm.
+"""
+
+from __future__ import absolute_import, print_function, unicode_literals
+
 try:
     import simplejson as json
 except ImportError:
@@ -7,6 +12,7 @@ import logging
 import os
 import sys
 from collections import deque
+from io import open
 
 
 config = context = None

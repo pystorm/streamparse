@@ -1,4 +1,6 @@
 """Base Bolt classes."""
+from __future__ import absolute_import, print_function, unicode_literals
+
 from collections import defaultdict
 import os
 import signal
@@ -6,8 +8,8 @@ import sys
 import threading
 import time
 
-from base import Component
-from ipc import read_handshake, read_tuple, send_message, json, _stdout, Tuple
+from .base import Component
+from .ipc import read_handshake, read_tuple, send_message, json, _stdout, Tuple
 
 
 class Bolt(Component):
@@ -37,7 +39,8 @@ class Bolt(Component):
 
         This should be overridden by subclasses.  :class:`Tuple` objects
         contain metadata about which component, stream and task it came from.
-        The actual values of the tuple can be accessed by calling ``tup.values``.
+        The actual values of the tuple can be accessed by calling
+        ``tup.values``.
 
         :param tup: the tuple to be processed.
         :type tup: Tuple
@@ -147,7 +150,9 @@ class BasicBolt(Bolt):
     """A bolt that automatically acknowledges tuples after :func:`process`."""
 
     def emit(self, tup, stream=None, anchors=[], direct_task=None):
-        """Overridden to anchor to the current tuple if no anchors are specified"""
+        """
+        Overridden to anchor to the current tuple if no anchors are specified
+        """
         anchors = anchors or [self.__current_tup]
         super(BasicBolt, self).emit(
             tup, stream=stream, anchors=anchors, direct_task=direct_task
@@ -170,10 +175,10 @@ class BatchingBolt(Bolt):
     """A bolt which batches tuples for processing.
 
     Batching tuples is unexpectedly complex to do correctly. The main problem
-    is that all bolts are single-threaded. The difficult comes when the topology
-    is shutting down because Storm stops feeding the bolt tuples. If the bolt
-    is blocked waiting on stdin, then it can't process any waiting tuples,
-    or even ack ones that were asynchronously written to a data store.
+    is that all bolts are single-threaded. The difficult comes when the
+    topology is shutting down because Storm stops feeding the bolt tuples. If
+    the bolt is blocked waiting on stdin, then it can't process any waiting
+    tuples, or even ack ones that were asynchronously written to a data store.
 
     This bolt helps with that grouping tuples based on a time interval and then
     processing them on a worker thread. The bolt also handles ack'ing tuples
@@ -249,4 +254,4 @@ class BatchingBolt(Bolt):
         Exceptions in the _batcher thread will send a SIGINT to the main
         thread which we catch here, and then raise in the main thread.
         """
-        raise self.exc_info[1], None, self.exc_info[2]
+        raise self.exc_info[1]().with_traceback(self.exc_info[2])

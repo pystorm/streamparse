@@ -9,9 +9,10 @@ Should be used like this::
 
     # your other tasks
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+from io import open
 
 from fabric.api import *
 from fabric.contrib.files import exists

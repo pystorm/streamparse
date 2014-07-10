@@ -1,12 +1,12 @@
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 from docopt import docopt
 
+from .bootstrap import quickstart
 from .ext.fabric import *
 from .ext.invoke import *
-from .bootstrap import quickstart
+from .version import __version__ as VERSION
 
-from streamparse import __version__ as VERSION
 
 # XXX: these are commands we're working on still
 TODO_CMDS = """

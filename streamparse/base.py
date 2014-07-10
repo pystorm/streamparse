@@ -1,7 +1,9 @@
 """Base primititve classes for working with Storm."""
+from __future__ import absolute_import, print_function, unicode_literals
+
 import traceback
 
-from ipc import send_message
+from .ipc import send_message
 
 
 class Component(object):
