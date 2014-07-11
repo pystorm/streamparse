@@ -112,6 +112,7 @@ class Bolt(Component):
             lines.append(json.dumps(msg))
         wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
         if PY3:
+            _stdout.flush()
             _stdout.buffer.write(wrapped_msg)
         else:
             _stdout.write(wrapped_msg)
@@ -207,7 +208,7 @@ class BatchingBolt(Bolt):
 
         self._batch = defaultdict(list)
         self._should_stop = threading.Event()
-        self._batcher = threading.Thread(target=self._batcher)
+        self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
         self._batcher.daemon = True
         self._batcher.start()
@@ -242,7 +243,7 @@ class BatchingBolt(Bolt):
         """
         raise NotImplementedError()
 
-    def _batcher(self):
+    def _batch_entry(self):
         """Entry point for the batcher thread."""
         try:
             while True:

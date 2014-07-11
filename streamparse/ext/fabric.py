@@ -14,7 +14,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 
-from fabric.api import *
+from fabric.api import env, execute, parallel, prefix, put, puts, run, task
 from fabric.contrib.files import exists
 
 from .util import get_env_config, die

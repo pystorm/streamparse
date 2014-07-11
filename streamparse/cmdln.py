@@ -3,8 +3,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from docopt import docopt
 
 from .bootstrap import quickstart
-from .ext.fabric import *
-from .ext.invoke import *
+from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
+                         submit_topology, tail_topology)
 from .version import __version__ as VERSION
 
 
@@ -55,15 +55,17 @@ def main():
                                     will use it automatically.
         -o --option <option>...     Topology option to use upon submit, e.g.
                                     "-o topology.debug=true" is equivalent to
-                                    "--debug". May be repeated for multiple options.
-                                    See "Topology Configuration" listing in Storm
-                                    UI to confirm effects.
+                                    "--debug". May be repeated for multiple
+                                    options.
+                                    See "Topology Configuration" listing in
+                                    Storm UI to confirm effects.
         -p --par <par>              Parallelism of topology; conveniently sets
                                     number of Storm workers and acker bolts
                                     at once to passed value [default: 2].
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
-        --pattern <regex>           Apply pattern to files for "tail" subcommand.
+        --pattern <regex>           Apply pattern to files for "tail"
+                                    subcommand.
         -f --force                  Force a topology to submit by killing any
                                     currently running topologies of the same
                                     name.

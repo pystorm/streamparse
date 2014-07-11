@@ -126,6 +126,7 @@ class Spout(Component):
             lines.append(json.dumps(msg))
         wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
         if PY3:
+            _stdout.flush()
             _stdout.buffer.write(wrapped_msg)
         else:
             _stdout.write(wrapped_msg)

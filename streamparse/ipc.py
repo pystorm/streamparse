@@ -184,6 +184,7 @@ def send_message(message):
     """Send a message to Storm via stdout"""
     wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
     if PY3:
+        _stdout.buffer.flush()
         _stdout.buffer.write(wrapped_msg)
     else:
         _stdout.write(wrapped_msg)
