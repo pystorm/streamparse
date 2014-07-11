@@ -8,13 +8,13 @@ try:
     import simplejson as json
 except ImportError:
     import json
-import codecs
 import logging
 import os
 import sys
 from collections import deque
 
-PY3 = sys.version_info >= (3, 0)
+from six import PY3
+
 
 config = context = None
 storm_log = logging.getLogger('streamparse')

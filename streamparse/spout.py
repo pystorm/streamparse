@@ -4,8 +4,10 @@ Base Spout classes.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import PY3
+
 from .base import Component
-from .ipc import read_handshake, read_command, send_message, json, _stdout, PY3
+from .ipc import read_handshake, read_command, send_message, json, _stdout
 
 
 class Spout(Component):

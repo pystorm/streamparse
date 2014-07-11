@@ -8,9 +8,11 @@ import sys
 import threading
 import time
 
+from six import iteritems, reraise, PY3
+
 from .base import Component
 from .ipc import (read_handshake, read_tuple, send_message, json, _stdout,
-                  Tuple, PY3)
+                  Tuple)
 
 
 class Bolt(Component):
@@ -252,7 +254,7 @@ class BatchingBolt(Bolt):
                     if not self._batch:
                         # No tuples to save
                         continue
-                    for key, tups in self._batch.iteritems():
+                    for key, tups in iteritems(self._batch):
                         self.process_batch(key, tups)
                         for tup in tups:
                             self.ack(tup)
@@ -267,4 +269,6 @@ class BatchingBolt(Bolt):
         Exceptions in the _batcher thread will send a SIGINT to the main
         thread which we catch here, and then raise in the main thread.
         """
-        raise self.exc_info[1].with_traceback(self.exc_info[2])
+        # TODO: Figure out why this used to be:
+        #       raise self.exc_info[1], None, self.exc_info[2]
+        reraise(*self.exc_info)
