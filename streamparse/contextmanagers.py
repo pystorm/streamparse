@@ -4,7 +4,8 @@ import subprocess
 import time
 from contextlib import contextmanager
 from socket import error as SocketError
-from SocketServer import UDPServer, TCPServer
+
+from six.moves.socketserver import UDPServer, TCPServer
 
 
 def _port_in_use(port, server_type="tcp"):
