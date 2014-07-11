@@ -14,16 +14,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import re
 import sys
 
 from setuptools import setup, find_packages
 
 # Get version without importing, which avoids dependency issues
-exec(compile(open('streamparse/version.py').read(), 'streamparse/version.py',
-             'exec'))
-# (we use the above instead of execfile for Python 3.x compatibility)
-
+def get_version():
+    with open('streamparse/version.py') as version_file:
+        return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""",
+                         version_file.read()).group('version')
 
 def readme():
     ''' Returns README.rst contents as str '''
@@ -55,7 +55,7 @@ if 'nosetests' in sys.argv[1:]:
 
 setup(
     name='streamparse',
-    version=__version__,
+    version=get_version(),
     author='Parsely, Inc.',
     author_email='hello@parsely.com',
     url='https://github.com/Parsely/streamparse',
