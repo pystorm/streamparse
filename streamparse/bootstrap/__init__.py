@@ -75,7 +75,7 @@ def quickstart(project_name):
                                                       project_name))
         sys.exit(1)
 
-    print('\nCreating your {} streamparse project...' % (blue(project_name)))
+    print('\nCreating your %s streamparse project...' % (blue(project_name)))
     _env.globals['project_name'] = project_name
 
     _mkdir(project_name)
