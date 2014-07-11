@@ -18,12 +18,9 @@ class BasicBoltTester(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         args = ["python", here("dummy_basic_bolt.py")]
-        my_env = os.environ
-        my_env['PYTHONIOENCODING'] = 'utf-8'
         cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    env=my_env)
+                                    stderr=subprocess.PIPE)
         print("Waiting for subprocess to start...")
         time.sleep(1)  # time for the subprocess to start
         if cls.proc.poll() is not None:
