@@ -30,6 +30,7 @@ Contributors
 
 Alphabetical, by last name:
 
+-  Dan Blanchard (`@dsblanch <https://twitter.com/dsblanch>`__)
 -  Keith Bourgoin (`@kbourgoin <https://twitter.com/kbourgoin>`__)
 -  Jeffrey Godwyll (`@rey12rey <https://twitter.com/rey12rey>`__)
 -  Andrew Montalenti (`@amontalenti <https://twitter.com/amontalenti>`__)
