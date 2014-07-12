@@ -1,4 +1,6 @@
 """Base Bolt classes."""
+from __future__ import absolute_import, print_function, unicode_literals
+
 from collections import defaultdict
 import os
 import signal
@@ -6,8 +8,11 @@ import sys
 import threading
 import time
 
-from base import Component
-from ipc import read_handshake, read_tuple, send_message, json, _stdout, Tuple
+from six import iteritems, reraise, PY3
+
+from .base import Component
+from .ipc import (read_handshake, read_tuple, send_message, json, _stdout,
+                  Tuple)
 
 
 class Bolt(Component):
@@ -37,14 +42,15 @@ class Bolt(Component):
 
         This should be overridden by subclasses.  :class:`Tuple` objects
         contain metadata about which component, stream and task it came from.
-        The actual values of the tuple can be accessed by calling ``tup.values``.
+        The actual values of the tuple can be accessed by calling
+        ``tup.values``.
 
         :param tup: the tuple to be processed.
         :type tup: Tuple
         """
         raise NotImplementedError()
 
-    def emit(self, tup, stream=None, anchors=[], direct_task=None):
+    def emit(self, tup, stream=None, anchors=None, direct_task=None):
         """Emit a new tuple to a stream.
 
         :param tup: the Tuple payload to send to Storm, should contain only
@@ -59,6 +65,8 @@ class Bolt(Component):
         :param direct_task: the task to send the tuple to.
         :type direct_task: int
         """
+        if anchors is None:
+            anchors = []
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead'
                             .format(type(tup)))
@@ -71,7 +79,7 @@ class Bolt(Component):
 
         send_message(msg)
 
-    def emit_many(self, tuples, stream=None, anchors=[], direct_task=None):
+    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
         """A more efficient way to send many tuples.
 
         Dumps out all tuples to STDOUT instead of writing one at a time.
@@ -89,6 +97,8 @@ class Bolt(Component):
         :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
         """
+        if anchors is None:
+            anchors = []
         msg = {
             'command': 'emit',
             'anchors': [a.id for a in anchors],
@@ -102,7 +112,12 @@ class Bolt(Component):
         for tup in tuples:
             msg['tuple'] = tup
             lines.append(json.dumps(msg))
-        _stdout.write("{}\nend\n".format("\nend\n".join(lines)))
+        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
+        if PY3:
+            _stdout.flush()
+            _stdout.buffer.write(wrapped_msg)
+        else:
+            _stdout.write(wrapped_msg)
         _stdout.flush()
 
     def ack(self, tup):
@@ -146,8 +161,12 @@ class Bolt(Component):
 class BasicBolt(Bolt):
     """A bolt that automatically acknowledges tuples after :func:`process`."""
 
-    def emit(self, tup, stream=None, anchors=[], direct_task=None):
-        """Overridden to anchor to the current tuple if no anchors are specified"""
+    def emit(self, tup, stream=None, anchors=None, direct_task=None):
+        """
+        Overridden to anchor to the current tuple if no anchors are specified
+        """
+        if anchors is None:
+            anchors = []
         anchors = anchors or [self.__current_tup]
         super(BasicBolt, self).emit(
             tup, stream=stream, anchors=anchors, direct_task=direct_task
@@ -170,10 +189,10 @@ class BatchingBolt(Bolt):
     """A bolt which batches tuples for processing.
 
     Batching tuples is unexpectedly complex to do correctly. The main problem
-    is that all bolts are single-threaded. The difficult comes when the topology
-    is shutting down because Storm stops feeding the bolt tuples. If the bolt
-    is blocked waiting on stdin, then it can't process any waiting tuples,
-    or even ack ones that were asynchronously written to a data store.
+    is that all bolts are single-threaded. The difficult comes when the
+    topology is shutting down because Storm stops feeding the bolt tuples. If
+    the bolt is blocked waiting on stdin, then it can't process any waiting
+    tuples, or even ack ones that were asynchronously written to a data store.
 
     This bolt helps with that grouping tuples based on a time interval and then
     processing them on a worker thread. The bolt also handles ack'ing tuples
@@ -191,7 +210,7 @@ class BatchingBolt(Bolt):
 
         self._batch = defaultdict(list)
         self._should_stop = threading.Event()
-        self._batcher = threading.Thread(target=self._batcher)
+        self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
         self._batcher.daemon = True
         self._batcher.start()
@@ -226,7 +245,7 @@ class BatchingBolt(Bolt):
         """
         raise NotImplementedError()
 
-    def _batcher(self):
+    def _batch_entry(self):
         """Entry point for the batcher thread."""
         try:
             while True:
@@ -235,9 +254,10 @@ class BatchingBolt(Bolt):
                     if not self._batch:
                         # No tuples to save
                         continue
-                    for key, tups in self._batch.iteritems():
+                    for key, tups in iteritems(self._batch):
                         self.process_batch(key, tups)
-                        [self.ack(tup) for tup in tups]
+                        for tup in tups:
+                            self.ack(tup)
                     self._batch = defaultdict(list)
         except Exception:
             self.exc_info = sys.exc_info()
@@ -249,4 +269,4 @@ class BatchingBolt(Bolt):
         Exceptions in the _batcher thread will send a SIGINT to the main
         thread which we catch here, and then raise in the main thread.
         """
-        raise self.exc_info[1], None, self.exc_info[2]
+        reraise(*self.exc_info)

@@ -6,7 +6,7 @@ Remote debugger for Python-based Storm tasks, based on Pdb.
 
 Inspired by http://snippets.dzone.com/posts/show/7248.
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import errno
 import os

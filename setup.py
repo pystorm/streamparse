@@ -14,12 +14,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import re
 import sys
 
 from setuptools import setup, find_packages
 
-from streamparse import __version__
+# Get version without importing, which avoids dependency issues
+def get_version():
+    with open('streamparse/version.py') as version_file:
+        return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
+                         version_file.read()).group('version')
+
+def readme():
+    ''' Returns README.rst contents as str '''
+    with open('README.rst') as f:
+        return f.read()
+
 
 install_requires = [
     'invoke',
@@ -33,7 +43,11 @@ lint_requires = [
     'pyflakes'
 ]
 
-tests_require = ['mock', 'nose', 'unittest2']
+if sys.version_info < (3, 0):
+    tests_require = ['mock', 'nose', 'unittest2']
+else:
+    tests_require = ['mock', 'nose']
+
 dependency_links = []
 setup_requires = []
 if 'nosetests' in sys.argv[1:]:
@@ -41,11 +55,13 @@ if 'nosetests' in sys.argv[1:]:
 
 setup(
     name='streamparse',
-    version=__version__,
+    version=get_version(),
     author='Parsely, Inc.',
     author_email='hello@parsely.com',
     url='https://github.com/Parsely/streamparse',
-    description='streamparse lets you run Python code against real-time streams of data. Integrates with Apache Storm.',
+    description=('streamparse lets you run Python code against real-time '
+                 'streams of data. Integrates with Apache Storm.'),
+    long_description=readme(),
     license='Apache License 2.0',
     packages=find_packages(),
     entry_points={

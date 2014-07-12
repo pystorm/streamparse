@@ -1,9 +1,9 @@
-from __future__ import print_function, absolute_import
-import subprocess
-import unittest
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
-import sys
+import subprocess
 import time
+import unittest
 
 from test.ipc.util import ShellProcess
 
@@ -25,7 +25,7 @@ class BasicBoltTester(unittest.TestCase):
         time.sleep(1)  # time for the subprocess to start
         if cls.proc.poll() is not None:
             raise Exception("Could not create subprocess.\n{}"
-                            .format("".join(cls.proc.stderr.readlines())))
+                            .format(cls.proc.stderr.read().decode('utf-8')))
         cls.shell_proc = ShellProcess(cls.proc.stdout, cls.proc.stdin)
 
     def test_1_initial_handshake(self):

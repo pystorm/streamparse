@@ -9,12 +9,14 @@ Should be used like this::
 
     # your other tasks
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
-import shutil
-from tempfile import NamedTemporaryFile
 import re
+import shutil
 import time
+from io import open
+from tempfile import NamedTemporaryFile
 
 from invoke import run, task
 
@@ -25,7 +27,7 @@ from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
 
-__all__ = ["list_topologies",  "kill_topology", "run_local_topology",
+__all__ = ["list_topologies", "kill_topology", "run_local_topology",
            "submit_topology", "tail_topology"]
 
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
@@ -58,7 +60,11 @@ def prepare_topology():
     shutil.copytree("src", "_resources/resources")
 
 
-def _list_topologies(run_args=[], run_kwargs={}):
+def _list_topologies(run_args=None, run_kwargs=None):
+    if run_args is None:
+        run_args = []
+    if run_kwargs is None:
+        run_kwargs = {}
     cmd = ["lein",
            "run -m streamparse.commands.list/-main"]
     return run(" ".join(cmd), *run_args, **run_kwargs)
@@ -73,7 +79,11 @@ def list_topologies(env_name="prod"):
         return _list_topologies()
 
 
-def _kill_topology(topology_name, run_args=[], run_kwargs={}):
+def _kill_topology(topology_name, run_args=None, run_kwargs=None):
+    if run_args is None:
+        run_args = []
+    if run_kwargs is None:
+        run_kwargs = {}
     cmd = ["lein",
            "run -m streamparse.commands.kill_topology/-main",
            topology_name]
