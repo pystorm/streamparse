@@ -5,6 +5,8 @@ import subprocess
 import time
 import unittest
 
+from six.moves import range
+
 from .util import ShellProcess
 
 _ROOT = os.path.dirname(os.path.realpath(__file__))
