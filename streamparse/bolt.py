@@ -269,6 +269,4 @@ class BatchingBolt(Bolt):
         Exceptions in the _batcher thread will send a SIGINT to the main
         thread which we catch here, and then raise in the main thread.
         """
-        # TODO: Figure out why this used to be:
-        #       raise self.exc_info[1], None, self.exc_info[2]
         reraise(*self.exc_info)
