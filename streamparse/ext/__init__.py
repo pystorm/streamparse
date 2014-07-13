@@ -1,1 +1,1 @@
-"""pystorm.ext package"""
+"""streamparse.ext package"""

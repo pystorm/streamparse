@@ -1,4 +1,4 @@
-(defproject pystorm-example-wordcount "0.0.1-SNAPSHOT"
+(defproject streamparse-example-wordcount "0.0.1-SNAPSHOT"
   :source-paths ["src/clj"]
   :java-source-paths ["src/jvm"]
   :test-paths ["test/jvm"]

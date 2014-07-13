@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from pystorm.bolt import BasicBolt
+from streamparse.bolt import BasicBolt
 
 
 class WordCountBolt(BasicBolt):

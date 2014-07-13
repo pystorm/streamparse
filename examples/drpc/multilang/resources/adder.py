@@ -1,6 +1,6 @@
 import re
 
-from pystorm.bolt import BasicBolt
+from streamparse.bolt import BasicBolt
 
 
 class AdderBolt(BasicBolt):
