@@ -1,4 +1,4 @@
-package pystorm;
+package streamparse;
 
 import java.util.Map;
 

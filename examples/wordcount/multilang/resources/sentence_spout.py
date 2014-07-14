@@ -1,7 +1,6 @@
-import logging
 import random
 
-from pystorm.spout import Spout
+from streamparse.spout import Spout
 
 
 class SentenceSpout(Spout):

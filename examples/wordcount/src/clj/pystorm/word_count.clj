@@ -1,4 +1,4 @@
-(ns pystorm.word-count
+(ns streamparse.word-count
   (:import [backtype.storm StormSubmitter LocalCluster])
   (:use [backtype.storm clojure config])
   (:gen-class))
@@ -8,7 +8,7 @@
   (topology
     ;; spout configuration
     {"sentences" (shell-spout-spec
-        ;; call pystorm sentence_spout.py (sentence_spout.py included in multilang/resources/sentence_spout.py)
+        ;; call streamparse sentence_spout.py (sentence_spout.py included in multilang/resources/sentence_spout.py)
         "python" "sentence_spout.py"
         ;; output fields
         ["sentence"]
@@ -18,7 +18,7 @@
     {"words" (shell-bolt-spec
         ;; indicates bolt uses a grouping of tuples from stream 1 on field "word"
         {"sentences" :shuffle}
-        ;; call pystorm word_count (word_count.py included in multilang/resources/word_count.py)
+        ;; call streamparse word_count (word_count.py included in multilang/resources/word_count.py)
         "python" "sentence_splitter.py"
         ;; output fields
         ["word"])
