@@ -36,7 +36,11 @@ install_requires = [
     'fabric',
     'docopt',
     'jinja2',
+    'six'
 ]
+
+if sys.version_info() < (3, 0):
+    install_requires.append('contextlib2')
 
 lint_requires = [
     'pep8',
