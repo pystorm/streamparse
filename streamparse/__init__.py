@@ -6,7 +6,15 @@ This package makes it easier to work with Storm and Python.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from .version import __version__, VERSION
+import streamparse.base
+import streamparse.bolt
+import streamparse.cmdln
+import streamparse.contextmanagers
+import streamparse.debug
+import streamparse.decorators
+import streamparse.ipc
+import streamparse.spout
+from streamparse.version import __version__, VERSION
 
 __license__ = """
 Copyright 2014 Parsely, Inc.
