@@ -4,7 +4,7 @@ from docopt import docopt
 
 from .bootstrap import quickstart
 from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
-                         submit_topology, tail_topology)
+                         submit_topology, tail_topology, visualize_topology)
 from .version import __version__ as VERSION
 
 
@@ -34,6 +34,7 @@ def main():
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [--pattern <regex>]
+        sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
 
@@ -66,6 +67,7 @@ def main():
                                     running [default: 5].
         --pattern <regex>           Apply pattern to files for "tail"
                                     subcommand.
+        --flip                      Flip the visualization to be horizontal.
         -f --force                  Force a topology to submit by killing any
                                     currently running topologies of the same
                                     name.
@@ -91,6 +93,8 @@ def main():
                         args["--force"], args["--debug"])
     elif args["tail"]:
         tail_topology(args["--environment"], args["--pattern"])
+    elif args["visualize"]:
+        visualize_topology(args["--name"])
 
 
 if __name__ == "__main__":

@@ -220,3 +220,18 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 def tail_topology(env_name="prod", pattern=None):
     activate_env(env_name)
     tail_logs(pattern)
+
+@task
+def visualize_topology(name=None, flip=False):
+    name, topology_file = get_topology_definition(name)
+    print("Visualizing {} topology...".format(name))
+    cmd = ["lein",
+           "run -m streamparse.commands.visualize/-main",
+           topology_file]
+    if flip:
+        cmd.append("-f")
+    full_cmd = " ".join(cmd)
+    print("Running lein command to visualize topology:")
+    print(full_cmd)
+    run(full_cmd)
+
