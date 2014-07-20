@@ -36,14 +36,18 @@ install_requires = [
     'fabric',
     'docopt',
     'jinja2',
+    'six'
 ]
+
+if sys.version_info.major < 3:
+    install_requires.append('contextlib2')
 
 lint_requires = [
     'pep8',
     'pyflakes'
 ]
 
-if sys.version_info < (3, 0):
+if sys.version_info.major < 3:
     tests_require = ['mock', 'nose', 'unittest2']
 else:
     tests_require = ['mock', 'nose']

@@ -16,6 +16,7 @@ import streamparse.ipc
 import streamparse.spout
 from streamparse.version import __version__, VERSION
 
+
 __license__ = """
 Copyright 2014 Parsely, Inc.
 
