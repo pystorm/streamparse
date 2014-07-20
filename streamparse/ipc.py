@@ -16,9 +16,6 @@ from collections import deque
 from six import PY3
 
 
-config = context = None
-storm_log = logging.getLogger('streamparse')
-
 _MAX_MESSAGE_SIZE = 16777216
 _MAX_BLANK_MSGS = 500
 _MAX_LINES = 100
@@ -161,6 +158,7 @@ def read_tuple():
 
 def read_handshake():
     """Read and process an initial handshake message from Storm."""
+    storm_log = logging.getLogger('streamparse')
     # Redirect stdout and stderr to ensure that print statements/functions
     # won't crash the Storm Java worker
     sys.stdout = LogStream(logging.getLogger('streamparse.stdout'))
