@@ -1,0 +1,14 @@
+{
+    "library": "",
+    "topology_specs": "topologies/",
+    "virtualenv_specs": "virtualenvs/",
+    "envs": {
+        "prod": {
+            "user": "",
+            "nimbus": "",
+            "workers": [],
+            "log_path": "",
+            "virtualenv_path": ""
+        }
+    }
+}
