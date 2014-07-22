@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
-
 from streamparse.spout import Spout
 
 class WordSpout(Spout):
@@ -13,7 +12,3 @@ class WordSpout(Spout):
     def next_tuple(self):
         word = next(self.words)
         self.emit([word])
-
-
-if __name__ == '__main__':
-    WordSpout().run()
