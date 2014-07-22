@@ -138,7 +138,7 @@ Clojure DSL functions for Storm":
       (:gen-class))
 
 The next block of code actually defines the topology and stores it into a var
-named "topology".
+named "wordcount".
 
 .. code-block:: clojure
 
@@ -167,7 +167,7 @@ important, is that **the var must be an array with only two dictionaries**.
 
 The first dictionary holds a named mapping of all the spouts that exist in the
 topology, the second holds a named mapping of all the bolts. An additional
-benefit of definint topologies in Clojure is that we're able to mix and match
+benefit of defining topologies in Clojure is that we're able to mix and match
 the types of spouts and bolts.  In most cases, you may want to use a pure
 Python topology, but you could easily use JVM-based spouts and bolts or even
 spouts and bolts written in other languages like Ruby, Go, etc.
@@ -193,13 +193,13 @@ definition of that spout via ``shell-spout-spec``:
                          ["sentence"])}
 
 In the example above, we've defined two spouts in our topology:
-``word-spout-1`` and ``word-spout-2`` and told Storm to run these components
+``sentence-spout-1`` and ``sentence-spout-2`` and told Storm to run these components
 using the ``python`` commmand with the appropriate script in relative to our
 ``src`` directory.  We've also let Storm know exactly what these spouts will be
-emitting, namely a single field called ``word``.
+emitting, namely a single field called ``sentence``.
 
-You'll notice that in ``word-spout-1``, we've passed an optional map of
-configuraiton parameters ``:p 2``, we'll get back to this later.
+You'll notice that in ``sentence-spout-1``, we've passed an optional map of
+configuration parameters ``:p 2``, we'll get back to this later.
 
 Creating bolts is very similar and uses the ``shell-bolt-spec`` function:
 
@@ -207,8 +207,8 @@ Creating bolts is very similar and uses the ``shell-bolt-spec`` function:
 
     {"sentence-splitter" (shell-bolt-spec
                           ;; inputs, where does this bolt recieve it's tuples from?
-                          {"word-spout-1" :shuffle
-                           "word-spout-2" :shuffle}
+                          {"sentence-spout-1" :shuffle
+                           "sentence-spout-2" :shuffle}
                           ;; command to run
                           ["python" "sentence_splitter.py"]
                           ;; output spec, what tuples does this bolt emit?

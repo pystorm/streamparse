@@ -34,6 +34,7 @@ Alphabetical, by last name:
 -  Keith Bourgoin (`@kbourgoin <https://twitter.com/kbourgoin>`__)
 -  Jeffrey Godwyll (`@rey12rey <https://twitter.com/rey12rey>`__)
 -  Andrew Montalenti (`@amontalenti <https://twitter.com/amontalenti>`__)
+-  Rohit Sankaran (`@roadhead <https://twitter.com/roadhead>`__)
 -  Mike Sukmanowsky (`@msukmanowsky <https://twitter.com/msukmanowsky>`__)
 
 Roadmap
