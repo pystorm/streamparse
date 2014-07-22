@@ -16,6 +16,7 @@
   (try
     (let [topology-def (load-file topology-file) ; should only be a single var
           topology-var (var-get topology-def)
+          ; only pass options if topology-var is a function (not just callable)
           topology (apply topology (if (fn? topology-var) (topology-var options) topology-var))
           topology-name (str (:name (meta topology-def)))
           cluster (LocalCluster.)]
