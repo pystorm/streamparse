@@ -1,4 +1,4 @@
-from pystorm.bolt import BasicBolt
+from streamparse.bolt import BasicBolt
 
 
 class SentenceSplitterBolt(BasicBolt):

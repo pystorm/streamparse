@@ -1,7 +1,9 @@
 """Base primititve classes for working with Storm."""
-import traceback
+from __future__ import absolute_import, print_function, unicode_literals
 
-from ipc import send_message
+from traceback import format_exc
+
+from .ipc import send_message
 
 
 class Component(object):
@@ -21,7 +23,7 @@ class Component(object):
             message = 'Python {exception_name} raised\n{traceback}'
         message = message.format(exception_name=exception.__class__.__name__,
                                  tup=tup,
-                                 traceback=traceback.format_exc(exception))
+                                 traceback=format_exc())
         self.log(message)
         send_message({'command': 'sync'})  # sync up right away
 

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+
 import json
 
 
@@ -14,7 +16,7 @@ class ShellProcess(object):
         self.write_string(json.dumps(msg))
 
     def write_string(self, string):
-        self.out_buf.write("{}\nend\n".format(string))
+        self.out_buf.write("{}\nend\n".format(string).encode('utf-8'))
         self.out_buf.flush()
 
     def read_message(self):
@@ -23,7 +25,7 @@ class ShellProcess(object):
     def read_string(self):
         res = ""
         while True:
-            in_line = self.in_buf.readline()[0:-1]
+            in_line = self.in_buf.readline().decode('utf-8')[0:-1]
             if not in_line:
                 raise Exception("Pipe to subprocess seems to be broken!")
 

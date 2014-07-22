@@ -1,12 +1,12 @@
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 from docopt import docopt
 
-from .ext.fabric import *
-from .ext.invoke import *
 from .bootstrap import quickstart
+from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
+                         submit_topology, tail_topology, visualize_topology)
+from .version import __version__ as VERSION
 
-from streamparse import __version__ as VERSION
 
 # XXX: these are commands we're working on still
 TODO_CMDS = """
@@ -30,10 +30,11 @@ def main():
     Usage:
         sparse quickstart <project_name>
         sparse run [-n <topology>] [-o <option>]... [-p <par>] [-t <time>] [-dv]
-        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dv]
+        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [--pattern <regex>]
+        sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
 
@@ -55,15 +56,21 @@ def main():
                                     will use it automatically.
         -o --option <option>...     Topology option to use upon submit, e.g.
                                     "-o topology.debug=true" is equivalent to
-                                    "--debug". May be repeated for multiple options.
-                                    See "Topology Configuration" listing in Storm
-                                    UI to confirm effects.
+                                    "--debug". May be repeated for multiple
+                                    options.
+                                    See "Topology Configuration" listing in
+                                    Storm UI to confirm effects.
         -p --par <par>              Parallelism of topology; conveniently sets
                                     number of Storm workers and acker bolts
                                     at once to passed value [default: 2].
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
-        --pattern <regex>           Apply pattern to files for "tail" subcommand.
+        --pattern <regex>           Apply pattern to files for "tail"
+                                    subcommand.
+        --flip                      Flip the visualization to be horizontal.
+        -f --force                  Force a topology to submit by killing any
+                                    currently running topologies of the same
+                                    name.
         -d --debug                  Debug the given command.
     """
     args = docopt(main.__doc__, version="sparse " + VERSION)
@@ -82,9 +89,12 @@ def main():
     elif args["submit"]:
         par = int(args["--par"])
         options = args["--option"]
-        submit_topology(args["--name"], args["--environment"], par, options, args["--debug"])
+        submit_topology(args["--name"], args["--environment"], par, options,
+                        args["--force"], args["--debug"])
     elif args["tail"]:
         tail_topology(args["--environment"], args["--pattern"])
+    elif args["visualize"]:
+        visualize_topology(args["--name"])
 
 
 if __name__ == "__main__":

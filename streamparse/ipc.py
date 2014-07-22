@@ -1,4 +1,9 @@
-"""Utilities for interprocess communication between Python and Storm."""
+"""
+Utilities for interprocess communication between Python and Storm.
+"""
+
+from __future__ import absolute_import, print_function, unicode_literals
+
 try:
     import simplejson as json
 except ImportError:
@@ -7,6 +12,8 @@ import logging
 import os
 import sys
 from collections import deque
+
+from six import PY3
 
 
 config = context = None
@@ -175,5 +182,10 @@ def read_handshake():
 
 def send_message(message):
     """Send a message to Storm via stdout"""
-    _stdout.write("{}\nend\n".format(json.dumps(message)))
+    wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
+    if PY3:
+        _stdout.buffer.flush()
+        _stdout.buffer.write(wrapped_msg)
+    else:
+        _stdout.write(wrapped_msg)
     _stdout.flush()

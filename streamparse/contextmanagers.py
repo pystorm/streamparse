@@ -1,9 +1,11 @@
-from __future__ import print_function
-from contextlib import contextmanager
+from __future__ import print_function, unicode_literals
+
 import subprocess
 import time
-from SocketServer import UDPServer, TCPServer
+from contextlib import contextmanager
 from socket import error as SocketError
+
+from six.moves.socketserver import UDPServer, TCPServer
 
 
 def _port_in_use(port, server_type="tcp"):

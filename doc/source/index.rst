@@ -13,10 +13,11 @@ Integrates with Apache Storm.
     :target: https://travis-ci.org/Parsely/streamparse
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    quickstart
    api
+   faq
 
 .. image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif
 

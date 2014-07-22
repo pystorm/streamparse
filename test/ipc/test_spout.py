@@ -1,9 +1,9 @@
-from __future__ import print_function, absolute_import
-import subprocess
-import unittest
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
-import sys
+import subprocess
 import time
+import unittest
 
 from .util import ShellProcess
 

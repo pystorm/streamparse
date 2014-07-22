@@ -4,7 +4,7 @@
             [streamparse.cli :refer [cli]]
             [clojure.stacktrace :refer [print-stack-trace]])
   (:use [backtype.storm clojure config]
-        ;;[storm-spirit.core] <-- removed, need to wait for 1.5 XXX
+        ;; [storm-spirit.core] <-- pulls in wrong version of Storm
   )
   (:import  [backtype.storm LocalCluster])
   (:gen-class))
@@ -15,9 +15,9 @@
 
 (defn vis [topology-path & [opts]]
   "Use storm-spirit to visualize the topology with graphviz."
-  ;; (visualize-with-graphviz (build-topology topology-path) opts) <-- removed
   (println (str "visualizing [" topology-path "]"))
-  (println "ERROR: storm-spirit not supported yet, waiting for Storm / Clojure 1.5 upgrade")
+  ;; (visualize-with-graphviz (build-topology topology-path) opts) <-- storm-spirit adds this
+  (println "ERROR: cannot actually visualize since streamparse can't bundle storm-spirit yet")
   )
 
 (defn vis-vertical [topology-path]

@@ -1,4 +1,5 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
+
 import json
 import os
 import sys
@@ -66,7 +67,7 @@ def get_env_config(env_name=None):
     """
     config = get_config()
     if env_name is None and len(config["envs"]) == 1:
-        env_name = config["envs"].keys()[0]
+        env_name = list(config["envs"].keys())[0]
     elif env_name is None and len(config["envs"]) > 1:
         die("Found more than one environment in config.json. "
             "When more than one environment exists, you must "
@@ -84,7 +85,7 @@ def get_nimbus_for_env_config(env_config):
     config file.
     """
     if not env_config["nimbus"]:
-        die("No Nimbus server configured for in config.json.")
+        die("No Nimbus server configured in config.json.")
 
     if ":" in env_config["nimbus"]:
         host, port = env_config["nimbus"].split(":", 1)

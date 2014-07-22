@@ -9,11 +9,14 @@ Should be used like this::
 
     # your other tasks
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
-import shutil
-from tempfile import NamedTemporaryFile
 import re
+import shutil
+import time
+from io import open
+from tempfile import NamedTemporaryFile
 
 from invoke import run, task
 
@@ -24,12 +27,28 @@ from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
 
-__all__ = ["list_topologies",  "kill_topology", "run_local_topology",
+__all__ = ["list_topologies", "kill_topology", "run_local_topology",
            "submit_topology", "tail_topology"]
 
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
 # from all these with something like
 # @task("setup")
+
+def is_safe_to_submit(topology_name):
+    """Check to see if a topology is currently running or is in the process of
+    being killed. Assumes tunnel is already connected to Nimbus."""
+    result = _list_topologies(run_kwargs={"hide": "both"})
+
+    if result.failed:
+        raise Exception("Error running streamparse.commands.list/-main")
+
+    pattern = re.compile(r"{}\s+\|\s+(ACTIVE|KILLED)\s+\|"
+                         .format(topology_name))
+    if re.search(pattern, result.stdout):
+        return False
+    else:
+        return True
+
 
 @task
 def prepare_topology():
@@ -41,15 +60,34 @@ def prepare_topology():
     shutil.copytree("src", "_resources/resources")
 
 
+def _list_topologies(run_args=None, run_kwargs=None):
+    if run_args is None:
+        run_args = []
+    if run_kwargs is None:
+        run_kwargs = {}
+    cmd = ["lein",
+           "run -m streamparse.commands.list/-main"]
+    return run(" ".join(cmd), *run_args, **run_kwargs)
+
+
 @task
 def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
     with ssh_tunnel(env_config["user"], host, 6627, port):
-        cmd = ["lein",
-               "run -m streamparse.commands.list/-main"]
-        run(" ".join(cmd))
+        return _list_topologies()
+
+
+def _kill_topology(topology_name, run_args=None, run_kwargs=None):
+    if run_args is None:
+        run_args = []
+    if run_kwargs is None:
+        run_kwargs = {}
+    cmd = ["lein",
+           "run -m streamparse.commands.kill_topology/-main",
+           topology_name]
+    return run(" ".join(cmd), *run_args, **run_kwargs)
 
 
 @task
@@ -59,10 +97,7 @@ def kill_topology(topology_name=None, env_name="prod"):
     host, port = get_nimbus_for_env_config(env_config)
 
     with ssh_tunnel(env_config["user"], host, 6627, port):
-        cmd = ["lein",
-               "run -m streamparse.commands.kill_topology/-main",
-               topology_name]
-        run(" ".join(cmd))
+        return _kill_topology(topology_name)
 
 
 @task
@@ -109,7 +144,8 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
 
 
 @task(pre=["prepare_topology"])
-def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False):
+def submit_topology(name=None, env_name="prod", par=2, options=None,
+                    force=False, debug=False):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
 
@@ -133,6 +169,16 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
     with ssh_tunnel(env_config["user"], host, 6627, port):
         print("ssh tunnel to Nimbus {}:{} established."
               .format(host, port))
+
+        if force and not is_safe_to_submit(name):
+            print("Killing current \"{}\" topology.".format(name))
+            _kill_topology(name, run_kwargs={"hide": "both"})
+            while not is_safe_to_submit(name):
+                print("Waiting for topology {} to quit...".format(name))
+                time.sleep(0.5)
+
+            print("Killed.")
+
         jvm_opts = [
             "-Dstorm.jar={}".format(topology_jar),
             "-Dstorm.options=",
@@ -161,3 +207,18 @@ def submit_topology(name=None, env_name="prod", par=2, options=None, debug=False
 def tail_topology(env_name="prod", pattern=None):
     activate_env(env_name)
     tail_logs(pattern)
+
+@task
+def visualize_topology(name=None, flip=False):
+    name, topology_file = get_topology_definition(name)
+    print("Visualizing {} topology...".format(name))
+    cmd = ["lein",
+           "run -m streamparse.commands.visualize/-main",
+           topology_file]
+    if flip:
+        cmd.append("-f")
+    full_cmd = " ".join(cmd)
+    print("Running lein command to visualize topology:")
+    print(full_cmd)
+    run(full_cmd)
+

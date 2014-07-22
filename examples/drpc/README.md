@@ -1,10 +1,10 @@
-# Install pystorm
+# Install streamparse
 
-In the pystorm directory, run
+In the streamparse directory, run
 
     sudo python setup.py develop
 
-In order to have the `pystorm` shell command available system-wide.
+In order to have the `sparse` shell command available system-wide.
 
 
 # Install Leiningen
@@ -19,4 +19,4 @@ On OSX you can also use homebrew to install leiningen
 
     lein deps
     lein compile
-    lein run -m pystorm.AdderTopology
+    lein run -m streamparse.AdderTopology

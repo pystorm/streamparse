@@ -1,11 +1,11 @@
-from __future__ import print_function, absolute_import
-import subprocess
-import unittest
-import os
-import sys
-import time
+from __future__ import absolute_import, print_function, unicode_literals
 
-from test.ipc.util import ShellProcess
+import os
+import subprocess
+import time
+import unittest
+
+from .util import ShellProcess
 
 
 _ROOT = os.path.dirname(os.path.realpath(__file__))
@@ -25,7 +25,7 @@ class ShellBoltTester(unittest.TestCase):
         time.sleep(1)  # time for the subprocess to start
         if cls.proc.poll() is not None:
             raise Exception("Could not create subprocess.\n{}"
-                            .format("".join(cls.proc.stderr.readlines())))
+                            .format(cls.proc.stderr.read().decode('utf-8')))
         cls.shell_proc = ShellProcess(cls.proc.stdout, cls.proc.stdin)
 
     def test_1_initial_handshake(self):
@@ -100,7 +100,7 @@ class ShellBoltTester(unittest.TestCase):
             "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252]
         }
         ShellBoltTester.shell_proc.write_message(msg)
-        for i in xrange(5):
+        for i in range(5):
             res = ShellBoltTester.shell_proc.read_message()
             self.assertEqual(res.get("tuple"), msg["tuple"])
 

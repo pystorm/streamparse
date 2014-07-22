@@ -1,4 +1,5 @@
 docopt
 jinja2
-fabric
+-e git+https://github.com/pashinin/fabric@p33#egg=fabric
 invoke
+six
