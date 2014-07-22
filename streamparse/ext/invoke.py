@@ -65,6 +65,7 @@ def _list_topologies(run_args=None, run_kwargs=None):
         run_args = []
     if run_kwargs is None:
         run_kwargs = {}
+    run_kwargs['pty'] = True
     cmd = ["lein",
            "run -m streamparse.commands.list/-main"]
     return run(" ".join(cmd), *run_args, **run_kwargs)
@@ -84,6 +85,7 @@ def _kill_topology(topology_name, run_args=None, run_kwargs=None):
         run_args = []
     if run_kwargs is None:
         run_kwargs = {}
+    run_kwargs['pty'] = True
     cmd = ["lein",
            "run -m streamparse.commands.kill_topology/-main",
            topology_name]
@@ -140,7 +142,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     full_cmd = " ".join(cmd)
     print("Running lein command to run local cluster:")
     print(full_cmd)
-    run(full_cmd)
+    run(full_cmd, pty=True)
 
 
 @task(pre=["prepare_topology"])
@@ -212,7 +214,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         full_cmd = " ".join(cmd)
         print("Running lein command to submit topology to nimbus:")
         print(full_cmd)
-        run(full_cmd)
+        run(full_cmd, pty=True)
 
     tmpfile.close()
 
@@ -233,5 +235,4 @@ def visualize_topology(name=None, flip=False):
     full_cmd = " ".join(cmd)
     print("Running lein command to visualize topology:")
     print(full_cmd)
-    run(full_cmd)
-
+    run(full_cmd, pty=True)
