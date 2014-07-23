@@ -38,15 +38,15 @@ class Bolt(Component):
         pass
 
     def process(self, tup):
-        """Process a single tuple :class:`Tuple` of input
+        """Process a single tuple :class:`streamparse.ipc.Tuple` of input
 
-        This should be overridden by subclasses.  :class:`Tuple` objects
-        contain metadata about which component, stream and task it came from.
-        The actual values of the tuple can be accessed by calling
-        ``tup.values``.
+        This should be overridden by subclasses.
+        :class:`streamparse.ipc.Tuple` objects contain metadata about which
+        component, stream and task it came from. The actual values of the
+        tuple can be accessed by calling ``tup.values``.
 
         :param tup: the tuple to be processed.
-        :type tup: Tuple
+        :type tup: streamparse.ipc.Tuple
         """
         raise NotImplementedError()
 
@@ -132,7 +132,7 @@ class Bolt(Component):
     def fail(self, tup):
         """Indicate that processing of a tuple has failed.
 
-        :param tup: the tuple to fail.
+        :param tup: the tuple to fail (``id`` if ``str``).
         :type tup: str or Tuple
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
@@ -195,8 +195,10 @@ class BatchingBolt(Bolt):
     tuples, or even ack ones that were asynchronously written to a data store.
 
     This bolt helps with that grouping tuples based on a time interval and then
-    processing them on a worker thread. The bolt also handles ack'ing tuples
-    after processing has finished, much like the BasicBolt.
+    processing them on a worker thread. This bolt does **not** handle
+    automatic acking of tuples in batches, you are responsible for any acking
+    or failing. :class:`streamparse.bolt.BasicBatchingBolt` performs automatic
+    acking of tuples in a batch.
 
     To use this class, you must implement ``process_batch``. ``group_key`` can
     be optionally implemented so that tuples are grouped before
@@ -240,10 +242,44 @@ class BatchingBolt(Bolt):
 
         :param key: the group key for the list of batches.
         :type key: hashable
-        :param tups: a `list` of :class:`ipc.Tuple` for the group.
+        :param tups: a `list` of :class:`streamparse.ipc.Tuple` s for the group.
         :type tups: list
         """
         raise NotImplementedError()
+
+    def _batch_entry(self):
+        """Entry point for the batcher thread."""
+        try:
+            while True:
+                time.sleep(self.SECS_BETWEEN_BATCHES)
+                with self._batch_lock:
+                    if not self._batch:
+                        # No tuples to save
+                        continue
+                    for key, tups in iteritems(self._batch):
+                        self.process_batch(key, tups)
+                    self._batch = defaultdict(list)
+        except Exception:
+            self.exc_info = sys.exc_info()
+            os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
+
+    def _handle_worker_exception(self, signum, frame):
+        """Handle an exception raised in the worker thread.
+
+        Exceptions in the _batcher thread will send a SIGINT to the main
+        thread which we catch here, and then raise in the main thread.
+        """
+        reraise(*self.exc_info)
+
+
+class BasicBatchingBolt(BatchingBolt):
+    """Identical to :class:`streamparse.bolt.BatchingBolt` except tuples in batch are
+    automatically acknowledged after being processed.
+
+    To use this class, you must implement ``process_batch``. ``group_key`` can
+    be optionally implemented so that tuples are grouped before
+    ``process_batch`` is even called.
+    """
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
@@ -262,11 +298,3 @@ class BatchingBolt(Bolt):
         except Exception:
             self.exc_info = sys.exc_info()
             os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
-
-    def _handle_worker_exception(self, signum, frame):
-        """Handle an exception raised in the worker thread.
-
-        Exceptions in the _batcher thread will send a SIGINT to the main
-        thread which we catch here, and then raise in the main thread.
-        """
-        reraise(*self.exc_info)

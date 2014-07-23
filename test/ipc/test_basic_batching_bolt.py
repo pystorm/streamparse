@@ -14,11 +14,11 @@ def here(*x):
     return os.path.join(_ROOT, *x)
 
 
-class ShellBatchingBoltTester(unittest.TestCase):
+class ShellBasicBatchingBoltTester(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        args = ["python", here("dummy_batching_bolt.py")]
+        args = ["python", here("dummy_basic_batching_bolt.py")]
         cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
@@ -35,16 +35,16 @@ class ShellBatchingBoltTester(unittest.TestCase):
             "context": {},
             "pidDir": here()
         }
-        ShellBatchingBoltTester.shell_proc.write_message(msg)
-        res = ShellBatchingBoltTester.shell_proc.read_message()
+        ShellBasicBatchingBoltTester.shell_proc.write_message(msg)
+        res = ShellBasicBatchingBoltTester.shell_proc.read_message()
 
         self.assertIsInstance(res, dict)
-        self.assertEqual(res.get("pid"), ShellBatchingBoltTester.proc.pid)
+        self.assertEqual(res.get("pid"), ShellBasicBatchingBoltTester.proc.pid)
         pid = str(res["pid"])
         self.assertTrue(os.path.exists(here(pid)))
         self.assertTrue(os.path.isfile(here(pid)))
 
-    def test_2_single_tuple(self):
+    def test_2_ack_tuple(self):
         msg = {
             "id": "2285924946354050200",
             "comp": "word-spout",
@@ -52,14 +52,18 @@ class ShellBatchingBoltTester(unittest.TestCase):
             "task": 0,
             "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252],
         }
-        ShellBatchingBoltTester.shell_proc.write_message(msg)
+        ShellBasicBatchingBoltTester.shell_proc.write_message(msg)
 
-        res = ShellBatchingBoltTester.shell_proc.read_message()
+        res = ShellBasicBatchingBoltTester.shell_proc.read_message()
         self.assertEqual(res.get("command"), "emit")
         self.assertEqual(res.get("tuple"),
                          ["snow white and the seven dwarfs", msg["id"]])
 
-    def test_3_multi_tuple(self):
+        res = ShellBasicBatchingBoltTester.shell_proc.read_message()
+        self.assertEqual(res.get("command"), "ack")
+        self.assertEqual(res.get("id"), msg["id"])
+
+    def test_3_multi_ack(self):
         msg = {
             "id": None,
             "comp": "word-spout",
@@ -69,14 +73,18 @@ class ShellBatchingBoltTester(unittest.TestCase):
         }
         for i in range(5):
             msg["id"] = str(i)
-            ShellBatchingBoltTester.shell_proc.write_message(msg)
+            ShellBasicBatchingBoltTester.shell_proc.write_message(msg)
         time.sleep(2.5)
-        # Ensure that we have a series of emits
+        # Ensure that we have a series of emits followed by a series of acks
         for i in range(5):
-            res = ShellBatchingBoltTester.shell_proc.read_message()
+            res = ShellBasicBatchingBoltTester.shell_proc.read_message()
             self.assertEqual(res.get("command"), "emit")
             self.assertEqual(res.get("tuple"),
                              ["snow white and the seven dwarfs", str(i)])
+        for i in range(5):
+            res = ShellBasicBatchingBoltTester.shell_proc.read_message()
+            self.assertEqual(res.get("command"), "ack")
+            self.assertEqual(res.get("id"), str(i))
 
     def test_4_batches(self):
         # Create two batches the "mike" batch and the "lida" batch
@@ -111,17 +119,19 @@ class ShellBatchingBoltTester(unittest.TestCase):
             },
         )
         for message in messages:
-            ShellBatchingBoltTester.shell_proc.write_message(message)
+            ShellBasicBatchingBoltTester.shell_proc.write_message(message)
 
         time.sleep(2.5)
 
         results = []
-        # should have series of emits,
-        for i in range(2*2):
-            results.append(ShellBatchingBoltTester.shell_proc.read_message())
+        # should have series of emits, then series of acks repeated twice
+        for i in range(2*2*2):
+            results.append(ShellBasicBatchingBoltTester.shell_proc.read_message())
 
         expected_commands = ["emit"] * 2
+        expected_commands += ["ack"] * 2
         expected_commands += ["emit"] * 2
+        expected_commands += ["ack"] * 2
         for i, command in enumerate(expected_commands):
             res = results[i]
             self.assertEqual(res.get("command"), command)
@@ -134,16 +144,16 @@ class ShellBatchingBoltTester(unittest.TestCase):
             "task": 0,
             "tuple": ["fail"],
         }
-        ShellBatchingBoltTester.shell_proc.write_message(msg)
-        res = ShellBatchingBoltTester.shell_proc.read_message()
+        ShellBasicBatchingBoltTester.shell_proc.write_message(msg)
+        res = ShellBasicBatchingBoltTester.shell_proc.read_message()
         self.assertEqual(res.get("command"), "log")
         self.assertIn("Exception", res.get("msg"))
 
-        res = ShellBatchingBoltTester.shell_proc.read_message()
+        res = ShellBasicBatchingBoltTester.shell_proc.read_message()
         self.assertEqual(res.get("command"), "sync")
 
         self.assertRaises(Exception,
-                          ShellBatchingBoltTester.shell_proc.read_message)
+                          ShellBasicBatchingBoltTester.shell_proc.read_message)
 
     @classmethod
     def tearDownClass(cls):
