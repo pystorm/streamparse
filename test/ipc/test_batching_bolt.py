@@ -116,7 +116,7 @@ class ShellBatchingBoltTester(unittest.TestCase):
         time.sleep(2.5)
 
         results = []
-        # should have series of emits,
+        # should have series of emits
         for i in range(2*2):
             results.append(ShellBatchingBoltTester.shell_proc.read_message())
 
