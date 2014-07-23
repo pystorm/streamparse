@@ -348,3 +348,27 @@ class BatchingBolt(Bolt):
         thread which we catch here, and then raise in the main thread.
         """
         reraise(*self.exc_info)
+
+
+class BasicBolt(Bolt):
+    """Legacy support for BasicBolt which simply sets all ``AUTO_*``
+    instance vars to ``True``.
+
+    Deprecated.
+    """
+
+    AUTO_ACK = True
+    AUTO_ANCHOR = True
+    AUTO_FAIL = True
+
+
+class BasicBatchingBolt(Bolt):
+    """Legacy support for BasicBatchingBolt which simply sets all ``AUTO_*``
+    instance vars to ``True``.
+
+    Deprecated.
+    """
+
+    AUTO_ACK = True
+    AUTO_ANCHOR = True
+    AUTO_FAIL = True
