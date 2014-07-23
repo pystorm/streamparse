@@ -2,7 +2,7 @@
   streamparse.cli
   (:require [clojure.pprint :as pp]
             [clojure.string :as s])
-  (:gen-class:))
+  (:gen-class))
 
 (defn- tokenize-args
   "Reduce arguments sequence into [opt-type opt ?optarg?] vectors and a vector
