@@ -1,22 +1,24 @@
 (ns wordcount
-  (:use     [backtype.storm.clojure])
+  (:use     [streamparse.specs])
   (:gen-class))
 
-(def wordcount
+(defn wordcount [options]
    [
     ;; spout configuration
-    {"word-spout" (shell-spout-spec
-          ["python" "words.py"]
+    {"word-spout" (python-spout-spec
+          options
+          "spouts.words.WordSpout"
           ["word"]
           )
     }
     ;; bolt configuration
-    {"count-bolt" (shell-bolt-spec
-           {"word-spout" :shuffle}
-           ["python" "wordcount.py"]
-           ["word" "count"]
-           :p 2
-           )
+    {"count-bolt" (python-bolt-spec
+          options
+          {"word-spout" :shuffle}
+          "bolts.wordcount.WordCounter"
+          ["word" "count"]
+          :p 2
+          )
     }
   ]
 )

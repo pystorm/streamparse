@@ -87,8 +87,14 @@ def quickstart(project_name):
         _touch('README.md')
         _mkdir('src')
         with _cd('src'):
-            _cp(_here('project', 'src', 'wordcount.py'), 'wordcount.py')
-            _cp(_here('project', 'src', 'words.py'), 'words.py')
+            _mkdir('bolts')
+            with _cd('bolts'):
+                _cp(_here('project', 'src', 'bolts', '__init__.py'), '__init__.py')
+                _cp(_here('project', 'src', 'bolts', 'wordcount.py'), 'wordcount.py')
+            _mkdir('spouts')
+            with _cd('spouts'):
+                _cp(_here('project', 'src', 'spouts', '__init__.py'), '__init__.py')
+                _cp(_here('project', 'src', 'spouts', 'words.py'), 'words.py')
         _cp(_here('project', 'tasks.py'), 'tasks.py')
         _mkdir('topologies')
         with _cd('topologies'):

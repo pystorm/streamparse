@@ -2,7 +2,8 @@
   "Run a topology on a Storm LocalCluster."
   (:require [clojure.string :as string]
             [streamparse.cli :refer [cli]]
-            [clojure.stacktrace :refer [print-stack-trace]])
+            [clojure.stacktrace :refer [print-stack-trace]]
+            [clojure.core :refer [fn?]])
   (:use [backtype.storm clojure config])
   (:import  [backtype.storm LocalCluster])
   (:gen-class))
@@ -14,7 +15,9 @@
   defined which contains the topology definition."
   (try
     (let [topology-def (load-file topology-file) ; should only be a single var
-          topology (apply topology (var-get topology-def))
+          topology-var (var-get topology-def)
+          ; only pass options if topology-var is a function (not just callable)
+          topology (apply topology (if (fn? topology-var) (topology-var options) topology-var))
           topology-name (str (:name (meta topology-def)))
           cluster (LocalCluster.)]
       (.submitTopology cluster
