@@ -106,8 +106,6 @@ class BatchingBoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
             self.assertEqual(actual["command"], expected)
 
 
-# TODO: Test is broken which means auto anchor support for BatchingBolts is
-# broken
 class BatchingBoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
     COMPONENT = "dummy_batching_bolt_auto_anchor.py"
@@ -126,7 +124,7 @@ class BatchingBoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase)
 
         for actual, expected in zip(results, expected_commands):
             self.assertEqual(actual["command"], expected)
-            self.assertEqual(len(actual["anchors"]), 1)
+            self.assertEqual(len(actual["anchors"]), 2)
 
 
 class BatchingBoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):

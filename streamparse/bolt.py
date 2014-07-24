@@ -55,7 +55,8 @@ class Bolt(Component):
     tuples when an exception occurs when the ``process()`` method is called.
     Default is ``False``.
     """
-    __current_tups = []
+
+    _current_tups = []
 
     def initialize(self, storm_conf, context):
         """Called immediately after the initial handshake with Storm and before
@@ -110,7 +111,7 @@ class Bolt(Component):
 
         if anchors is None:
             if self.AUTO_ANCHOR:
-                anchors = [t.id for t in self.__current_tups]
+                anchors = [t.id for t in self._current_tups]
             else:
                 anchors = []
         msg['anchors'] = anchors
@@ -150,7 +151,7 @@ class Bolt(Component):
 
         if anchors is None:
             if self.AUTO_ANCHOR:
-                anchors = [t.id for t in self.__current_tups]
+                anchors = [t.id for t in self._current_tups]
             else:
                 anchors = []
         msg['anchors'] = anchors
@@ -203,15 +204,15 @@ class Bolt(Component):
         try:
             self.initialize(storm_conf, context)
             while True:
-                self.__current_tups = [read_tuple()]
-                self.process(self.__current_tups[0])
+                self._current_tups = [read_tuple()]
+                self.process(self._current_tups[0])
                 if self.AUTO_ACK:
-                    self.ack(self.__current_tups[0])
+                    self.ack(self._current_tups[0])
         except Exception as e:
-            if self.AUTO_FAIL and self.__current_tups:
-                for tup in self.__current_tups:
+            if self.AUTO_FAIL and self._current_tups:
+                for tup in self._current_tups:
                     self.fail(tup)
-            self.raise_exception(e, self.__current_tups[0])
+            self.raise_exception(e, self._current_tups[0])
             sys.exit(1)
 
 
@@ -334,20 +335,16 @@ class BatchingBolt(Bolt):
                         # No tuples to save
                         continue
                     for key, tups in iteritems(self._batch):
-                        # TODO: This is currently a bug, for some reason,
-                        # self.__current_tups is not visible to the emit()
-                        # method and so auto anchoring breaks. Have no idea why
-                        # this is.
-                        self.__current_tups = tups
-                        self.process_batch(key, self.__current_tups)
+                        self._current_tups = tups
+                        self.process_batch(key, self._current_tups)
                         if self.AUTO_ACK:
-                            for tup in self.__current_tups:
+                            for tup in self._current_tups:
                                 self.ack(tup)
                     self._batch = defaultdict(list)
         except Exception as e:
-            self.raise_exception(e, self.__current_tups)
-            if self.AUTO_FAIL and self.__current_tups:
-                for tup in self.__current_tups:
+            self.raise_exception(e, self._current_tups)
+            if self.AUTO_FAIL and self._current_tups:
+                for tup in self._current_tups:
                     self.fail(tup)
             self.exc_info = sys.exc_info()
             os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
