@@ -279,6 +279,7 @@ class BatchingBolt(Bolt):
     """
 
     def __init__(self):
+        super(BatchingBolt, self).__init__()
         self.exc_info = None
         signal.signal(signal.SIGINT, self._handle_worker_exception)
 
