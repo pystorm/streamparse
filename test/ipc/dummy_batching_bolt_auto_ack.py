@@ -14,6 +14,8 @@ class DummyBatchingBoltAutoAck(BatchingBolt):
 
     secs_between_batches = 1
     auto_ack = True
+    auto_anchor = False
+    auto_fail = False
 
     def group_key(self, tup):
         return tup.values[0]

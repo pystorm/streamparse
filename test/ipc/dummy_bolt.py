@@ -12,6 +12,10 @@ from streamparse.bolt import Bolt
 
 class DummyBolt(Bolt):
 
+    auto_ack = False
+    auto_anchor = False
+    auto_fail = False
+
     def process(self, tup):
         if tup.id == "ack_me":
             self.emit(tup.values)

@@ -13,6 +13,8 @@ from streamparse.bolt import Bolt
 class DummyBoltAutoAck(Bolt):
 
     auto_ack = True
+    auto_anchor = False
+    auto_fail = False
 
     def process(self, tup):
         if tup.id == "emit_many":

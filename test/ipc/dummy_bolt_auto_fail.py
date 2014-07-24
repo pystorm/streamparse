@@ -12,6 +12,8 @@ from streamparse.bolt import Bolt
 
 class DummyBoltAutoFail(Bolt):
 
+    auto_ack = False
+    auto_anchor = False
     auto_fail = True
 
     def process(self, tup):

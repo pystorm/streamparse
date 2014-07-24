@@ -12,7 +12,9 @@ from streamparse.bolt import Bolt
 
 class DummyBoltAutoAnchor(Bolt):
 
+    auto_ack = False
     auto_anchor = True
+    auto_fail = False
 
     def process(self, tup):
         if tup.id == "emit_many":

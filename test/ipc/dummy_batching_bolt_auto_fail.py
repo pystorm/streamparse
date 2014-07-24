@@ -13,6 +13,8 @@ from streamparse.bolt import BatchingBolt
 class DummyBatchingBoltAutoFail(BatchingBolt):
 
     secs_between_batches = 1
+    auto_ack = False
+    auto_anchor = False
     auto_fail = True
 
     def group_key(self, tup):

@@ -29,30 +29,27 @@ class Bolt(Component):
 
         class SentenceSplitterBolt(Bolt):
 
-            auto_anchor = True  # perform auto anchoring during emits
-            auto_ack = True  # perform auto acking after process()
-            auto_fail = True  # perform auto fail on exceptions
-
             def process(self, tup):
                 sentence = tup.values[0]
                 for word in sentence.split(" "):
                     self.emit([word])
     """
 
-    auto_anchor = False
+    auto_anchor = True
     """A ``bool`` indicating whether or not the bolt should automatically
     anchor emits to the incoming tuple ID. Tuple anchoring is how Storm
     provides reliability, you can read more about `tuple anchoring in Storm's
-    docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_. Default is ``False``.
+    docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+    Default is ``True``.
     """
-    auto_ack = False
+    auto_ack = True
     """A ``bool`` indicating whether or not the bolt should automatically
-    acknowledge tuples after ``process()`` is called. Default is ``False``.
+    acknowledge tuples after ``process()`` is called. Default is ``True``.
     """
-    auto_fail = False
+    auto_fail = True
     """A ``bool`` indicating whether or not the bolt should automatically fail
     tuples when an exception occurs when the ``process()`` method is called.
-    Default is ``False``.
+    Default is ``True``.
     """
 
     # Using a list so Bolt and subclasses can have more than one current_tup
@@ -240,9 +237,6 @@ class BatchingBolt(Bolt):
         class WordCounterBolt(BatchingBolt):
 
             secs_between_batches = 5
-            auto_ack = True
-            auto_anchor = True
-            auto_fail = True
 
             def group_key(self, tup):
                 word = tup.values[0]
@@ -254,21 +248,22 @@ class BatchingBolt(Bolt):
 
     """
 
-    auto_anchor = False
+    auto_anchor = True
     """A ``bool`` indicating whether or not the bolt should automatically
     anchor emits to the incoming tuple ID. Tuple anchoring is how Storm
     provides reliability, you can read more about `tuple anchoring in Storm's
-    docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_. Default is ``False``.
+    docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+    Default is ``True``.
     """
-    auto_ack = False
+    auto_ack = True
     """A ``bool`` indicating whether or not the bolt should automatically
     acknowledge tuples after ``process_batch()`` is called. Default is
-    ``False``.
+    ``True``.
     """
-    auto_fail = False
+    auto_fail = True
     """A ``bool`` indicating whether or not the bolt should automatically fail
     tuples when an exception occurs when the ``process_batch()`` method is
-    called. Default is ``False``.
+    called. Default is ``True``.
     """
     secs_between_batches = 2
     """The time (in seconds) between calls to ``process_batch()``. Note that if
@@ -363,10 +358,7 @@ class BasicBolt(Bolt):
 
     Deprecated.
     """
-
-    auto_ack = True
-    auto_anchor = True
-    auto_fail = True
+    pass
 
 
 class BasicBatchingBolt(Bolt):
@@ -375,7 +367,4 @@ class BasicBatchingBolt(Bolt):
 
     Deprecated.
     """
-
-    auto_ack = True
-    auto_anchor = True
-    auto_fail = True
+    pass
