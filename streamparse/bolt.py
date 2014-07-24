@@ -7,6 +7,7 @@ import signal
 import sys
 import threading
 import time
+import warnings
 
 from six import iteritems, reraise, PY3
 
@@ -352,19 +353,23 @@ class BatchingBolt(Bolt):
         reraise(*self.exc_info)
 
 
-class BasicBolt(Bolt):
-    """Legacy support for BasicBolt which simply sets all ``AUTO_*``
-    instance vars to ``True``.
+# http://stackoverflow.com/questions/9008444/how-to-warn-about-class-name-deprecation
+class DeprecationHelper(object):
 
-    Deprecated.
-    """
-    pass
+    def __init__(self, new_target, name):
+        self._new_target = new_target
+        self._name = name
+
+    def _warn(self):
+        warnings.warn("{} is deprecated and "
+                      "will be removed in a future streamparse release. "
+                      "Please use Bolt or BatchingBolt."
+                      .format(self._name), DeprecationWarning)
+
+    def __call__(self, *args, **kwargs):
+        self._warn()
+        return self._new_target(*args, **kwargs)
 
 
-class BasicBatchingBolt(Bolt):
-    """Legacy support for BasicBatchingBolt which simply sets all ``AUTO_*``
-    instance vars to ``True``.
-
-    Deprecated.
-    """
-    pass
+BasicBolt = DeprecationHelper(Bolt, "BasicBolt")
+BasicBatchingBolt = DeprecationHelper(BatchingBolt, "BasicBatchingBolt")
