@@ -288,14 +288,6 @@ class BatchingBolt(Bolt):
         self._batcher.daemon = True
         self._batcher.start()
 
-    def process(self, tup):
-        """Add a tuple a specific batch by group key. Do not override this
-        method in subclasses.
-        """
-        with self._batch_lock:
-            group_key = self.group_key(tup)
-            self._batch[group_key].append(tup)
-
     def group_key(self, tup):
         """Return the group key used to group tuples within a batch.
 
@@ -317,6 +309,19 @@ class BatchingBolt(Bolt):
         :type tups: list
         """
         raise NotImplementedError()
+
+    def run(self):
+        """Modified and simplified run loop which runs in the main thread since
+        we only need to add tuples to the proper batch for later processing
+        in the _batcher thread.
+        """
+        storm_conf, context = read_handshake()
+        self.initialize(storm_conf, context)
+        while True:
+            tup = read_tuple()
+            group_key = self.group_key(tup)
+            with self._batch_lock:
+                self._batch[group_key].append(tup)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
