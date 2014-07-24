@@ -19,7 +19,6 @@ from six import PY3
 config = context = None
 storm_log = logging.getLogger('streamparse')
 
-_MAX_MESSAGE_SIZE = 16777216
 _MAX_BLANK_MSGS = 500
 _MAX_LINES = 100
 # queue up commands we read while trying to read task IDs
@@ -96,16 +95,6 @@ def read_message_lines():
         if line == 'end':
             break
         lines += 1
-        message_size = len(line)
-
-        # If message size exceeds MAX_MESSAGE_SIZE, we assume that the
-        # Storm worker has died, and we would be reading an infinite
-        # series of blank lines. Throw an error to halt processing,
-        # otherwise the task will use 100% CPU and will quickly consume
-        # a huge amount of RAM.
-        if message_size >= _MAX_MESSAGE_SIZE:
-            raise StormIPCException(('Message {} exceeds '
-                                     '{:,}'.format(line, _MAX_MESSAGE_SIZE)))
 
         # If Storm starts to send us a series of blank lines, after awhile we
         # have to assume that the pipe to the Storm supervisor is broken, this
