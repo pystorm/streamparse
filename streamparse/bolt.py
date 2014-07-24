@@ -281,7 +281,7 @@ class BatchingBolt(Bolt):
         self.exc_info = None
         signal.signal(signal.SIGINT, self._handle_worker_exception)
 
-        self._batch = defaultdict(list)
+        self._batches = defaultdict(list)
         self._should_stop = threading.Event()
         self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
@@ -322,7 +322,7 @@ class BatchingBolt(Bolt):
             tup = read_tuple()
             group_key = self.group_key(tup)
             with self._batch_lock:
-                self._batch[group_key].append(tup)
+                self._batches[group_key].append(tup)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
@@ -330,16 +330,16 @@ class BatchingBolt(Bolt):
             while True:
                 time.sleep(self.SECS_BETWEEN_BATCHES)
                 with self._batch_lock:
-                    if not self._batch:
+                    if not self._batches:
                         # No tuples to save
                         continue
-                    for key, tups in iteritems(self._batch):
-                        self._current_tups = tups
-                        self.process_batch(key, self._current_tups)
+                    for key, batch in iteritems(self._batches):
+                        self._current_tups = batch
+                        self.process_batch(key, batch)
                         if self.AUTO_ACK:
-                            for tup in self._current_tups:
+                            for tup in batch:
                                 self.ack(tup)
-                    self._batch = defaultdict(list)
+                    self._batches = defaultdict(list)
         except Exception as e:
             self.raise_exception(e, self._current_tups)
             if self.AUTO_FAIL and self._current_tups:
