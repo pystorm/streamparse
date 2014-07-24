@@ -14,6 +14,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import re
 import shutil
+import sys
 import time
 from io import open
 from tempfile import NamedTemporaryFile
@@ -33,6 +34,23 @@ __all__ = ["list_topologies", "kill_topology", "run_local_topology",
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
 # from all these with something like
 # @task("setup")
+
+
+
+def get_user_tasks():
+    """Get tasks defined in a user's tasks.py and fabric.py file which is
+    assumed to be in the current working directory.
+
+    :returns: tuple invoke_tasks, fabric_tasks
+    """
+    try:
+        sys.path.insert(0, os.getcwd())
+        import tasks as user_invoke
+        import fabric as user_fabric
+        return user_invoke, user_fabric
+    except ImportError:
+        return None, None
+
 
 def is_safe_to_submit(topology_name):
     """Check to see if a topology is currently running or is in the process of
@@ -154,6 +172,15 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
+    # pre-submit hooks for invoke and fabric
+    user_invoke, user_fabric = get_user_tasks()
+    pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
+    if callable(pre_submit_invoke):
+        pre_submit_invoke(name, env_name, env_config)
+    pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
+    if callable(pre_submit_fabric):
+        pre_submit_fabric(name, env_name, env_config)
+
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
     activate_env(env_name)
     create_or_update_virtualenvs(
@@ -201,6 +228,14 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         print("Running lein command to submit topology to nimbus:")
         print(full_cmd)
         run(full_cmd)
+
+        # post-submit hooks for invoke and fabric
+        post_submit_invoke = getattr(user_invoke, "post_submit", None)
+        if callable(post_submit_invoke):
+            post_submit_invoke(name, env_name, env_config)
+        post_submit_fabric = getattr(user_fabric, "post_submit", None)
+        if callable(post_submit_fabric):
+            post_submit_fabric(name, env_name, env_config)
 
 
 @task
