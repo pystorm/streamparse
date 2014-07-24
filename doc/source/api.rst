@@ -29,12 +29,9 @@ Bolts
 -----
 
 .. autoclass:: streamparse.bolt.Bolt
-    :members: ack, emit, emit_many, fail, initialize, process, log
-    :show-inheritance:
-
-.. autoclass:: streamparse.bolt.BasicBolt
+    :members: ack, emit, emit_many, fail, initialize, process, log, auto_anchor, auto_ack, auto_fail
     :show-inheritance:
 
 .. autoclass:: streamparse.bolt.BatchingBolt
-    :members: group_key, process_batch, SECS_BETWEEN_BATCHES
+    :members: group_key, process_batch, secs_between_batches, auto_anchor, auto_ack, auto_fail
     :show-inheritance:

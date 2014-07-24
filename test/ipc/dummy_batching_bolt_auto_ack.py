@@ -10,10 +10,10 @@ sys.path[0:0] = [root]
 from streamparse.bolt import BatchingBolt
 
 
-class DummyBatchingBolt(BatchingBolt):
+class DummyBatchingBoltAutoAck(BatchingBolt):
 
     secs_between_batches = 1
-    auto_ack = False
+    auto_ack = True
     auto_anchor = False
     auto_fail = False
 
@@ -21,11 +21,8 @@ class DummyBatchingBolt(BatchingBolt):
         return tup.values[0]
 
     def process_batch(self, key, tups):
-        for tup in tups:
-            if tup.values[0] == "fail":
-                raise Exception("Something bad happened!")
-            self.emit([key, tup.id])
+        self.emit([key, len(tups)])
 
 
 if __name__ == '__main__':
-    DummyBatchingBolt().run()
+    DummyBatchingBoltAutoAck().run()

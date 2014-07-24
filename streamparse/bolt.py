@@ -7,6 +7,7 @@ import signal
 import sys
 import threading
 import time
+import warnings
 
 from six import iteritems, reraise, PY3
 
@@ -20,7 +21,40 @@ class Bolt(Component):
 
     For more information on bolts, consult Storm's
     `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+
+    **Example**:
+
+    .. code-block:: python
+
+        from streamparse.bolt import Bolt
+
+        class SentenceSplitterBolt(Bolt):
+
+            def process(self, tup):
+                sentence = tup.values[0]
+                for word in sentence.split(" "):
+                    self.emit([word])
     """
+
+    auto_anchor = True
+    """A ``bool`` indicating whether or not the bolt should automatically
+    anchor emits to the incoming tuple ID. Tuple anchoring is how Storm
+    provides reliability, you can read more about `tuple anchoring in Storm's
+    docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+    Default is ``True``.
+    """
+    auto_ack = True
+    """A ``bool`` indicating whether or not the bolt should automatically
+    acknowledge tuples after ``process()`` is called. Default is ``True``.
+    """
+    auto_fail = True
+    """A ``bool`` indicating whether or not the bolt should automatically fail
+    tuples when an exception occurs when the ``process()`` method is called.
+    Default is ``True``.
+    """
+
+    # Using a list so Bolt and subclasses can have more than one current_tup
+    _current_tups = []
 
     def initialize(self, storm_conf, context):
         """Called immediately after the initial handshake with Storm and before
@@ -38,15 +72,15 @@ class Bolt(Component):
         pass
 
     def process(self, tup):
-        """Process a single tuple :class:`Tuple` of input
+        """Process a single tuple :class:`streamparse.ipc.Tuple` of input
 
-        This should be overridden by subclasses.  :class:`Tuple` objects
-        contain metadata about which component, stream and task it came from.
-        The actual values of the tuple can be accessed by calling
-        ``tup.values``.
+        This should be overridden by subclasses.
+        :class:`streamparse.ipc.Tuple` objects contain metadata about which
+        component, stream and task it came from. The actual values of the
+        tuple can be accessed by calling ``tup.values``.
 
         :param tup: the tuple to be processed.
-        :type tup: Tuple
+        :type tup: streamparse.ipc.Tuple
         """
         raise NotImplementedError()
 
@@ -59,21 +93,27 @@ class Bolt(Component):
         :param stream: the ID of the stream to emit this tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs of the tuples the emitted tuple should be anchored
-                        to.
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``auto_anchor`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).
         :type anchors: list
         :param direct_task: the task to send the tuple to.
         :type direct_task: int
         """
-        if anchors is None:
-            anchors = []
         if not isinstance(tup, list):
-            raise TypeError('All tuples must be lists, received {!r} instead'
+            raise TypeError('All tuples must be lists, received {!r} instead.'
                             .format(type(tup)))
+
         msg = {'command': 'emit', 'tuple': tup}
+
+        if anchors is None:
+            anchors = self._current_tups if self.auto_anchor else []
+        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
+
         if stream is not None:
             msg['stream'] = stream
-        msg['anchors'] = [x.id for x in anchors]
         if direct_task is not None:
             msg['task'] = direct_task
 
@@ -91,18 +131,25 @@ class Bolt(Component):
         :param stream: the ID of the steram to emit these tuples to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples which the emitted tuples should be
-                        anchored to.
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``auto_anchor`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).
         :type anchors: list
         :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
         """
+        if not isinstance(tuples, list):
+            raise TypeError('tuples should be a list of lists, received {!r}'
+                            'instead.'.format(type(tuples)))
+
+        msg = {'command': 'emit'}
+
         if anchors is None:
-            anchors = []
-        msg = {
-            'command': 'emit',
-            'anchors': [a.id for a in anchors],
-        }
+            anchors = self._current_tups if self.auto_anchor else []
+        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
+
         if stream is not None:
             msg['stream'] = stream
         if direct_task is not None:
@@ -132,7 +179,7 @@ class Bolt(Component):
     def fail(self, tup):
         """Indicate that processing of a tuple has failed.
 
-        :param tup: the tuple to fail.
+        :param tup: the tuple to fail (``id`` if ``str``).
         :type tup: str or Tuple
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
@@ -148,41 +195,22 @@ class Bolt(Component):
         Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
-        tup = None
         try:
             self.initialize(storm_conf, context)
             while True:
-                tup = read_tuple()
-                self.process(tup)
+                self._current_tups = [read_tuple()]
+                self.process(self._current_tups[0])
+                if self.auto_ack:
+                    self.ack(self._current_tups[0])
+                # reset so that we don't accidentally fail the wrong tuples
+                # if a successive call to read_tuple fails
+                self._current_tups = []
         except Exception as e:
-            self.raise_exception(e, tup)
-
-
-class BasicBolt(Bolt):
-    """A bolt that automatically acknowledges tuples after :func:`process`."""
-
-    def emit(self, tup, stream=None, anchors=None, direct_task=None):
-        """
-        Overridden to anchor to the current tuple if no anchors are specified
-        """
-        if anchors is None:
-            anchors = []
-        anchors = anchors or [self.__current_tup]
-        super(BasicBolt, self).emit(
-            tup, stream=stream, anchors=anchors, direct_task=direct_task
-        )
-
-    def run(self):
-        storm_conf, context = read_handshake()
-        self.__current_tup = None # used for auto-anchoring
-        try:
-            self.initialize(storm_conf, context)
-            while True:
-                self.__current_tup = read_tuple()
-                self.process(self.__current_tup)
-                self.ack(self.__current_tup)
-        except Exception as e:
-            self.raise_exception(e, self.__current_tup)
+            if self.auto_fail and self._current_tups:
+                for tup in self._current_tups:
+                    self.fail(tup)
+            self.raise_exception(e, self._current_tups[0])
+            sys.exit(1)
 
 
 class BatchingBolt(Bolt):
@@ -195,43 +223,77 @@ class BatchingBolt(Bolt):
     tuples, or even ack ones that were asynchronously written to a data store.
 
     This bolt helps with that grouping tuples based on a time interval and then
-    processing them on a worker thread. The bolt also handles ack'ing tuples
-    after processing has finished, much like the BasicBolt.
+    processing them on a worker thread.
 
     To use this class, you must implement ``process_batch``. ``group_key`` can
     be optionally implemented so that tuples are grouped before
     ``process_batch`` is even called.
+
+    **Example**:
+
+    .. code-block:: python
+
+        from streamparse.bolt import BatchingBolt
+
+        class WordCounterBolt(BatchingBolt):
+
+            secs_between_batches = 5
+
+            def group_key(self, tup):
+                word = tup.values[0]
+                return word  # collect batches of words
+
+            def process_batch(self, key, tups):
+                # emit the count of words we had per 5s batch
+                self.emit([key, len(tups)])
+
     """
-    SECS_BETWEEN_BATCHES = 2
+
+    auto_anchor = True
+    """A ``bool`` indicating whether or not the bolt should automatically
+    anchor emits to the incoming tuple ID. Tuple anchoring is how Storm
+    provides reliability, you can read more about `tuple anchoring in Storm's
+    docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+    Default is ``True``.
+    """
+    auto_ack = True
+    """A ``bool`` indicating whether or not the bolt should automatically
+    acknowledge tuples after ``process_batch()`` is called. Default is
+    ``True``.
+    """
+    auto_fail = True
+    """A ``bool`` indicating whether or not the bolt should automatically fail
+    tuples when an exception occurs when the ``process_batch()`` method is
+    called. Default is ``True``.
+    """
+    secs_between_batches = 2
+    """The time (in seconds) between calls to ``process_batch()``. Note that if
+    there are no tuples in any batch, the BatchingBolt will continue to sleep.
+    Note: Can be fractional to specify greater precision (e.g. 2.5).
+    """
 
     def __init__(self):
+        super(BatchingBolt, self).__init__()
         self.exc_info = None
         signal.signal(signal.SIGINT, self._handle_worker_exception)
 
-        self._batch = defaultdict(list)
+        self._batches = defaultdict(list)
         self._should_stop = threading.Event()
         self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
         self._batcher.daemon = True
         self._batcher.start()
 
-    def process(self, tup):
-        """Add a tuple a specific batch by group key. Do not override this
-        method in subclasses.
-        """
-        with self._batch_lock:
-            group_key = self.group_key(tup)
-            self._batch[group_key].append(tup)
-
     def group_key(self, tup):
         """Return the group key used to group tuples within a batch.
 
         By default, returns None, which put all tuples in a single
-        batch. Override this function to enable batching.
+        batch, effectively just time-based batching. Override this create
+        multiple batches based on a key.
 
         :param tup: the tuple used to extract a group key
         :type tup: Tuple
-        :returns: Any ``hashable`` value (will be used in a ``dict``).
+        :returns: Any ``hashable`` value.
         """
         return None
 
@@ -240,26 +302,45 @@ class BatchingBolt(Bolt):
 
         :param key: the group key for the list of batches.
         :type key: hashable
-        :param tups: a `list` of :class:`ipc.Tuple` for the group.
+        :param tups: a `list` of :class:`streamparse.ipc.Tuple` s for the group.
         :type tups: list
         """
         raise NotImplementedError()
+
+    def run(self):
+        """Modified and simplified run loop which runs in the main thread since
+        we only need to add tuples to the proper batch for later processing
+        in the _batcher thread.
+        """
+        storm_conf, context = read_handshake()
+        self.initialize(storm_conf, context)
+        while True:
+            tup = read_tuple()
+            group_key = self.group_key(tup)
+            with self._batch_lock:
+                self._batches[group_key].append(tup)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
         try:
             while True:
-                time.sleep(self.SECS_BETWEEN_BATCHES)
+                time.sleep(self.secs_between_batches)
                 with self._batch_lock:
-                    if not self._batch:
+                    if not self._batches:
                         # No tuples to save
                         continue
-                    for key, tups in iteritems(self._batch):
-                        self.process_batch(key, tups)
-                        for tup in tups:
-                            self.ack(tup)
-                    self._batch = defaultdict(list)
-        except Exception:
+                    for key, batch in iteritems(self._batches):
+                        self._current_tups = batch
+                        self.process_batch(key, batch)
+                        if self.auto_ack:
+                            for tup in batch:
+                                self.ack(tup)
+                    self._batches = defaultdict(list)
+        except Exception as e:
+            self.raise_exception(e, self._current_tups)
+            if self.auto_fail and self._current_tups:
+                for tup in self._current_tups:
+                    self.fail(tup)
             self.exc_info = sys.exc_info()
             os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
 
@@ -270,3 +351,25 @@ class BatchingBolt(Bolt):
         thread which we catch here, and then raise in the main thread.
         """
         reraise(*self.exc_info)
+
+
+# http://stackoverflow.com/questions/9008444/how-to-warn-about-class-name-deprecation
+class DeprecationHelper(object):
+
+    def __init__(self, new_target, name):
+        self._new_target = new_target
+        self._name = name
+
+    def _warn(self):
+        warnings.warn("{} is deprecated and "
+                      "will be removed in a future streamparse release. "
+                      "Please use Bolt or BatchingBolt."
+                      .format(self._name), DeprecationWarning)
+
+    def __call__(self, *args, **kwargs):
+        self._warn()
+        return self._new_target(*args, **kwargs)
+
+
+BasicBolt = DeprecationHelper(Bolt, "BasicBolt")
+BasicBatchingBolt = DeprecationHelper(BatchingBolt, "BasicBatchingBolt")
