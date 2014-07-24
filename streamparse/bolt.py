@@ -94,10 +94,11 @@ class Bolt(Component):
         :param stream: the ID of the stream to emit this tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs of the tuples the emitted tuple should be anchored
-                        to. If ``AUTO_ANCHOR`` is set to ``True`` and you have
-                        not specified ``anchors``, ``anchors`` will be set to
-                        the incoming/most recent tuple ID(s).
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``AUTO_ANCHOR`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).
         :type anchors: list
         :param direct_task: the task to send the tuple to.
         :type direct_task: int
@@ -109,11 +110,8 @@ class Bolt(Component):
         msg = {'command': 'emit', 'tuple': tup}
 
         if anchors is None:
-            if self.AUTO_ANCHOR:
-                anchors = [t.id for t in self._current_tups]
-            else:
-                anchors = []
-        msg['anchors'] = anchors
+            anchors = self._current_tups if self.AUTO_ANCHOR else []
+        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
 
         if stream is not None:
             msg['stream'] = stream
@@ -134,8 +132,9 @@ class Bolt(Component):
         :param stream: the ID of the steram to emit these tuples to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples which the emitted tuples should be
-                        anchored to. If ``AUTO_ANCHOR`` is set to ``True`` and
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``AUTO_ANCHOR`` is set to ``True`` and
                         you have not specified ``anchors``, ``anchors`` will be
                         set to the incoming/most recent tuple ID(s).
         :type anchors: list
@@ -149,11 +148,8 @@ class Bolt(Component):
         msg = {'command': 'emit'}
 
         if anchors is None:
-            if self.AUTO_ANCHOR:
-                anchors = [t.id for t in self._current_tups]
-            else:
-                anchors = []
-        msg['anchors'] = anchors
+            anchors = self._current_tups if self.AUTO_ANCHOR else []
+        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
 
         if stream is not None:
             msg['stream'] = stream
