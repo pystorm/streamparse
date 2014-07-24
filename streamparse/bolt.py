@@ -185,6 +185,19 @@ class Bolt(Component):
         tup_id = tup.id if isinstance(tup, Tuple) else tup
         send_message({'command': 'fail', 'id': tup_id})
 
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        self._current_tups = [read_tuple()]
+        self.process(self._current_tups[0])
+        if self.auto_ack:
+            self.ack(self._current_tups[0])
+        # reset so that we don't accidentally fail the wrong tuples
+        # if a successive call to read_tuple fails
+        self._current_tups = []
+
     def run(self):
         """Main run loop for all bolts.
 
@@ -198,13 +211,7 @@ class Bolt(Component):
         try:
             self.initialize(storm_conf, context)
             while True:
-                self._current_tups = [read_tuple()]
-                self.process(self._current_tups[0])
-                if self.auto_ack:
-                    self.ack(self._current_tups[0])
-                # reset so that we don't accidentally fail the wrong tuples
-                # if a successive call to read_tuple fails
-                self._current_tups = []
+                self._run()
         except Exception as e:
             if self.auto_fail and self._current_tups:
                 for tup in self._current_tups:
