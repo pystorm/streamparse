@@ -334,6 +334,10 @@ class BatchingBolt(Bolt):
                         # No tuples to save
                         continue
                     for key, tups in iteritems(self._batch):
+                        # TODO: This is currently a bug, for some reason,
+                        # self.__current_tups is not visible to the emit()
+                        # method and so auto anchoring breaks. Have no idea why
+                        # this is.
                         self.__current_tups = tups
                         self.process_batch(key, self.__current_tups)
                         if self.AUTO_ACK:

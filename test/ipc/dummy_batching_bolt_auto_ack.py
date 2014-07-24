@@ -7,20 +7,20 @@ here = os.path.split(os.path.abspath(__file__))[0]
 root = os.path.abspath(os.path.join(here, '../../'))
 sys.path[0:0] = [root]
 
-from streamparse.bolt import BasicBatchingBolt
+from streamparse.bolt import BatchingBolt
 
 
-class DummyBasicBatchingBolt(BasicBatchingBolt):
+class DummyBatchingBoltAutoAck(BatchingBolt):
+
+    SECS_BETWEEN_BATCHES = 1
+    AUTO_ACK = True
 
     def group_key(self, tup):
         return tup.values[0]
 
     def process_batch(self, key, tups):
-        for tup in tups:
-            if tup.values[0] == "fail":
-                raise Exception("Something bad happened!")
-            self.emit([key, tup.id])
+        self.emit([key, len(tups)])
 
 
 if __name__ == '__main__':
-    DummyBasicBatchingBolt().run()
+    DummyBatchingBoltAutoAck().run()

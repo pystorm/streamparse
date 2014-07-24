@@ -5,110 +5,191 @@ import subprocess
 import time
 import unittest
 
-from .util import ShellProcess
+from .util import ShellProcess, ShellComponentTestCaseMixin, get_message
 
 
-_ROOT = os.path.dirname(os.path.realpath(__file__))
-def here(*x):
-    return os.path.join(_ROOT, *x)
+_multiprocess_can_split_ = True
 
+class BoltTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-class ShellBoltTester(unittest.TestCase):
+    COMPONENT = "dummy_bolt.py"
 
-    @classmethod
-    def setUpClass(cls):
-        args = ["python", here("dummy_bolt.py")]
-        cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-        print("Waiting for subprocess to start...")
-        time.sleep(1)  # time for the subprocess to start
-        if cls.proc.poll() is not None:
-            raise Exception("Could not create subprocess.\n{}"
-                            .format(cls.proc.stderr.read().decode('utf-8')))
-        cls.shell_proc = ShellProcess(cls.proc.stdout, cls.proc.stdin)
+    def test_echo_tuple(self):
+        msg = get_message()
 
-    def test_1_initial_handshake(self):
-        msg = {
-            "conf": {},
-            "context": {},
-            "pidDir": here()
-        }
-        ShellBoltTester.shell_proc.write_message(msg)
-        res = ShellBoltTester.shell_proc.read_message()
-
-        self.assertIsInstance(res, dict)
-        self.assertEqual(res.get("pid"), ShellBoltTester.proc.pid)
-        pid = str(res["pid"])
-        self.assertTrue(os.path.exists(here(pid)))
-        self.assertTrue(os.path.isfile(here(pid)))
-
-    def test_2_echo_tuple(self):
-        msg = {
-            "id": "2285924946354050200",
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252]
-        }
-        ShellBoltTester.shell_proc.write_message(msg)
-        res = ShellBoltTester.shell_proc.read_message()
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
 
         # DummyBolt should simply echo any tuple sent in to it
-        self.assertEqual(res.get("command"), "emit")
-        self.assertEqual(msg["tuple"], res.get("tuple"))
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(msg["tuple"], res["tuple"])
 
-    def test_3_ack_tuple(self):
-        msg = {
-            "id": "ack_me",
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252]
-        }
-        ShellBoltTester.shell_proc.write_message(msg)
-        res = ShellBoltTester.shell_proc.read_message()
-        self.assertEqual(res.get("command"), "emit")
-        self.assertEqual(msg["tuple"], res.get("tuple"))
+    def test_ack_tuple(self):
+        msg = get_message(id="ack_me")
 
-        res = ShellBoltTester.shell_proc.read_message()
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(msg["tuple"], res["tuple"])
+
+        res = self.shell_proc.read_message()
         self.assertEqual(res, {"command": "ack", "id": msg["id"]})
 
-    def test_4_fail_tuple(self):
-        msg = {
-            "id": "fail_me",
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252]
-        }
+    def test_fail_tuple(self):
+        msg = get_message(id="fail_me")
 
-        ShellBoltTester.shell_proc.write_message(msg)
-        res = ShellBoltTester.shell_proc.read_message()
-        self.assertEqual(res.get("command"), "emit")
-        self.assertEqual(msg["tuple"], res.get("tuple"))
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
 
-        res = ShellBoltTester.shell_proc.read_message()
         self.assertEqual(res, {"command": "fail", "id": msg["id"]})
 
-    def test_5_emit_many(self):
-        msg = {
-            "id": "emit_many",
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252]
-        }
-        ShellBoltTester.shell_proc.write_message(msg)
+    def test_emit_stream(self):
+        msg = get_message(id="stream-words")
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(res["stream"], "words")
+        self.assertEqual(res["tuple"], msg["tuple"])
+
+    def test_emit_anchoring(self):
+        msg = get_message(id="anchor|1,2,3")
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(res["anchors"], ["1", "2", "3"])
+        self.assertEqual(res["tuple"], msg["tuple"])
+
+    def test_emit_direct_task(self):
+        msg = get_message(id="direct_task|12")
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(res["task"], 12)
+        self.assertEqual(res["tuple"], msg["tuple"])
+
+    def test_emit_many(self):
+        msg = get_message(id="emit_many")
+
+        self.shell_proc.write_message(msg)
+
         for i in range(5):
-            res = ShellBoltTester.shell_proc.read_message()
-            self.assertEqual(res.get("tuple"), msg["tuple"])
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["tuple"], msg["tuple"])
+
+    # TODO: test emit_many for stream, anchoring, direct_task
 
 
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(here(str(cls.proc.pid)))
-        cls.proc.kill()
+class BoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    COMPONENT = "dummy_bolt.py"
+
+    def test_exception(self):
+        """Ensure that exceptions raised in the bolt send proper log messages
+        before exiting. In a separate test case as the process immediately
+        exits after an exception is raised.
+        """
+        msg = get_message(id="exception")
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "log")
+        self.assertIn("Exception: ", res["msg"])
+
+        res = self.shell_proc.read_message()
+        self.assertEqual(res["command"], "sync")
+
+        # Ensure exit code of 1 from bolt
+        time.sleep(0.5)
+        self.assertEqual(self.proc.poll(), 1)
+
+
+class BoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    COMPONENT = "dummy_bolt_auto_ack.py"
+
+    def test_emit_auto_ack(self):
+        msg = get_message()
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(msg["tuple"], res["tuple"])
+
+        res = self.shell_proc.read_message()
+        self.assertEqual(res["command"], "ack")
+        self.assertEqual(res["id"], msg["id"])
+
+    def test_emit_many_auto_ack(self):
+        msg = get_message(id="emit_many")
+
+        self.shell_proc.write_message(msg)
+        for i in range(5):
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], "emit")
+            self.assertEqual(res["tuple"], msg["tuple"])
+
+        res = self.shell_proc.read_message()
+        self.assertEqual(res["command"], "ack")
+        self.assertEqual(res["id"], msg["id"])
+
+
+class BoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    COMPONENT = "dummy_bolt_auto_anchor.py"
+
+    def test_emit_auto_anchor(self):
+        msg = get_message()
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        # DummyBolt should simply echo any tuple sent in to it
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(msg["tuple"], res["tuple"])
+        self.assertEqual(res["anchors"], [msg["id"]])
+
+    def test_emit_many_auto_anchor(self):
+        msg = get_message(id="emit_many")
+
+        self.shell_proc.write_message(msg)
+
+        for i in range(5):
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], "emit")
+            self.assertEqual(msg["tuple"], res["tuple"])
+            self.assertEqual(res["anchors"], [msg["id"]])
+
+
+class BoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    COMPONENT = "dummy_bolt_auto_fail.py"
+
+    def test_auto_fail(self):
+        msg = get_message()
+
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "fail")
+        self.assertEqual(res["id"], msg["id"])
+
+        res = self.shell_proc.read_message()
+        self.assertEqual(res["command"], "log")
+        self.assertIn("Exception: ", res["msg"])
+
+        time.sleep(0.5)
+        self.assertEqual(self.proc.poll(), 1)
+
+
 
 if __name__ == '__main__':
     unittest.main()
