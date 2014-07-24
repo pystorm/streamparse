@@ -340,7 +340,8 @@ class BatchingBolt(Bolt):
                             for tup in self.__current_tups:
                                 self.ack(tup)
                     self._batch = defaultdict(list)
-        except Exception:
+        except Exception as e:
+            self.raise_exception(e, self.__current_tups)
             if self.AUTO_FAIL and self.__current_tups:
                 for tup in self.__current_tups:
                     self.fail(tup)
