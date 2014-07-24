@@ -353,23 +353,19 @@ class BatchingBolt(Bolt):
         reraise(*self.exc_info)
 
 
-# http://stackoverflow.com/questions/9008444/how-to-warn-about-class-name-deprecation
-class DeprecationHelper(object):
+class BasicBolt(Bolt):
 
-    def __init__(self, new_target, name):
-        self._new_target = new_target
-        self._name = name
-
-    def _warn(self):
-        warnings.warn("{} is deprecated and "
+    def __init__(self):
+        super(BasicBolt, self).__init__()
+        warnings.warn("BasicBolt is deprecated and "
                       "will be removed in a future streamparse release. "
-                      "Please use Bolt or BatchingBolt."
-                      .format(self._name), DeprecationWarning)
-
-    def __call__(self, *args, **kwargs):
-        self._warn()
-        return self._new_target(*args, **kwargs)
+                      "Please use Bolt.", DeprecationWarning)
 
 
-BasicBolt = DeprecationHelper(Bolt, "BasicBolt")
-BasicBatchingBolt = DeprecationHelper(BatchingBolt, "BasicBatchingBolt")
+class BasicBatchingBolt(BatchingBolt):
+
+    def __init__(self):
+        super(BasicBatchingBolt, self).__init__()
+        warnings.warn("BasicBatchingBolt is deprecated and "
+                      "will be removed in a future streamparse release. "
+                      "Please use BatchingBolt.", DeprecationWarning)
