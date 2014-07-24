@@ -21,7 +21,7 @@ BATCH = (
 
 class BatchingBoltTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_batching_bolt.py"
+    component = "dummy_batching_bolt.py"
 
     def test_single_tuple(self):
         msg = get_message()
@@ -67,7 +67,7 @@ class BatchingBoltTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BatchingBoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_batching_bolt.py"
+    component = "dummy_batching_bolt.py"
 
     def test_worker_exception(self):
         msg = get_message(tuple=["fail"])
@@ -88,7 +88,7 @@ class BatchingBoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BatchingBoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_batching_bolt_auto_ack.py"
+    component = "dummy_batching_bolt_auto_ack.py"
 
     def test_auto_ack(self):
         for message in BATCH:
@@ -108,7 +108,7 @@ class BatchingBoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BatchingBoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_batching_bolt_auto_anchor.py"
+    component = "dummy_batching_bolt_auto_anchor.py"
 
     def test_auto_anchor(self):
         for message in BATCH:
@@ -129,7 +129,7 @@ class BatchingBoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase)
 
 class BatchingBoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_batching_bolt_auto_fail.py"
+    component = "dummy_batching_bolt_auto_fail.py"
 
     def test_auto_fail(self):
         for message in BATCH:

@@ -28,11 +28,11 @@ class ShellComponentTestCaseMixin(object):
     as well as the initial handshake to the component.
     """
 
-    COMPONENT = None
+    component = None
 
     @classmethod
     def setUpClass(cls):
-        args = ["python", here(cls.COMPONENT)]
+        args = ["python", here(cls.component)]
         cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)

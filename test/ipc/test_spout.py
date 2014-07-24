@@ -12,7 +12,7 @@ _multiprocess_can_split_ = True
 
 class ShellSpoutTester(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_spout.py"
+    component = "dummy_spout.py"
 
     def test_next_tuple(self):
         msg = {"command": "next"}

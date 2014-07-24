@@ -12,7 +12,7 @@ _multiprocess_can_split_ = True
 
 class BoltTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_bolt.py"
+    component = "dummy_bolt.py"
 
     def test_echo_tuple(self):
         msg = get_message()
@@ -88,7 +88,7 @@ class BoltTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_bolt.py"
+    component = "dummy_bolt.py"
 
     def test_exception(self):
         """Ensure that exceptions raised in the bolt send proper log messages
@@ -113,7 +113,7 @@ class BoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_bolt_auto_ack.py"
+    component = "dummy_bolt_auto_ack.py"
 
     def test_emit_auto_ack(self):
         msg = get_message()
@@ -144,7 +144,7 @@ class BoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_bolt_auto_anchor.py"
+    component = "dummy_bolt_auto_anchor.py"
 
     def test_emit_auto_anchor(self):
         msg = get_message()
@@ -171,7 +171,7 @@ class BoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
 class BoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    COMPONENT = "dummy_bolt_auto_fail.py"
+    component = "dummy_bolt_auto_fail.py"
 
     def test_auto_fail(self):
         msg = get_message()
