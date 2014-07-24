@@ -314,6 +314,16 @@ class BatchingBolt(Bolt):
         """
         raise NotImplementedError()
 
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        tup = read_tuple()
+        group_key = self.group_key(tup)
+        with self._batch_lock:
+            self._batches[group_key].append(tup)
+
     def run(self):
         """Modified and simplified run loop which runs in the main thread since
         we only need to add tuples to the proper batch for later processing
@@ -322,27 +332,30 @@ class BatchingBolt(Bolt):
         storm_conf, context = read_handshake()
         self.initialize(storm_conf, context)
         while True:
-            tup = read_tuple()
-            group_key = self.group_key(tup)
-            with self._batch_lock:
-                self._batches[group_key].append(tup)
+            self._run()
+
+    def _batch_entry_run(self):
+        """The inside of ``_batch_entry``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        time.sleep(self.secs_between_batches)
+        with self._batch_lock:
+            if not self._batches:
+                return # no tuples to save
+            for key, batch in iteritems(self._batches):
+                self._current_tups = batch
+                self.process_batch(key, batch)
+                if self.auto_ack:
+                    for tup in batch:
+                        self.ack(tup)
+            self._batches = defaultdict(list)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
         try:
             while True:
-                time.sleep(self.secs_between_batches)
-                with self._batch_lock:
-                    if not self._batches:
-                        # No tuples to save
-                        continue
-                    for key, batch in iteritems(self._batches):
-                        self._current_tups = batch
-                        self.process_batch(key, batch)
-                        if self.auto_ack:
-                            for tup in batch:
-                                self.ack(tup)
-                    self._batches = defaultdict(list)
+                self._batch_entry_run()
         except Exception as e:
             self.raise_exception(e, self._current_tups)
             if self.auto_fail and self._current_tups:

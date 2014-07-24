@@ -1,5 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+import itertools
+import mock
+import time
 import unittest
 
 from mock import patch
@@ -149,6 +152,66 @@ class BoltTests(unittest.TestCase):
         self.bolt.auto_fail = False
         self.bolt.run()
         self.assertFalse(fail_mock.called)
+
+
+@patch('streamparse.bolt.send_message', new=lambda t: None)
+class BatchingBoltTests(unittest.TestCase):
+
+    class ShortBatchTester(bolt.BatchingBolt):
+        secs_between_batches = 0.05 # keep it speedy
+
+    def setUp(self):
+        self.bolt = self.ShortBatchTester()
+        self.bolt.initialize({}, {})
+        self.tups = [
+            ipc.Tuple(14, 'some_spout', 'default', 'some_bolt', [1, 2, 3]),
+            ipc.Tuple(15, 'some_spout', 'default', 'some_bolt', [4, 5, 6]),
+            ipc.Tuple(16, 'some_spout', 'default', 'some_bolt', [7, 8, 9]),
+        ]
+        self.tups_cycle = itertools.cycle(self.tups)
+
+    @patch.object(bolt.BatchingBolt, 'process_batch')
+    @patch('streamparse.bolt.read_tuple')
+    def test_batching(self, read_tuple_mock, process_batch_mock):
+        # Basic test that batching is working
+        read_tuple_mock.side_effect = lambda: self.tups_cycle.next()
+
+        # Add a bunch of tuples
+        for i in xrange(3):
+            self.bolt._run()
+
+        # Wait a bit, and see if process_batch was called
+        time.sleep(0.1)
+        process_batch_mock.assert_called_with(None, self.tups[:3])
+
+    @patch.object(bolt.BatchingBolt, 'process_batch')
+    @patch('streamparse.bolt.read_tuple')
+    def test_group_key(self, read_tuple_mock, process_batch_mock):
+        # Basic test that batching is working
+        read_tuple_mock.side_effect = lambda: self.tups_cycle.next()
+
+        # Change the group key
+        self.bolt.group_key = lambda t: sum(t.values) % 2
+
+        # Add a bunch of tuples
+        for i in xrange(3):
+            self.bolt._run()
+
+        # Wait a bit, and see if process_batch was called correctly
+        time.sleep(0.1)
+        process_batch_mock.assert_has_calls([
+            mock.call(0, [self.tups[0], self.tups[2]]),
+            mock.call(1, [self.tups[1]]),
+        ], any_order=True)
+
+    def test_auto_ack(self):
+        pass
+
+    def test_auto_anchor(self):
+        pass
+
+    def test_auto_fail(self):
+        pass
 
 
 if __name__ == '__main__':
