@@ -33,5 +33,5 @@ Bolts
     :show-inheritance:
 
 .. autoclass:: streamparse.bolt.BatchingBolt
-    :members: group_key, process_batch, SECS_BETWEEN_BATCHES, auto_anchor, auto_ack, auto_fail
+    :members: group_key, process_batch, secs_between_batches, auto_anchor, auto_ack, auto_fail
     :show-inheritance:

@@ -12,7 +12,7 @@ from streamparse.bolt import BatchingBolt
 
 class DummyBatchingBolt(BatchingBolt):
 
-    SECS_BETWEEN_BATCHES = 1
+    secs_between_batches = 1
 
     def group_key(self, tup):
         return tup.values[0]

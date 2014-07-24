@@ -239,7 +239,7 @@ class BatchingBolt(Bolt):
 
         class WordCounterBolt(BatchingBolt):
 
-            SECS_BETWEEN_BATCHES = 5
+            secs_between_batches = 5
             auto_ack = True
             auto_anchor = True
             auto_fail = True
@@ -270,7 +270,7 @@ class BatchingBolt(Bolt):
     tuples when an exception occurs when the ``process_batch()`` method is
     called. Default is ``False``.
     """
-    SECS_BETWEEN_BATCHES = 2
+    secs_between_batches = 2
     """The time (in seconds) between calls to ``process_batch()``. Note that if
     there are no tuples in any batch, the BatchingBolt will continue to sleep.
     Note: Can be fractional to specify greater precision (e.g. 2.5).
@@ -328,7 +328,7 @@ class BatchingBolt(Bolt):
         """Entry point for the batcher thread."""
         try:
             while True:
-                time.sleep(self.SECS_BETWEEN_BATCHES)
+                time.sleep(self.secs_between_batches)
                 with self._batch_lock:
                     if not self._batches:
                         # No tuples to save

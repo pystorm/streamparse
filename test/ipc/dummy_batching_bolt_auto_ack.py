@@ -12,7 +12,7 @@ from streamparse.bolt import BatchingBolt
 
 class DummyBatchingBoltAutoAck(BatchingBolt):
 
-    SECS_BETWEEN_BATCHES = 1
+    secs_between_batches = 1
     auto_ack = True
 
     def group_key(self, tup):
