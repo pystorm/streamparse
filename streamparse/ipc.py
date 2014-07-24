@@ -29,6 +29,8 @@ _pending_task_ids = deque()
 # we'll redirect stdout, but we'll save original for communication to Storm
 _stdout = sys.stdout
 _stderr = sys.stderr
+# this way we don't have to mock sys.stdin for testing, which lets us use pdb
+_stdin = sys.stdin
 
 
 class StormIPCException(Exception):
@@ -92,7 +94,7 @@ def read_message_lines():
     lines = blank_lines = 0
 
     while True:
-        line = sys.stdin.readline()[0:-1]  # ignore new line
+        line = _stdin.readline()[0:-1]  # ignore new line
         if line == 'end':
             break
         lines += 1
