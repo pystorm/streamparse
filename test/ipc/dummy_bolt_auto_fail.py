@@ -12,7 +12,7 @@ from streamparse.bolt import Bolt
 
 class DummyBoltAutoFail(Bolt):
 
-    AUTO_FAIL = True
+    auto_fail = True
 
     def process(self, tup):
         raise Exception("Something bad happened!")

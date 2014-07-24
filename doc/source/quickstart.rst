@@ -351,7 +351,7 @@ sending a larger number of tuples to Storm.
 After processing of the tuple is complete, we tell Storm the tuple was
 successfully processed by calling the bolt's ``ack()`` method and passing the
 input tuple we received.  If you're writing simple bolt that should always call
-``ack()`` after processing completes, you can add an ``AUTO_ACK`` class
+``ack()`` after processing completes, you can add an ``auto_ack`` class
 variable to your bolt implementation and streamparse will take care of
 automatically acking tuples.
 
@@ -361,7 +361,7 @@ automatically acking tuples.
 
     class MyBolt(Bolt):
 
-        AUTO_ACK = True
+        auto_ack = True
 
         def process(self, tup):
             # do stuff...
@@ -371,8 +371,8 @@ automatically acking tuples.
 Other Bolt Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In addition to ``AUTO_ACK``, Bolts support two other configuration parameters,
-``AUTO_ANCHOR`` and ``AUTO_FAIL``.  All three options are documented in
+In addition to ``auto_ack``, Bolts support two other configuration parameters,
+``auto_anchor`` and ``auto_fail``.  All three options are documented in
 :class:`streamparse.bolt.Bolt`.
 
 

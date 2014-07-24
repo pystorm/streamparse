@@ -29,9 +29,9 @@ class Bolt(Component):
 
         class SentenceSplitterBolt(Bolt):
 
-            AUTO_ANCHOR = True  # perform auto anchoring during emits
-            AUTO_ACK = True  # perform auto acking after process()
-            AUTO_FAIL = True  # perform auto fail on exceptions
+            auto_anchor = True  # perform auto anchoring during emits
+            auto_ack = True  # perform auto acking after process()
+            auto_fail = True  # perform auto fail on exceptions
 
             def process(self, tup):
                 sentence = tup.values[0]
@@ -39,17 +39,17 @@ class Bolt(Component):
                     self.emit([word])
     """
 
-    AUTO_ANCHOR = False
+    auto_anchor = False
     """A ``bool`` indicating whether or not the bolt should automatically
     anchor emits to the incoming tuple ID. Tuple anchoring is how Storm
     provides reliability, you can read more about `tuple anchoring in Storm's
     docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_. Default is ``False``.
     """
-    AUTO_ACK = False
+    auto_ack = False
     """A ``bool`` indicating whether or not the bolt should automatically
     acknowledge tuples after ``process()`` is called. Default is ``False``.
     """
-    AUTO_FAIL = False
+    auto_fail = False
     """A ``bool`` indicating whether or not the bolt should automatically fail
     tuples when an exception occurs when the ``process()`` method is called.
     Default is ``False``.
@@ -97,7 +97,7 @@ class Bolt(Component):
         :type stream: str
         :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
                         instances) which the emitted tuples should be anchored
-                        to. If ``AUTO_ANCHOR`` is set to ``True`` and
+                        to. If ``auto_anchor`` is set to ``True`` and
                         you have not specified ``anchors``, ``anchors`` will be
                         set to the incoming/most recent tuple ID(s).
         :type anchors: list
@@ -111,7 +111,7 @@ class Bolt(Component):
         msg = {'command': 'emit', 'tuple': tup}
 
         if anchors is None:
-            anchors = self._current_tups if self.AUTO_ANCHOR else []
+            anchors = self._current_tups if self.auto_anchor else []
         msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
 
         if stream is not None:
@@ -135,7 +135,7 @@ class Bolt(Component):
         :type stream: str
         :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
                         instances) which the emitted tuples should be anchored
-                        to. If ``AUTO_ANCHOR`` is set to ``True`` and
+                        to. If ``auto_anchor`` is set to ``True`` and
                         you have not specified ``anchors``, ``anchors`` will be
                         set to the incoming/most recent tuple ID(s).
         :type anchors: list
@@ -149,7 +149,7 @@ class Bolt(Component):
         msg = {'command': 'emit'}
 
         if anchors is None:
-            anchors = self._current_tups if self.AUTO_ANCHOR else []
+            anchors = self._current_tups if self.auto_anchor else []
         msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
 
         if stream is not None:
@@ -202,13 +202,13 @@ class Bolt(Component):
             while True:
                 self._current_tups = [read_tuple()]
                 self.process(self._current_tups[0])
-                if self.AUTO_ACK:
+                if self.auto_ack:
                     self.ack(self._current_tups[0])
                 # reset so that we don't accidentally fail the wrong tuples
                 # if a successive call to read_tuple fails
                 self._current_tups = []
         except Exception as e:
-            if self.AUTO_FAIL and self._current_tups:
+            if self.auto_fail and self._current_tups:
                 for tup in self._current_tups:
                     self.fail(tup)
             self.raise_exception(e, self._current_tups[0])
@@ -240,9 +240,9 @@ class BatchingBolt(Bolt):
         class WordCounterBolt(BatchingBolt):
 
             SECS_BETWEEN_BATCHES = 5
-            AUTO_ACK = True
-            AUTO_ANCHOR = True
-            AUTO_FAIL = True
+            auto_ack = True
+            auto_anchor = True
+            auto_fail = True
 
             def group_key(self, tup):
                 word = tup.values[0]
@@ -254,18 +254,18 @@ class BatchingBolt(Bolt):
 
     """
 
-    AUTO_ANCHOR = False
+    auto_anchor = False
     """A ``bool`` indicating whether or not the bolt should automatically
     anchor emits to the incoming tuple ID. Tuple anchoring is how Storm
     provides reliability, you can read more about `tuple anchoring in Storm's
     docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_. Default is ``False``.
     """
-    AUTO_ACK = False
+    auto_ack = False
     """A ``bool`` indicating whether or not the bolt should automatically
     acknowledge tuples after ``process_batch()`` is called. Default is
     ``False``.
     """
-    AUTO_FAIL = False
+    auto_fail = False
     """A ``bool`` indicating whether or not the bolt should automatically fail
     tuples when an exception occurs when the ``process_batch()`` method is
     called. Default is ``False``.
@@ -336,13 +336,13 @@ class BatchingBolt(Bolt):
                     for key, batch in iteritems(self._batches):
                         self._current_tups = batch
                         self.process_batch(key, batch)
-                        if self.AUTO_ACK:
+                        if self.auto_ack:
                             for tup in batch:
                                 self.ack(tup)
                     self._batches = defaultdict(list)
         except Exception as e:
             self.raise_exception(e, self._current_tups)
-            if self.AUTO_FAIL and self._current_tups:
+            if self.auto_fail and self._current_tups:
                 for tup in self._current_tups:
                     self.fail(tup)
             self.exc_info = sys.exc_info()
@@ -364,9 +364,9 @@ class BasicBolt(Bolt):
     Deprecated.
     """
 
-    AUTO_ACK = True
-    AUTO_ANCHOR = True
-    AUTO_FAIL = True
+    auto_ack = True
+    auto_anchor = True
+    auto_fail = True
 
 
 class BasicBatchingBolt(Bolt):
@@ -376,6 +376,6 @@ class BasicBatchingBolt(Bolt):
     Deprecated.
     """
 
-    AUTO_ACK = True
-    AUTO_ANCHOR = True
-    AUTO_FAIL = True
+    auto_ack = True
+    auto_anchor = True
+    auto_fail = True

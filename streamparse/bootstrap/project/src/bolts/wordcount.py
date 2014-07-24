@@ -6,9 +6,9 @@ from streamparse.bolt import Bolt
 
 class WordCounter(Bolt):
 
-    AUTO_ACK = True  # automatically acknowledge tuples after process()
-    AUTO_ANCHOR = True  # automatically anchor tuples to current tuple
-    AUTO_FAIL = True  # automatically fail tuples when exceptions occur
+    auto_ack = True  # automatically acknowledge tuples after process()
+    auto_anchor = True  # automatically anchor tuples to current tuple
+    auto_fail = True  # automatically fail tuples when exceptions occur
 
     def initialize(self, conf, ctx):
         self.counts = Counter()
