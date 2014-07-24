@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-streamparse
-===========
+streamparse |release|
+=====================
 
 streamparse lets you run Python code against real-time streams of data.
 Integrates with Apache Storm.
