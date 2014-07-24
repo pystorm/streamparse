@@ -47,8 +47,7 @@ class Bolt(Component):
     """
     AUTO_ACK = False
     """A ``bool`` indicating whether or not the bolt should automatically
-    anchor emits to the incoming tuple as well as acknowledge the tuple after
-    ``process()`` is called. Default is ``False``.
+    acknowledge tuples after ``process()`` is called. Default is ``False``.
     """
     AUTO_FAIL = False
     """A ``bool`` indicating whether or not the bolt should automatically fail
@@ -263,8 +262,7 @@ class BatchingBolt(Bolt):
     """
     AUTO_ACK = False
     """A ``bool`` indicating whether or not the bolt should automatically
-    anchor emits to tuple ids of the current batch as well as acknowledge
-    all the tuples in the batch after ``process_batch()`` is called. Default is
+    acknowledge tuples after ``process_batch()`` is called. Default is
     ``False``.
     """
     AUTO_FAIL = False
