@@ -292,11 +292,12 @@ class BatchingBolt(Bolt):
         """Return the group key used to group tuples within a batch.
 
         By default, returns None, which put all tuples in a single
-        batch. Override this function to enable batching.
+        batch, effectively just time-based batching. Override this create
+        multiple batches based on a key.
 
         :param tup: the tuple used to extract a group key
         :type tup: Tuple
-        :returns: Any ``hashable`` value (will be used in a ``dict``).
+        :returns: Any ``hashable`` value.
         """
         return None
 
