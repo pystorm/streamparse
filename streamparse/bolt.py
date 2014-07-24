@@ -55,6 +55,7 @@ class Bolt(Component):
     Default is ``False``.
     """
 
+    # Using a list so Bolt and subclasses can have more than one current_tup
     _current_tups = []
 
     def initialize(self, storm_conf, context):
