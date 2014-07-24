@@ -200,7 +200,6 @@ class Bolt(Component):
         Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
-        tup = None
         try:
             self.initialize(storm_conf, context)
             while True:
@@ -212,7 +211,8 @@ class Bolt(Component):
             if self.AUTO_FAIL and self.__current_tups:
                 for tup in self.__current_tups:
                     self.fail(tup)
-            self.raise_exception(e, tup)
+            self.raise_exception(e, self.__current_tups[0])
+            sys.exit(1)
 
 
 class BatchingBolt(Bolt):
