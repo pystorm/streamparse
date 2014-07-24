@@ -336,7 +336,7 @@ Now let's create a bolt that takes in sentences, and spits out words:
                 return
 
             self.emit_many(words)
-            self.ack(tup)  # tell Storm the tuple has been processed successfully
+            # tuple acknowledgement is handled automatically
 
 The bolt implementation is even simpler. We simply override the default
 ``process()`` method which streamparse calls when a tuple has been emitted by
@@ -348,11 +348,38 @@ In the ``SentenceSplitterBolt`` above, we have decided to use the
 ``emit_many()`` method instead of ``emit()`` which is a bit more efficient when
 sending a larger number of tuples to Storm.
 
-After processing of the tuple is complete, we tell Storm the tuple was
-successfully processed by calling the bolt's ``ack()`` method and passing the
-input tuple we received.  If you're writing simple bolt that should always call
-``ack()`` after processing completes, you can use the
-:class:`streamparse.bolt.BasicBolt` class.
+If your ``process()`` method completes without raising an Exception, streamparse
+will automatically ensure any emits you have are anchored to the current tuple
+being processed and acknowledged after ``process()`` completes.
+
+If an Exception is raised while ``process()`` is called, streamparse
+automatically fails the current tuple prior to killing the Python process.
+
+Bolt Configuration Options
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can disable the automatic acknowleding, anchoring or failing of tuples by
+adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
+``auto_fail``.  All three options are documented in
+:class:`streamparse.bolt.Bolt`.
+
+**Example**:
+
+.. code-block:: python
+
+    from streamparse.bolt import Bolt
+
+    class MyBolt(Bolt):
+
+        auto_ack = False
+        auto_fail = False
+
+        def process(self, tup):
+            # do stuff...
+            if error:
+              self.fail(tup)  # perform failure manually
+            self.ack(tup)  # perform acknowledgement manually
+
 
 Failed Tuples
 ^^^^^^^^^^^^^
