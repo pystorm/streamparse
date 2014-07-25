@@ -209,7 +209,7 @@ class Bolt(Component):
             if self.auto_fail and self._current_tups:
                 for tup in self._current_tups:
                     self.fail(tup)
-            self.raise_exception(e, self._current_tups[0])
+                    self.raise_exception(e, tup)
             sys.exit(1)
 
 
