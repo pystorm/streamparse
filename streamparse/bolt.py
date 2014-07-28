@@ -276,7 +276,6 @@ class BatchingBolt(Bolt):
         signal.signal(signal.SIGINT, self._handle_worker_exception)
 
         self._batches = defaultdict(list)
-        self._should_stop = threading.Event()
         self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
         self._batcher.daemon = True
