@@ -196,6 +196,8 @@ class Bolt(Component):
         Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
+        self._setup_component(storm_conf, context)
+
         try:
             self.initialize(storm_conf, context)
             while True:
@@ -362,6 +364,8 @@ class BatchingBolt(Bolt):
         in the _batcher thread.
         """
         storm_conf, context = read_handshake()
+        self._setup_component(storm_conf, context)
+
         tup = None
         try:
             self.initialize(storm_conf, context)

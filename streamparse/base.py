@@ -10,6 +10,18 @@ class Component(object):
     """Base class for Spouts and Bolts which contains class methods for
     logging messages back to the Storm worker process."""
 
+    def _setup_component(self, storm_conf, context):
+        """Add helpful instance variables to component after initial handshake
+        with Storm.
+        """
+        self._topology_name = storm_conf.get('topology.name', '')
+        self._task_id = context.get('taskid', '')
+        self._component_name = context.get('task->component', {})\
+                                      .get(str(self._task_id), '')
+        self._debug = storm_conf.get("topology.debug", False)
+        self._storm_conf = storm_conf
+        self._context = context
+
     def raise_exception(self, exception, tup=None):
         """Report an exception back to Storm via logging.
 
