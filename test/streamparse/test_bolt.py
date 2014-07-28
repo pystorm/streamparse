@@ -154,28 +154,35 @@ class BoltTests(unittest.TestCase):
         self.assertFalse(fail_mock.called)
 
 
-@patch('streamparse.bolt.send_message', new=lambda t: None)
+@patch('streamparse.bolt.send_message', new=lambda *a: None)
+@patch('streamparse.base.send_message', new=lambda *a: None)
 class BatchingBoltTests(unittest.TestCase):
 
-    class ShortBatchTester(bolt.BatchingBolt):
-        secs_between_batches = 0.05 # keep it speedy
-
     def setUp(self):
-        self.bolt = self.ShortBatchTester()
+        # mock seconds between batches to speed the tests up
+        self._orig_secs = bolt.BatchingBolt.secs_between_batches
+
+        bolt.BatchingBolt.secs_between_batches = 0.05
+        self.bolt = bolt.BatchingBolt()
         self.bolt.initialize({}, {})
+
+        # Mock read_tuple and manually since it all needs to be mocked
         self.tups = [
             ipc.Tuple(14, 'some_spout', 'default', 'some_bolt', [1, 2, 3]),
             ipc.Tuple(15, 'some_spout', 'default', 'some_bolt', [4, 5, 6]),
             ipc.Tuple(16, 'some_spout', 'default', 'some_bolt', [7, 8, 9]),
         ]
-        self.tups_cycle = itertools.cycle(self.tups)
+        self._orig_read_tuple = bolt.read_tuple
+        tups_cycle = itertools.cycle(self.tups)
+        bolt.read_tuple = lambda: tups_cycle.next()
+
+    def tearDown(self):
+        # undo the mocking
+        bolt.BatchingBolt.secs_between_batches = self._orig_secs
+        bolt.read_tuple = self._orig_read_tuple
 
     @patch.object(bolt.BatchingBolt, 'process_batch')
-    @patch('streamparse.bolt.read_tuple')
-    def test_batching(self, read_tuple_mock, process_batch_mock):
-        # Basic test that batching is working
-        read_tuple_mock.side_effect = lambda: self.tups_cycle.next()
-
+    def test_batching(self, process_batch_mock):
         # Add a bunch of tuples
         for i in xrange(3):
             self.bolt._run()
@@ -185,12 +192,8 @@ class BatchingBoltTests(unittest.TestCase):
         process_batch_mock.assert_called_with(None, self.tups[:3])
 
     @patch.object(bolt.BatchingBolt, 'process_batch')
-    @patch('streamparse.bolt.read_tuple')
-    def test_group_key(self, read_tuple_mock, process_batch_mock):
-        # Basic test that batching is working
-        read_tuple_mock.side_effect = lambda: self.tups_cycle.next()
-
-        # Change the group key
+    def test_group_key(self, process_batch_mock):
+        # Change the group key to even/odd grouping
         self.bolt.group_key = lambda t: sum(t.values) % 2
 
         # Add a bunch of tuples
@@ -204,14 +207,86 @@ class BatchingBoltTests(unittest.TestCase):
             mock.call(1, [self.tups[1]]),
         ], any_order=True)
 
-    def test_auto_ack(self):
-        pass
+    def _test_exception_handling(self):
+        # Make sure the exception gets from the worker thread to the main
+        for i in xrange(1):
+            self.bolt._run()
+        self.assertRaises(NotImplementedError, lambda: time.sleep(0.1))
 
-    def test_auto_anchor(self):
-        pass
+    @patch.object(bolt.BatchingBolt, 'ack')
+    @patch.object(bolt.BatchingBolt, 'process_batch', new=lambda *args: None)
+    def test_auto_ack(self, ack_mock):
+        # Test auto-ack on (the default)
+        for i in xrange(3):
+            self.bolt._run()
+        time.sleep(0.1)
+        ack_mock.assert_has_calls([
+            mock.call(self.tups[0]),
+            mock.call(self.tups[1]),
+            mock.call(self.tups[2]),
+        ], any_order=True)
+        ack_mock.reset_mock()
 
-    def test_auto_fail(self):
-        pass
+        # Test auto-ack off
+        self.bolt.auto_ack = False
+        for i in xrange(3):
+            self.bolt._run()
+        time.sleep(0.1)
+        self.assertFalse(ack_mock.called)
+
+    @patch.object(bolt.BatchingBolt, 'fail')
+    def test_auto_fail(self, fail_mock):
+        # Test auto-fail on (the default)
+        for i in xrange(3):
+            self.bolt._run()
+        try: time.sleep(0.1)
+        except NotImplementedError: pass
+        # All waiting tuples should have failed at this point
+        fail_mock.assert_has_calls([
+            mock.call(self.tups[0]),
+            mock.call(self.tups[1]),
+            mock.call(self.tups[2]),
+        ], any_order=True)
+        fail_mock.reset_mock()
+
+        # Test auto-fail off
+        self.bolt.auto_fail = False
+        for i in xrange(3):
+            self.bolt._run()
+        try: time.sleep(0.1)
+        except NotImplementedError: pass
+        self.assertFalse(fail_mock.called)
+
+    @patch.object(bolt.BatchingBolt, 'process_batch')
+    @patch.object(bolt.BatchingBolt, 'fail')
+    def test_auto_fail_partial(self, fail_mock, process_batch_mock):
+        """Test processing failing when only some batches are done"""
+        # NOTE: This test is currently broken because BatchingBolt is broken.
+        #       If a batch fails, all subsequent batches need to fail too.
+        #       Right now, only the current batch of tuples will be failed,
+        #       leaving the rest to eventually time out. Not horrible, but
+        #       definitely incorrect.
+        # Change the group key just be the sum of values -- therefore 3 separate batches
+        self.bolt.group_key = lambda t: sum(t.values)
+        # Make sure we fail on the second batch
+        work = {'status': True} # to avoid scoping problems
+        def work_once(*args):
+            if work['status']:
+                work['status'] = False
+            else:
+                raise Exception('borkt')
+        process_batch_mock.side_effect = work_once
+        # Run the batches
+        for i in xrange(3):
+            self.bolt._run()
+        try:
+            time.sleep(0.1)
+        except Exception:
+            pass
+        # Only some tuples should have failed at this point. The key is that
+        # all un-acked tuples should be failed, even for batches we haven't
+        # started processing yet. Therefore
+        self.assertEqual(fail_mock.call_count, 2)
 
 
 if __name__ == '__main__':
