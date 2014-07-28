@@ -310,12 +310,16 @@ class BatchingBolt(Bolt):
         in the _batcher thread.
         """
         storm_conf, context = read_handshake()
-        self.initialize(storm_conf, context)
-        while True:
-            tup = read_tuple()
-            group_key = self.group_key(tup)
-            with self._batch_lock:
-                self._batches[group_key].append(tup)
+        tup = None
+        try:
+            self.initialize(storm_conf, context)
+            while True:
+                with self._batch_lock:
+                    tup = read_tuple()
+                    group_key = self.group_key(tup)
+                    self._batches[group_key].append(tup)
+        except Exception as e:
+            self.raise_exception(e)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
@@ -326,6 +330,7 @@ class BatchingBolt(Bolt):
                     if not self._batches:
                         # No tuples to save
                         continue
+
                     for key, batch in iteritems(self._batches):
                         self._current_tups = batch
                         self.process_batch(key, batch)
