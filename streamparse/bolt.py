@@ -428,12 +428,3 @@ class BasicBolt(Bolt):
         warnings.warn("BasicBolt is deprecated and "
                       "will be removed in a future streamparse release. "
                       "Please use Bolt.", DeprecationWarning)
-
-
-class BasicBatchingBolt(BatchingBolt):
-
-    def __init__(self):
-        super(BasicBatchingBolt, self).__init__()
-        warnings.warn("BasicBatchingBolt is deprecated and "
-                      "will be removed in a future streamparse release. "
-                      "Please use BatchingBolt.", DeprecationWarning)
