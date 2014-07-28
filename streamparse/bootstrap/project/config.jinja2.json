@@ -7,7 +7,11 @@
             "user": "",
             "nimbus": "",
             "workers": [],
-            "log_path": "",
+            "log": {
+                "path": "",
+                "max_bytes": 1000000,
+                "backup_count": 10
+            },
             "virtualenv_root": ""
         }
     }
