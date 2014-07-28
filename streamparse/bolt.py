@@ -284,9 +284,12 @@ class BatchingBolt(Bolt):
         self.exc_info = None
         signal.signal(signal.SIGINT, self._handle_worker_exception)
 
+        iname = self.__class__.__name__
+        threading.current_thread().name = '{}:main-thread'.format(iname)
         self._batches = defaultdict(list)
-        self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
+        self._batcher = threading.Thread(target=self._batch_entry)
+        self._batcher.name = '{}:_batcher-thread'.format(iname)
         self._batcher.daemon = True
         self._batcher.start()
 
