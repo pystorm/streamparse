@@ -115,28 +115,24 @@ def read_message():
     means that communication with the supervisor has been severed.
     """
     msg = ""
-    num_lines = num_blank_lines = num_eof = 0
+    num_blank_lines = 0
     while True:
         # readline will return trailing \n so that output is unambigious, we
         # should only have line == '' if we're at EOF
         line = _readline()
-        num_lines += 1
 
         if line == 'end\n':
             break
         elif line == '':
-            eof_msgs += 1
-            if eof_msgs % 10000 == 0:
-                _log.warn("Tried to read from stdin {:,} times with no "
-                         "success. Is Storm supervisor running?"
-                         .format(eof_msgs))
-            continue
+            _log.error("Received EOF while trying to read stdin from Storm, "
+                       "pipe appears to be broken, exiting.")
+            sys.exit(1)
         elif line == '\n':
-            blank_lines += 1
-            if blank_lines % 1000 == 0:
+            num_blank_lines += 1
+            if num_blank_lines % 1000 == 0:
                 _log.warn("While trying to read a command or pending task ID, "
-                         "Storm has instead sent {:,} '\\n' messages."
-                         .format(blank_lines))
+                          "Storm has instead sent {:,} '\\n' messages."
+                          .format(num_blank_lines))
             continue
 
         msg = '{}{}\n'.format(msg, line[0:-1])
