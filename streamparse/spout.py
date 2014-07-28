@@ -167,4 +167,6 @@ class Spout(Component):
                     self.fail(cmd['id'])
                 send_message({'command': 'sync'})
         except Exception as e:
+            log.error('Error in %s.run()', self.__class__.__name__,
+                      exc_info=True)
             self.raise_exception(e)
