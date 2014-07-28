@@ -316,6 +316,46 @@ class BatchingBolt(Bolt):
         """
         raise NotImplementedError()
 
+    def emit(self, tup, stream=None, anchors=None, direct_task=None):
+        """A modified emit which, due to the threaded nature of BatchingBolt,
+        does not return task IDs after emitting.
+
+        :param tup: the Tuple payload to send to Storm, should contain only
+                    JSON-serializable data.
+        :type tup: list
+        :param stream: the ID of the stream to emit this tuple to. Specify
+                       ``None`` to emit to default stream.
+        :type stream: str
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``auto_anchor`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).
+        :type anchors: list
+        :param direct_task: the task to send the tuple to.
+        :type direct_task: int
+
+        :returns: ``None``.
+        """
+        if not isinstance(tup, list):
+            raise TypeError('All tuples must be lists, received {!r} instead.'
+                            .format(type(tup)))
+
+        msg = {'command': 'emit', 'tuple': tup}
+
+        if anchors is None:
+            anchors = self._current_tups if self.auto_anchor else []
+        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
+
+        if stream is not None:
+            msg['stream'] = stream
+        if direct_task is not None:
+            msg['task'] = direct_task
+        # tell Storm not to send task IDs since we don't plan to return them
+        msg['need_task_ids'] = False
+
+        send_message(msg)
+
     def run(self):
         """Modified and simplified run loop which runs in the main thread since
         we only need to add tuples to the proper batch for later processing
@@ -326,9 +366,9 @@ class BatchingBolt(Bolt):
         try:
             self.initialize(storm_conf, context)
             while True:
+                tup = read_tuple()
+                group_key = self.group_key(tup)
                 with self._batch_lock:
-                    tup = read_tuple()
-                    group_key = self.group_key(tup)
                     self._batches[group_key].append(tup)
         except Exception as e:
             log.error("Exception in %s.run() while adding %r to batch",
@@ -351,6 +391,7 @@ class BatchingBolt(Bolt):
                         if self.auto_ack:
                             for tup in batch:
                                 self.ack(tup)
+
                     self._batches = defaultdict(list)
 
         except Exception as e:
