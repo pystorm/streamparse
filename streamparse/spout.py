@@ -7,7 +7,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from six import PY3
 
 from .base import Component
-from .ipc import read_handshake, read_command, send_message, json, _stdout
+from .ipc import (read_handshake, read_command, read_task_ids, send_message,
+                  json)
 
 
 class Spout(Component):
@@ -78,6 +79,10 @@ class Spout(Component):
         :param direct_task: the task to send the tuple to if performing a
                             direct emit.
         :type direct_task: int
+
+        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+                  when specifying direct_task, this will be equal to
+                  ``[direct_task]``.
         """
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead'
@@ -93,46 +98,47 @@ class Spout(Component):
 
         send_message(msg)
 
-    def emit_many(self, tuples, tup_id=None, stream=None, direct_task=None):
-        """A more efficient way to send many tuples.
+        downstream_task_ids = [direct_task] if direct_task is not None else \
+                              read_task_ids()
+        return downstream_task_ids
 
-        Dumps out all tuples to STDOUT instead of writing one at a time.
 
-        :param tuples: a two-dimensional ``list`` representing the tuples to
-                       send to Storm.  Tuples should contain only
+    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
+        """Emit multiple tuples.
+
+        **Deprecated**: This function is deprecated and will be removed in a
+        future version of streamparse, please just make multiple calls to
+        :method:`emit` if you need to send multiple tuples.
+
+        :param tuples: a ``list`` containing ``list`` s of tuple payload data
+                       to send to Storm. All tuples should contain only
                        JSON-serializable data.
         :type tuples: list
-        :param tup_id: the id for the tuple.  Leave this blank for unreliable
-                       emits.
-        :type tup_id: str
-        :param stream: ID of the stream these tuples should be emitted to.
-                       Leave empty to emit to the default stream.
+        :param stream: the ID of the steram to emit these tuples to. Specify
+                       ``None`` to emit to default stream.
         :type stream: str
-        :param direct_task: the task to send the tuple to if
-                            performing a direct emit.
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``auto_anchor`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).
+        :type anchors: list
+        :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
         """
-        msg = {
-            'command': 'emit',
-        }
-        if tup_id is not None:
-            msg['id'] = tup_id
-        if stream is not None:
-            msg['stream'] = stream
-        if direct_task is not None:
-            msg['task'] = direct_task
+        if not isinstance(tuples, list):
+            raise TypeError('tuples should be a list of lists, received {!r}'
+                            'instead.'.format(type(tuples)))
+        warnings.warn("emit_many is deprecated and "
+                      "will be removed in a future streamparse release. "
+                      "Please use emit.", DeprecationWarning)
 
-        lines = []
+        all_task_ids = []
         for tup in tuples:
-            msg['tuple'] = tup
-            lines.append(json.dumps(msg))
-        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
-        if PY3:
-            _stdout.flush()
-            _stdout.buffer.write(wrapped_msg)
-        else:
-            _stdout.write(wrapped_msg)
-        _stdout.flush()
+            all_task_ids.append(self.emit(tup, stream=stream, anchors=anchors,
+                                          direct_task=direct_task))
+
+        return all_task_ids
 
     def run(self):
         """Main run loop for all spouts.

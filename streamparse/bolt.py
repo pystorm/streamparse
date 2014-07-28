@@ -12,8 +12,8 @@ import warnings
 from six import iteritems, reraise, PY3
 
 from .base import Component
-from .ipc import (read_handshake, read_tuple, send_message, json, _stdout,
-                  Tuple)
+from .ipc import (read_handshake, read_tuple, read_task_ids, send_message,
+                  json, Tuple)
 
 
 class Bolt(Component):
@@ -101,6 +101,10 @@ class Bolt(Component):
         :type anchors: list
         :param direct_task: the task to send the tuple to.
         :type direct_task: int
+
+        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+                  when specifying direct_task, this will be equal to
+                  ``[direct_task]``.
         """
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead.'
@@ -119,10 +123,16 @@ class Bolt(Component):
 
         send_message(msg)
 
-    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
-        """A more efficient way to send many tuples.
+        downstream_task_ids = [direct_task] if direct_task is not None else \
+                              read_task_ids()
+        return downstream_task_ids
 
-        Dumps out all tuples to STDOUT instead of writing one at a time.
+    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
+        """Emit multiple tuples.
+
+        **Deprecated**: This function is deprecated and will be removed in a
+        future version of streamparse, please just make multiple calls to
+        :method:`emit` if you need to send multiple tuples.
 
         :param tuples: a ``list`` containing ``list`` s of tuple payload data
                        to send to Storm. All tuples should contain only
@@ -143,29 +153,16 @@ class Bolt(Component):
         if not isinstance(tuples, list):
             raise TypeError('tuples should be a list of lists, received {!r}'
                             'instead.'.format(type(tuples)))
+        warnings.warn("emit_many is deprecated and "
+                      "will be removed in a future streamparse release. "
+                      "Please use emit.", DeprecationWarning)
 
-        msg = {'command': 'emit'}
-
-        if anchors is None:
-            anchors = self._current_tups if self.auto_anchor else []
-        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
-
-        if stream is not None:
-            msg['stream'] = stream
-        if direct_task is not None:
-            msg['task'] = direct_task
-
-        lines = []
+        all_task_ids = []
         for tup in tuples:
-            msg['tuple'] = tup
-            lines.append(json.dumps(msg))
-        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
-        if PY3:
-            _stdout.flush()
-            _stdout.buffer.write(wrapped_msg)
-        else:
-            _stdout.write(wrapped_msg)
-        _stdout.flush()
+            all_task_ids.append(self.emit(tup, stream=stream, anchors=anchors,
+                                          direct_task=direct_task))
+
+        return all_task_ids
 
     def ack(self, tup):
         """Indicate that processing of a tuple has succeeded.
