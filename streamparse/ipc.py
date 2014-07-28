@@ -33,11 +33,18 @@ if PY3:
     import io
     _readline = io.TextIOWrapper(sys.stdin.buffer,
                                  encoding='utf-8').readline
-    _stdout = sys.stdout.buffer
 else:
     def _readline():
         line = sys.stdin.readline()
         return line.decode('utf-8')
+
+_stdout = sys.stdout
+# Travis CI has stdout set to an io.StringIO object instead of an
+# io.BufferedWriter object which is what's actually used when streamparse is
+# running
+if hasattr(sys.stdout, 'buffer'):
+    _stdout = sys.stdout.buffer
+else:
     _stdout = sys.stdout
 
 
