@@ -4,11 +4,16 @@ Base Spout classes.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
+
 from six import PY3
 
 from .base import Component
 from .ipc import (read_handshake, read_command, read_task_ids, send_message,
                   json)
+
+
+log = logging.getLogger('streamparse.spout')
 
 
 class Spout(Component):
