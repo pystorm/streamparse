@@ -237,8 +237,8 @@ def read_handshake():
 def send_message(message):
     """Send a message to Storm via stdout."""
     if not isinstance(message, dict):
-        _log.error("%s.%d attempted to send a non dict message to Storm.",
-                   _component_name, _pid)
+        _log.error("%s.%d attempted to send a non dict message to Storm: %r",
+                   _component_name, _pid, message)
         return
 
     wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
