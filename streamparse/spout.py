@@ -111,10 +111,6 @@ class Spout(Component):
     def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
         """Emit multiple tuples.
 
-        **Deprecated**: This function is deprecated and will be removed in a
-        future version of streamparse, please just make multiple calls to
-        :method:`emit` if you need to send multiple tuples.
-
         :param tuples: a ``list`` containing ``list`` s of tuple payload data
                        to send to Storm. All tuples should contain only
                        JSON-serializable data.
@@ -134,9 +130,6 @@ class Spout(Component):
         if not isinstance(tuples, list):
             raise TypeError('tuples should be a list of lists, received {!r}'
                             'instead.'.format(type(tuples)))
-        warnings.warn("emit_many is deprecated and "
-                      "will be removed in a future streamparse release. "
-                      "Please use emit.", DeprecationWarning)
 
         all_task_ids = []
         for tup in tuples:
