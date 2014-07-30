@@ -33,7 +33,7 @@ def main():
         sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
-        sparse tail [-e <env>] [--pattern <regex>]
+        sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
@@ -92,7 +92,7 @@ def main():
         submit_topology(args["--name"], args["--environment"], par, options,
                         args["--force"], args["--debug"])
     elif args["tail"]:
-        tail_topology(args["--environment"], args["--pattern"])
+        tail_topology(args["--name"], args["--environment"], args["--pattern"])
     elif args["visualize"]:
         visualize_topology(args["--name"])
 

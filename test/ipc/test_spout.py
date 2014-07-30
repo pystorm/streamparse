@@ -16,13 +16,11 @@ class ShellSpoutTester(ShellComponentTestCaseMixin, unittest.TestCase):
 
     def test_next_tuple(self):
         msg = {"command": "next"}
+
         res = self.shell_proc.query_subprocess(msg)
-
         self.assertEqual(len(res), 2)
-
         cmd = res[0]
         self.assertDictEqual({"command": "emit", "tuple": ["test"]}, cmd)
-
         cmd = res[1]
         self.assertDictEqual({"command": "sync"}, cmd)
 
