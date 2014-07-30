@@ -185,6 +185,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
+    activate_env(env_name)
+
     # pre-submit hooks for invoke and fabric
     user_invoke, user_fabric = get_user_tasks()
     pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
@@ -195,7 +197,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         pre_submit_fabric(name, env_name, env_config)
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-    activate_env(env_name)
+
     create_or_update_virtualenvs(
         name, "{}/{}.txt".format(config["virtualenv_specs"], name)
     )
