@@ -312,8 +312,10 @@ class BatchingBolt(Bolt):
         raise NotImplementedError()
 
     def emit(self, tup, stream=None, anchors=None, direct_task=None):
-        """A modified emit which, due to the threaded nature of BatchingBolt,
-        does not return task IDs after emitting.
+        """Emit a tuple, do not return task IDs after emitting.
+
+        A modified emit which, due to the threaded nature of BatchingBolt,
+        does not return (or ask Storm for) task IDs after emitting.
 
         :param tup: the Tuple payload to send to Storm, should contain only
                     JSON-serializable data.

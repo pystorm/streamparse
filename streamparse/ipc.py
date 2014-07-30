@@ -104,8 +104,9 @@ class Tuple(object):
 # Message recieving
 
 def read_message():
-    """Read a message from Storm, reconstruct newlines appropriately. All of
-    Storm's messages (for either Bolts or Spouts) should be of the form:
+    """Read a message from Storm, reconstruct newlines appropriately.
+
+    All of Storm's messages (for either Bolts or Spouts) should be of the form:
 
     '<command or task_id form prior emit>\nend\n'
 
