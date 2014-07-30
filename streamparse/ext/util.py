@@ -47,7 +47,7 @@ def get_topology_definition(topology_name=None):
                 "explicitly specify the topology by name using the -n or "
                 "--name flags.".format(specs_dir=topology_path))
         topology_file = topology_files[0]
-        topology_name = topology_file.rstrip(".clj").lstrip(topology_path)
+        topology_name = topology_file.rstrip(".clj").replace(topology_path, '')
     else:
         topology_file = "{}.clj".format(os.path.join(topology_path, topology_name))
         if not os.path.exists(topology_file):
