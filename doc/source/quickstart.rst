@@ -483,3 +483,6 @@ tuned with the ``log.max_bytes`` and ``log.backup_count`` variables.
 The default logging level is set to ``INFO``, but if you run or submit your
 topology with the ``--debug`` flag enabled, the logging level will be set to
 ``DEBUG``.
+
+When running your topology locally via ``sparse run``, your log path will be
+automatically set to ``/path/to/your/streamparse/project/logs``.

@@ -151,6 +151,15 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
         cmd.append("--debug")
     cmd.append("--option 'topology.workers={}'".format(par))
     cmd.append("--option 'topology.acker.executors={}'".format(par))
+
+    # Python logging settings
+    if not os.path.isdir("logs"):
+        os.makedirs("logs")
+    log_path = os.path.join(os.getcwd(), "logs")
+    print("Routing Python logging to {}.".format(log_path))
+    cmd.append("--option 'streamparse.log.path=\"{}\"'"
+                   .format(log_path))
+
     if options is None:
         options = []
     for option in options:
@@ -220,6 +229,20 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         cmd.append("--option 'topology.workers={}'".format(par))
         cmd.append("--option 'topology.acker.executors={}'".format(par))
         cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
+
+        # Python logging settings
+        log_config = env_config.get("log", {})
+        log_path = log_config.get("path") or env_config.get("log_path")
+        if log_path:
+            cmd.append("--option 'streamparse.log.path=\"{}\"'"
+                       .format(log_path))
+        if isinstance(log_config.get("max_bytes"), int):
+            cmd.append("--option 'streamparse.log.max_bytes={}'"
+                       .format(log_config["max_bytes"]))
+        if isinstance(log_config.get("backup_count"), int):
+            cmd.append("--option 'streamparse.log.backup_count={}'"
+                       .format(log_config["backup_count"]))
+
         if options is None:
             options = []
         for option in options:
