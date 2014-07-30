@@ -161,6 +161,8 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     print("Routing Python logging to {}.".format(log_path))
     cmd.append("--option 'streamparse.log.path=\"{}\"'"
                    .format(log_path))
+    cmd.append("--option 'streamparse.log.level=\"debug\"'")
+
 
     if options is None:
         options = []
@@ -235,6 +237,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         # Python logging settings
         log_config = env_config.get("log", {})
         log_path = log_config.get("path") or env_config.get("log_path")
+        print("Routing Python logging to {}.".format(log_path))
         if log_path:
             cmd.append("--option 'streamparse.log.path=\"{}\"'"
                        .format(log_path))
@@ -244,6 +247,9 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         if isinstance(log_config.get("backup_count"), int):
             cmd.append("--option 'streamparse.log.backup_count={}'"
                        .format(log_config["backup_count"]))
+        if isinstance(log_config.get("level"), str):
+            cmd.append("--option 'streamparse.log.level=\"{}\"'"
+                       .format(log_config["level"].lower()))
 
         if options is None:
             options = []

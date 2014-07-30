@@ -221,7 +221,7 @@ def read_handshake():
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         root_log.addHandler(handler)
-        log_level = _conf.get('streamparse.log.level', 'info').lower()
+        log_level = _conf.get('streamparse.log.level', 'info')
         log_level = _PYTHON_LOG_LEVELS.get(log_level, logging.INFO)
         if _debug:
             # potentially override logging that was provided if topology.debug
