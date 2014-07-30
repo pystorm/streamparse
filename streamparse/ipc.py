@@ -112,7 +112,7 @@ def read_message():
     Command example, an incoming tuple to a bolt:
     '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\nend\n'
 
-    Command example for a Spoutt to emit it's next tuple:
+    Command example for a Spout to emit it's next tuple:
     '{"command": "next"}\nend\n'
 
     Example, the task IDs a prior emit was sent to:
