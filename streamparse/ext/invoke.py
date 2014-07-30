@@ -258,7 +258,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         full_cmd = " ".join(cmd)
         print("Running lein command to submit topology to nimbus:")
         print(full_cmd)
-        run(full_cmd, pty=True)
+        run(full_cmd)
 
         # post-submit hooks for invoke and fabric
         post_submit_invoke = getattr(user_invoke, "post_submit", None)
