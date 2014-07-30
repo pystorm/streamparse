@@ -198,8 +198,7 @@ def read_handshake():
     _debug = _conf.get('topology.debug', False)
 
     # Set up logging
-    log_path = _conf.get('streamparse.log.path') or \
-               _conf.get('streamparse.log_path')
+    log_path = _conf.get('streamparse.log.path')
     if log_path:
         root_log = logging.getLogger()
         max_bytes = _conf.get('stremparse.log.max_bytes', 1000000)  # 1 MB
