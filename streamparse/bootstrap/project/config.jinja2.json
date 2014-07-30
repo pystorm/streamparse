@@ -10,7 +10,8 @@
             "log": {
                 "path": "",
                 "max_bytes": 1000000,
-                "backup_count": 10
+                "backup_count": 10,
+                "level": "info"
             },
             "virtualenv_root": ""
         }
