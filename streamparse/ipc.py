@@ -17,6 +17,13 @@ from six import PY3
 
 
 # Module globals
+_PYTHON_LOG_LEVELS = {
+    'critical': logging.CRITICAL,
+    'error': logging.ERROR,
+    'warning': logging.WARNING,
+    'info': logging.INFO,
+    'debug': logging.DEBUG
+}
 _log = logging.getLogger('streamparse.ipc')
 # pending commands/tuples we read while trying to read task IDs
 _pending_commands = deque()
@@ -214,10 +221,13 @@ def read_handshake():
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         root_log.addHandler(handler)
+        log_level = _conf.get('streamparse.log.level', 'info').lower()
+        log_level = _PYTHON_LOG_LEVELS.get(log_level, logging.INFO)
         if _debug:
-            root_log.setLevel(logging.DEBUG)
-        else:
-            root_log.setLevel(logging.INFO)
+            # potentially override logging that was provided if topology.debug
+            # was set to true
+            log_level = logging.DEBUG
+        root_log.setLevel(log_level)
     else:
         send_message({
             'command': 'log',
