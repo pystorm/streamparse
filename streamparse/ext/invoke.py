@@ -46,7 +46,7 @@ def get_user_tasks():
     try:
         sys.path.insert(0, os.getcwd())
         import tasks as user_invoke
-        import fabric as user_fabric
+        import fabfile as user_fabric
         return user_invoke, user_fabric
     except ImportError:
         return None, None
