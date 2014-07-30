@@ -262,9 +262,11 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
 
 @task
-def tail_topology(env_name="prod", pattern=None):
+def tail_topology(topology_name=None, env_name=None, pattern=None):
+    get_topology_definition(topology_name)
     activate_env(env_name)
-    tail_logs(pattern)
+    tail_logs(topology_name, pattern)
+
 
 @task
 def visualize_topology(name=None, flip=False):

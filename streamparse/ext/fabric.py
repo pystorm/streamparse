@@ -24,24 +24,26 @@ __all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs"]
 
 
 @task
-def _tail_logs(pattern=None):
+def _tail_logs(topology_name=None, pattern=None):
     # list log files found
-    ls_cmd = "cd {log_path} && ls".format(log_path=env.log_path)
+    ls_cmd = ("cd {log_path} && ls worker* supervisor* access* metrics* "
+              "streamparse_{topo_name}_*"
+              .format(log_path=env.log_path, topo_name=topology_name))
     if pattern is not None:
-        ls_cmd += " | egrep '{pattern}'".format(
-            pattern=pattern)
+        ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
     run(ls_cmd)
-    # tail -f all of them
     tail_pipe = " | xargs tail -f"
     run(ls_cmd + tail_pipe)
 
+
 @task
-def tail_logs(pattern=None):
+def tail_logs(topology_name=None, pattern=None):
     """Follow (tail -f) the log files on remote Storm workers.
 
     Will use the `log_path` and `workers` properties from config.json.
     """
-    execute(_tail_logs, pattern, hosts=env.storm_workers)
+    execute(_tail_logs, topology_name, pattern, hosts=env.storm_workers)
+
 
 @task
 def activate_env(env_name=None):
@@ -58,8 +60,10 @@ def activate_env(env_name=None):
     # env.storm_nimbus = [env_config["nimbus"].split(":")[0]]
     env.storm_workers = env_config["workers"]
     env.user = env_config["user"]
-    env.log_path = env_config["log_path"]
-    env.virtualenv_root = env_config["virtualenv_root"]
+    env.log_path = env_config.get("log_path") or \
+                   env_config.get("log", {}).get("path")
+    env.virtualenv_root = env_config.get("virtualenv_root") or \
+                          env_config.get("virtualenv_path")
     env.disable_known_hosts = True
     env.forward_agent = True
 
