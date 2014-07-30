@@ -20,7 +20,26 @@ from fabric.contrib.files import exists
 from .util import get_env_config, die
 
 
-__all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs"]
+__all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs",
+           "remove_logs"]
+
+
+@parallel
+def _remove_logs(topology_name):
+    print("Removing all \"{}\" topology Python logs on {!r}"
+          .format(topology_name, env.storm_workers))
+    log_path = "{}/".format(env.log_path) if not env.log_path.endswith("/") \
+               else env.log_path
+    find_cmd = ("find {log_path}/ -name \"streamparse_{topo_name}*\""
+                .format(log_path=log_path, topo_name=topology_name))
+    rm_cmd = "{} | xargs rm".format(find_cmd)
+    run(rm_cmd)
+
+
+@task
+def remove_logs(topology_name):
+    """Remove all Python logs on Storm workers in the log.path directory."""
+    execute(_remove_logs, topology_name, hosts=env.storm_workers)
 
 
 @task
