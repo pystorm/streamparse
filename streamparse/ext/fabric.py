@@ -33,7 +33,7 @@ def _remove_logs(topology_name):
     find_cmd = ("find {log_path}/ -name \"streamparse_{topo_name}*\""
                 .format(log_path=log_path, topo_name=topology_name))
     rm_cmd = "{} | xargs rm".format(find_cmd)
-    run(rm_cmd)
+    run(rm_cmd, warn_only=True)
 
 
 @task
