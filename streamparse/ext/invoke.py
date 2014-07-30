@@ -247,7 +247,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         if isinstance(log_config.get("backup_count"), int):
             cmd.append("--option 'streamparse.log.backup_count={}'"
                        .format(log_config["backup_count"]))
-        if isinstance(log_config.get("level"), str):
+        if isinstance(log_config.get("level"), basestring):
             cmd.append("--option 'streamparse.log.level=\"{}\"'"
                        .format(log_config["level"].lower()))
 
