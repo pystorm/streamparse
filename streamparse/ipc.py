@@ -75,6 +75,12 @@ class LogStream(object):
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             raise
+        
+    def flush(self):
+        """No-op method to prevent crashes when someone does 
+        sys.stdout.flush.
+        """
+        pass
 
 
 class Tuple(object):
