@@ -20,6 +20,7 @@ import requests
 from io import open
 from tempfile import NamedTemporaryFile
 from prettytable import PrettyTable
+from random import shuffle
 
 from invoke import run, task
 
@@ -287,17 +288,24 @@ def display_stats(env_name, topology_name=None):
     else:
         print("Failed to retrieve status information from Storm Head.")
 
-def _get_ui_json(env_name, api_url):
+def _get_ui_json(env_name, api_path):
+    """Take env_name as a string and api_path that should
+    look something like '/api/v1/topology/summary'
+    """
     _, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
-    remote_ui_port = 8081
-    for local_port in range(8081,8090):
+    remote_ui_port = 8081 #TODO: Get this from storm?
+    # SSH tunnel can take a while to close. Check multiples
+    # if necessary.
+    local_ports = range(8081,8090)
+    shuffle(local_ports)
+    for local_port in local_ports:
         try:
             with ssh_tunnel(env_config["user"],
                             host,
                             local_port=local_port,
                             remote_port=remote_ui_port):
-                r = requests.get(api_url % local_port)
+                r = requests.get('http://127.0.0.1:%s%s' % (local_port, api_path))
                 return r.json()
         except Exception, e:
             if "already in use" in e.message:
@@ -309,10 +317,9 @@ def _get_topology_ui_detail(env_name, topology_name):
     env_name, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
     topology_id = _get_topology_id(env_name, topology_name)
-    detail_url = 'http://127.0.0.1:%%s/api/v1/topology/%s' % topology_id
+    detail_url = '/api/v1/topology/%s' % topology_id
     detail = _get_ui_json(env_name, detail_url)
     return detail
-
 
 def _print_topology_status(env_name, topology_name):
     ui_detail = _get_topology_ui_detail(env_name, topology_name)
@@ -349,7 +356,7 @@ def _print_bolts(ui_detail):
 def _get_topology_id(env_name, topology_name):
     """Get toplogy ID from summary json provided by UI api
     """
-    summary_url = 'http://127.0.0.1:%s/api/v1/topology/summary'
+    summary_url = '/api/v1/topology/summary'
     topology_summary = _get_ui_json(env_name, summary_url)
     for topology in topology_summary["topologies"]:
         if topology_name == topology["name"]:
