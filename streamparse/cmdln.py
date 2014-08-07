@@ -35,7 +35,7 @@ def main():
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
-        sparse stats [-e <env>]... [-n <topology>]
+        sparse stats [-e <env>] [-n <topology>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
