@@ -12,6 +12,7 @@ import logging.handlers
 import os
 import sys
 from collections import deque
+from threading import RLock
 
 from six import PY3
 
@@ -32,6 +33,8 @@ _pending_task_ids = deque()
 _pid = os.getpid()
 _debug = False
 _topology_name = _component_name = _task_id = _conf = _context = None
+_reader_lock = RLock()
+_writer_lock = RLock()
 
 # Setup stdin line reader and stdout
 if PY3:
@@ -134,7 +137,8 @@ def read_message():
     while True:
         # readline will return trailing \n so that output is unambigious, we
         # should only have line == '' if we're at EOF
-        line = _readline()
+        with _reader_lock:
+            line = _readline()
 
         if line == 'end\n':
             break
@@ -256,6 +260,7 @@ def send_message(message):
 
     wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
 
-    _stdout.flush()
-    _stdout.write(wrapped_msg)
-    _stdout.flush()
+    with _writer_lock:
+        _stdout.flush()
+        _stdout.write(wrapped_msg)
+        _stdout.flush()
