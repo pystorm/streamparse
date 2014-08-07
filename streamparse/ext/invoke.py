@@ -286,7 +286,7 @@ def display_stats(env_name, topology_name=None):
     if topology_name:
         _print_topology_status(env_name, topology_name)
     else:
-        print("Failed to retrieve status information from Storm Head.")
+        _print_cluster_status(env_name)
 
 def _get_ui_json(env_name, api_path):
     """Take env_name as a string and api_path that should
@@ -313,6 +313,39 @@ def _get_ui_json(env_name, api_path):
             raise
     raise Exception("Cannot find local port for SSH tunnel to Storm Head.")
 
+def _print_cluster_status(env_name):
+    _print_cluster_summary(env_name)
+    _print_topologies_summary(env_name)
+    _print_supervisor_summary(env_name)
+
+def _print_cluster_summary(env_name):
+    ui_topologies_summary = _get_ui_json(env_name, "/api/v1/cluster/summary")
+    print("# Cluster summary")
+    columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
+               'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
+    table = PrettyTable(columns)
+    table.add_row([ui_topologies_summary.get(key, "MISSING") for key in columns])
+    print(table)
+
+def _print_topologies_summary(env_name):
+    ui_topologies_summary = _get_ui_json(env_name, "/api/v1/topology/summary")
+    print("# Topology summary")
+    columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
+               'executorsTotal', 'tasksTotal']
+    table = PrettyTable(columns)
+    for topology in ui_topologies_summary['topologies']:
+        table.add_row([topology.get(key, "MISSING") for key in columns])
+    print(table)
+
+def _print_supervisor_summary(env_name):
+    ui_supervisor_summary = _get_ui_json(env_name, "/api/v1/supervisor/summary")
+    print("# Supervisor summary")
+    columns = ['id', 'hots', 'uptime', 'slotsTotal', 'slotsUsed']
+    table = PrettyTable(columns)
+    for supervisor in ui_supervisor_summary['supervisors']:
+        table.add_row([supervisor.get(key, "MISSING") for key in columns])
+    print(table)
+
 def _get_topology_ui_detail(env_name, topology_name):
     env_name, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
@@ -323,11 +356,11 @@ def _get_topology_ui_detail(env_name, topology_name):
 
 def _print_topology_status(env_name, topology_name):
     ui_detail = _get_topology_ui_detail(env_name, topology_name)
-    _print_summary(ui_detail)
+    _print_topology_summary(ui_detail)
     _print_spouts(ui_detail)
     _print_bolts(ui_detail)
 
-def _print_summary(ui_detail):
+def _print_topology_summary(ui_detail):
     print("# Topology summary")
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
     table = PrettyTable(columns)
