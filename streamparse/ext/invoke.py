@@ -324,6 +324,7 @@ def _print_cluster_summary(env_name):
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
                'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
     table = PrettyTable(columns)
+    table.align = 'r'
     table.add_row([ui_topologies_summary.get(key, "MISSING") for key in columns])
     print(table)
 
@@ -333,6 +334,8 @@ def _print_topologies_summary(env_name):
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
     table = PrettyTable(columns)
+    table.align = 'r'
+    table.align["name"] = 'l'
     for topology in ui_topologies_summary['topologies']:
         table.add_row([topology.get(key, "MISSING") for key in columns])
     print(table)
@@ -340,8 +343,11 @@ def _print_topologies_summary(env_name):
 def _print_supervisor_summary(env_name):
     ui_supervisor_summary = _get_ui_json(env_name, "/api/v1/supervisor/summary")
     print("# Supervisor summary")
-    columns = ['id', 'hots', 'uptime', 'slotsTotal', 'slotsUsed']
+    columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
     table = PrettyTable(columns)
+    table.align = 'r'
+    table.align["host"] = 'l'
+    table.align["uptime"] = 'l'
     for supervisor in ui_supervisor_summary['supervisors']:
         table.add_row([supervisor.get(key, "MISSING") for key in columns])
     print(table)
@@ -364,6 +370,7 @@ def _print_topology_summary(ui_detail):
     print("# Topology summary")
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
     table = PrettyTable(columns)
+    table.align = 'r'
     table.add_row([ui_detail.get(key, "MISSING") for key in columns])
     print(table)
 
@@ -372,6 +379,8 @@ def _print_spouts(ui_detail):
     if not ui_detail.get('spouts'): return
     columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
     table = PrettyTable(columns)
+    table.align = 'r'
+    table.align["spoutId"] = 'l'
     for bolt in ui_detail['spouts']:
         table.add_row([bolt.get(key, "MISSING") for key in columns])
     print(table)
@@ -382,6 +391,8 @@ def _print_bolts(ui_detail):
     columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred', 'capacity',
                'executeLatency', 'executed', 'processLatency', 'acked', 'failed', 'lastError']
     table = PrettyTable(columns)
+    table.align = 'r'
+    table.align["boltId"] = 'l'
     for bolt in ui_detail['bolts']:
         table.add_row([bolt.get(key, "MISSING") for key in columns])
     print(table)
