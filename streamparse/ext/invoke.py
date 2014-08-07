@@ -307,7 +307,7 @@ def _get_ui_json(env_name, api_path):
                             remote_port=remote_ui_port):
                 r = requests.get('http://127.0.0.1:%s%s' % (local_port, api_path))
                 return r.json()
-        except Exception, e:
+        except Exception as e:
             if "already in use" in e.message:
                 continue
             raise
