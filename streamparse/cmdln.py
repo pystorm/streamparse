@@ -4,7 +4,8 @@ from docopt import docopt
 
 from .bootstrap import quickstart
 from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
-                         submit_topology, tail_topology, visualize_topology)
+                         submit_topology, tail_topology, visualize_topology,
+                         display_stats)
 from .version import __version__ as VERSION
 
 
@@ -34,6 +35,7 @@ def main():
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
+        sparse stats [-e <env>]... [-n <topology>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
@@ -93,6 +95,8 @@ def main():
                         args["--force"], args["--debug"])
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
+    elif args["stats"]:
+        display_stats(args["--environment"], args.get("--name"))
     elif args["visualize"]:
         visualize_topology(args["--name"])
 

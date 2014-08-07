@@ -16,8 +16,10 @@ import re
 import shutil
 import sys
 import time
+import requests
 from io import open
 from tempfile import NamedTemporaryFile
+from prettytable import PrettyTable
 
 from invoke import run, task
 
@@ -277,6 +279,79 @@ def tail_topology(topology_name=None, env_name=None, pattern=None):
     activate_env(env_name)
     tail_logs(topology_name, pattern)
 
+@task
+def display_stats(env_name, topology_name=None):
+    env_name = env_name[0]
+    if topology_name:
+        _print_topology_status(env_name, topology_name)
+    else:
+        print("Failed to retrieve status information from Storm Head.")
+
+def _get_topology_ui_detail(env_name, topology_name):
+    env_name, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    remote_ui_port = 8081
+    for local_port in range(8081,8090):
+        try:
+            with ssh_tunnel(env_config["user"],
+                            host,
+                            local_port=local_port,
+                            remote_port=remote_ui_port):
+                summary_url = 'http://127.0.0.1:%s/api/v1/topology/summary' % local_port
+                summary = requests.get(summary_url)
+                topology_id = _get_topology_id(topology_name, summary.json())
+
+                detail_url = 'http://127.0.0.1:%s/api/v1/topology/%s' % (local_port, topology_id)
+                detail = requests.get(detail_url)
+                break
+        except Exception, e:
+            if "already in use" in e.message:
+                continue
+            raise
+    return detail.json()
+
+
+def _print_topology_status(env_name, topology_name):
+    ui_detail = _get_topology_ui_detail(env_name, topology_name)
+    _print_summary(ui_detail)
+    _print_spouts(ui_detail)
+    _print_bolts(ui_detail)
+
+
+def _print_summary(ui_detail):
+
+    print("# Topology summary")
+    columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
+    table = PrettyTable(columns)
+    table.add_row([ui_detail.get(key, "MISSING") for key in columns])
+    print(table)
+
+def _print_spouts(ui_detail):
+    print("# Spouts (All time)")
+
+    if not ui_detail.get('spouts'): return
+    columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
+    table = PrettyTable(columns)
+    for bolt in ui_detail['spouts']:
+        table.add_row([bolt.get(key, "MISSING") for key in columns])
+    print(table)
+
+def _print_bolts(ui_detail):
+    print("# Bolts (All time)")
+    if not ui_detail.get('bolts'): return
+    columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred', 'capacity',
+               'executeLatency', 'executed', 'processLatency', 'acked', 'failed', 'lastError']
+    table = PrettyTable(columns)
+    for bolt in ui_detail['bolts']:
+        table.add_row([bolt.get(key, "MISSING") for key in columns])
+    print(table)
+
+def _get_topology_id(topology_name, topology_summary):
+    """Get toplogy ID from summary json provided by UI api
+    """
+    for topology in topology_summary["topologies"]:
+        if topology_name == topology["name"]:
+            return topology["id"]
 
 @task
 def visualize_topology(name=None, flip=False):
