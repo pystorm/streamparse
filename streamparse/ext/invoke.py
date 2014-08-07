@@ -287,8 +287,8 @@ def display_stats(env_name, topology_name=None):
     else:
         print("Failed to retrieve status information from Storm Head.")
 
-def _get_topology_ui_detail(env_name, topology_name):
-    env_name, env_config = get_env_config(env_name)
+def _get_ui_json(env_name, api_url):
+    _, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
     remote_ui_port = 8081
     for local_port in range(8081,8090):
@@ -297,18 +297,21 @@ def _get_topology_ui_detail(env_name, topology_name):
                             host,
                             local_port=local_port,
                             remote_port=remote_ui_port):
-                summary_url = 'http://127.0.0.1:%s/api/v1/topology/summary' % local_port
-                summary = requests.get(summary_url)
-                topology_id = _get_topology_id(topology_name, summary.json())
-
-                detail_url = 'http://127.0.0.1:%s/api/v1/topology/%s' % (local_port, topology_id)
-                detail = requests.get(detail_url)
-                break
+                r = requests.get(api_url % local_port)
+                return r.json()
         except Exception, e:
             if "already in use" in e.message:
                 continue
             raise
-    return detail.json()
+    raise Exception("Cannot find local port for SSH tunnel to Storm Head.")
+
+def _get_topology_ui_detail(env_name, topology_name):
+    env_name, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    topology_id = _get_topology_id(env_name, topology_name)
+    detail_url = 'http://127.0.0.1:%%s/api/v1/topology/%s' % topology_id
+    detail = _get_ui_json(env_name, detail_url)
+    return detail
 
 
 def _print_topology_status(env_name, topology_name):
@@ -317,9 +320,7 @@ def _print_topology_status(env_name, topology_name):
     _print_spouts(ui_detail)
     _print_bolts(ui_detail)
 
-
 def _print_summary(ui_detail):
-
     print("# Topology summary")
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
     table = PrettyTable(columns)
@@ -328,7 +329,6 @@ def _print_summary(ui_detail):
 
 def _print_spouts(ui_detail):
     print("# Spouts (All time)")
-
     if not ui_detail.get('spouts'): return
     columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
     table = PrettyTable(columns)
@@ -346,9 +346,11 @@ def _print_bolts(ui_detail):
         table.add_row([bolt.get(key, "MISSING") for key in columns])
     print(table)
 
-def _get_topology_id(topology_name, topology_summary):
+def _get_topology_id(env_name, topology_name):
     """Get toplogy ID from summary json provided by UI api
     """
+    summary_url = 'http://127.0.0.1:%s/api/v1/topology/summary'
+    topology_summary = _get_ui_json(env_name, summary_url)
     for topology in topology_summary["topologies"]:
         if topology_name == topology["name"]:
             return topology["id"]
