@@ -282,7 +282,7 @@ def tail_topology(topology_name=None, env_name=None, pattern=None):
 
 @task
 def display_stats(env_name, topology_name=None):
-    env_name = env_name[0]
+    env_name = env_name
     if topology_name:
         _print_topology_status(env_name, topology_name)
     else:
