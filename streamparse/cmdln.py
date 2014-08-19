@@ -35,7 +35,7 @@ def main():
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
-        sparse stats [-e <env>] [-n <topology>]
+        sparse stats [-e <env>] [-n <topology>] [-c <component>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
@@ -56,6 +56,8 @@ def main():
                                     have only one topology defined in your
                                     topologies/ directory, streamparse
                                     will use it automatically.
+        -c --component <component>  Topology component (bolt/spout) name as
+                                    specified in Clojure topology specification
         -o --option <option>...     Topology option to use upon submit, e.g.
                                     "-o topology.debug=true" is equivalent to
                                     "--debug". May be repeated for multiple
@@ -96,7 +98,7 @@ def main():
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
     elif args["stats"]:
-        display_stats(args["--environment"], args.get("--name"))
+        display_stats(args["--environment"], args.get("--name"), args.get("--component"))
     elif args["visualize"]:
         visualize_topology(args["--name"])
 
