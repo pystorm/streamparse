@@ -291,8 +291,8 @@ def display_stats(env_name, topology_name=None, component_name=None):
         _print_cluster_status(env_name)
 
 def _get_ui_jsons(env_name, api_paths):
-    """Take env_name as a string and api_path that should
-    look something like '/api/v1/topology/summary'
+    """Take env_name as a string and api_paths that should
+    be a list of strings like '/api/v1/topology/summary'
     """
     _, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
@@ -319,6 +319,9 @@ def _get_ui_jsons(env_name, api_paths):
     raise Exception("Cannot find local port for SSH tunnel to Storm Head.")
 
 def _get_ui_json(env_name, api_path):
+    """Take env_name as a string and api_path that should
+    be a string like '/api/v1/topology/summary'
+    """
     return _get_ui_jsons(env_name, [api_path])[api_path]
 
 def _print_cluster_status(env_name):
