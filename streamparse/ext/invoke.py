@@ -435,28 +435,64 @@ def _print_bolt_stats(ui_detail):
     _print_stats_dict("Bolt stats",
                       ui_detail['boltStats'],
                       columns,
-                      'r'
+                      'r',
+                      {'windowPretty': 'l'}
                       )
 
 def _print_input_stats(ui_detail):
     columns = ['component', 'stream', 'executeLatency', 'processLatency',
                'executed', 'acked', 'failed']
-    _print_stats_dict("Input Stats",
+    _print_stats_dict("Input stats (All time)",
                       ui_detail['inputStats'],
                       columns,
-                      'r'
+                      'r',
+                      {'component': 'l'}
                       )
 
 def _print_bolt_output_stats(ui_detail):
     columns = ['stream', 'emitted', 'transferred']
-    _print_stats_dict("Output Stats",
+    _print_stats_dict("Output stats (All time)",
                       ui_detail['outputStats'],
                       columns,
-                      'r'
+                      'r',
+                      {'stream': 'l'}
                       )
 
 def _print_spout_status(ui_detail):
-    pass
+    _print_spout_stats(ui_detail)
+    _print_spout_output_stats(ui_detail)
+    _print_spout_executors(ui_detail)
+
+def _print_spout_stats(ui_detail):
+    columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
+               'acked', 'failed']
+    data = ui_detail['spoutSummary'][-1].copy()
+    _print_stats_dict("Spout stats",
+                      data,
+                      columns,
+                      'r',
+                      {'windowPretty': 'l'}
+                      )
+
+def _print_spout_output_stats(ui_detail):
+    columns = ['stream', 'emitted', 'transferred', 'completeLatency',
+               'acked', 'failed']
+    _print_stats_dict("Output stats (All time)",
+                      ui_detail['outputStats'],
+                      columns,
+                      'r',
+                      {'stream': 'l'}
+                      )
+
+def _print_spout_executors(ui_detail):
+    columns = ['id', 'uptime', 'host', 'port', 'emitted',
+               'transferred', 'completeLatency', 'acked', 'failed']
+    _print_stats_dict("Executors (All time)",
+                      ui_detail['executorStats'],
+                      columns,
+                      'r',
+                      {'host': 'l'}
+                      )
 
 def _print_stats_dict(header, data, columns, default_alignment, custom_alignment=None):
     print("# %s" % header)
@@ -468,7 +504,7 @@ def _print_stats_dict(header, data, columns, default_alignment, custom_alignment
     else:
         table.add_row([data.get(key, "MISSING") for key in columns])
     if custom_alignment:
-        for column, alignment in custom_alignment:
+        for column, alignment in custom_alignment.iteritems():
             table.align[column] = alignment
     print(table)
 
