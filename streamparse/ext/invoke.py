@@ -290,7 +290,7 @@ def display_stats(env_name, topology_name=None, component_name=None):
     else:
         _print_cluster_status(env_name)
 
-def _get_ui_json(env_name, api_path):
+def _get_ui_jsons(env_name, api_paths):
     """Take env_name as a string and api_path that should
     look something like '/api/v1/topology/summary'
     """
@@ -303,25 +303,33 @@ def _get_ui_json(env_name, api_path):
     shuffle(local_ports)
     for local_port in local_ports:
         try:
+            data = {}
             with ssh_tunnel(env_config["user"],
                             host,
                             local_port=local_port,
                             remote_port=remote_ui_port):
-                r = requests.get('http://127.0.0.1:%s%s' % (local_port, api_path))
-                return r.json()
+                for api_path in api_paths:
+                    r = requests.get('http://127.0.0.1:%s%s' % (local_port, api_path))
+                    data[api_path] = r.json()
+            return data
         except Exception as e:
             if "already in use" in e.message:
                 continue
             raise
     raise Exception("Cannot find local port for SSH tunnel to Storm Head.")
 
-def _print_cluster_status(env_name):
-    _print_cluster_summary(env_name)
-    _print_topologies_summary(env_name)
-    _print_supervisor_summary(env_name)
+def _get_ui_json(env_name, api_path):
+    return _get_ui_jsons(env_name, [api_path])[api_path]
 
-def _print_cluster_summary(env_name):
-    ui_cluster_summary = _get_ui_json(env_name, "/api/v1/cluster/summary")
+def _print_cluster_status(env_name):
+    jsons = _get_ui_jsons(env_name, ["/api/v1/cluster/summary",
+                                     "/api/v1/topology/summary",
+                                     "/api/v1/supervisor/summary"])
+    _print_cluster_summary(env_name, jsons["/api/v1/cluster/summary"])
+    _print_topologies_summary(env_name, jsons["/api/v1/topology/summary"])
+    _print_supervisor_summary(env_name, jsons["/api/v1/supervisor/summary"])
+
+def _print_cluster_summary(env_name, ui_cluster_summary):
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
                'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
     _print_stats_dict("Cluster summary",
@@ -330,9 +338,7 @@ def _print_cluster_summary(env_name):
                   'r'
                   )
 
-def _print_topologies_summary(env_name):
-    ui_topologies_summary = _get_ui_json(env_name, "/api/v1/topology/summary")
-    print("# Topology summary")
+def _print_topologies_summary(env_name, ui_topologies_summary):
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
     _print_stats_dict("Topology summary",
@@ -341,8 +347,7 @@ def _print_topologies_summary(env_name):
                   'r'
                   )
 
-def _print_supervisor_summary(env_name):
-    ui_supervisor_summary = _get_ui_json(env_name, "/api/v1/supervisor/summary")
+def _print_supervisor_summary(env_name, ui_supervisor_summary):
     columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
     _print_stats_dict("Supervisor summary",
                   ui_supervisor_summary['supervisors'],
