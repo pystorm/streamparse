@@ -411,9 +411,13 @@ def _print_component_status(env_name, topology_name, component_name):
     ui_detail = _get_component_ui_detail(env_name, topology_name, component_name)
     _print_component_summary(ui_detail)
     if ui_detail.get("componentType") == "spout":
-        _print_spout_status(ui_detail)
+        _print_spout_stats(ui_detail)
+        _print_spout_output_stats(ui_detail)
+        _print_spout_executors(ui_detail)
     elif ui_detail.get("componentType") == "bolt":
-        _print_bolt_status(ui_detail)
+        _print_bolt_stats(ui_detail)
+        _print_input_stats(ui_detail)
+        _print_bolt_output_stats(ui_detail)
 
 def _print_component_summary(ui_detail):
     columns = ['id', 'name', 'executors', 'tasks']
@@ -422,11 +426,6 @@ def _print_component_summary(ui_detail):
                       columns,
                       'r'
                       )
-
-def _print_bolt_status(ui_detail):
-    _print_bolt_stats(ui_detail)
-    _print_input_stats(ui_detail)
-    _print_bolt_output_stats(ui_detail)
 
 def _print_bolt_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred',
@@ -457,11 +456,6 @@ def _print_bolt_output_stats(ui_detail):
                       'r',
                       {'stream': 'l'}
                       )
-
-def _print_spout_status(ui_detail):
-    _print_spout_stats(ui_detail)
-    _print_spout_output_stats(ui_detail)
-    _print_spout_executors(ui_detail)
 
 def _print_spout_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
