@@ -321,38 +321,35 @@ def _print_cluster_status(env_name):
     _print_supervisor_summary(env_name)
 
 def _print_cluster_summary(env_name):
-    ui_topologies_summary = _get_ui_json(env_name, "/api/v1/cluster/summary")
-    print("# Cluster summary")
+    ui_cluster_summary = _get_ui_json(env_name, "/api/v1/cluster/summary")
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
                'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
-    table = PrettyTable(columns)
-    table.align = 'r'
-    table.add_row([ui_topologies_summary.get(key, "MISSING") for key in columns])
-    print(table)
+    _print_stats_dict("Cluster summary",
+                  ui_cluster_summary,
+                  columns,
+                  'r'
+                  )
 
 def _print_topologies_summary(env_name):
     ui_topologies_summary = _get_ui_json(env_name, "/api/v1/topology/summary")
     print("# Topology summary")
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
-    table = PrettyTable(columns)
-    table.align = 'r'
-    table.align["name"] = 'l'
-    for topology in ui_topologies_summary['topologies']:
-        table.add_row([topology.get(key, "MISSING") for key in columns])
-    print(table)
+    _print_stats_dict("Topology summary",
+                  ui_topologies_summary['topologies'],
+                  columns,
+                  'r'
+                  )
 
 def _print_supervisor_summary(env_name):
     ui_supervisor_summary = _get_ui_json(env_name, "/api/v1/supervisor/summary")
-    print("# Supervisor summary")
     columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
-    table = PrettyTable(columns)
-    table.align = 'r'
-    table.align["host"] = 'l'
-    table.align["uptime"] = 'l'
-    for supervisor in ui_supervisor_summary['supervisors']:
-        table.add_row([supervisor.get(key, "MISSING") for key in columns])
-    print(table)
+    _print_stats_dict("Supervisor summary",
+                  ui_supervisor_summary['supervisors'],
+                  columns,
+                  'r',
+                  {'host': 'l', 'uptime': 'l'}
+                  )
 
 def _get_topology_ui_detail(env_name, topology_name):
     env_name, env_config = get_env_config(env_name)
@@ -365,39 +362,46 @@ def _get_topology_ui_detail(env_name, topology_name):
 def _print_topology_status(env_name, topology_name):
     ui_detail = _get_topology_ui_detail(env_name, topology_name)
     _print_topology_summary(ui_detail)
+    _print_topology_stats(ui_detail)
     _print_spouts(ui_detail)
     _print_bolts(ui_detail)
 
 def _print_topology_summary(ui_detail):
-    print("# Topology summary")
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
-    table = PrettyTable(columns)
-    table.align = 'r'
-    table.add_row([ui_detail.get(key, "MISSING") for key in columns])
-    print(table)
+    _print_stats_dict("Topology summary",
+                  ui_detail,
+                  columns,
+                  'r'
+                  )
+
+def _print_topology_stats(ui_detail):
+    columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
+               'acked', 'failed']
+    _print_stats_dict("Topology stats",
+                  ui_detail['topologyStats'],
+                  columns,
+                  'r'
+                  )
 
 def _print_spouts(ui_detail):
-    print("# Spouts (All time)")
     if not ui_detail.get('spouts'): return
     columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
-    table = PrettyTable(columns)
-    table.align = 'r'
-    table.align["spoutId"] = 'l'
-    for bolt in ui_detail['spouts']:
-        table.add_row([bolt.get(key, "MISSING") for key in columns])
-    print(table)
+    _print_stats_dict("Spouts (All time)",
+                      ui_detail['spouts'],
+                      columns,
+                      'r',
+                      {'spoutId': 'l'}
+                      )
 
 def _print_bolts(ui_detail):
-    print("# Bolts (All time)")
-    if not ui_detail.get('bolts'): return
     columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred', 'capacity',
                'executeLatency', 'executed', 'processLatency', 'acked', 'failed', 'lastError']
-    table = PrettyTable(columns)
-    table.align = 'r'
-    table.align["boltId"] = 'l'
-    for bolt in ui_detail['bolts']:
-        table.add_row([bolt.get(key, "MISSING") for key in columns])
-    print(table)
+    _print_stats_dict("Bolt (All time)",
+                      ui_detail['bolts'],
+                      columns,
+                      'r',
+                      {'boltId': 'l'}
+                      )
 
 def _get_component_ui_detail(env_name, topology_name, component_name):
     env_name, env_config = get_env_config(env_name)
