@@ -281,9 +281,11 @@ def tail_topology(topology_name=None, env_name=None, pattern=None):
     tail_logs(topology_name, pattern)
 
 @task
-def display_stats(env_name, topology_name=None):
+def display_stats(env_name, topology_name=None, component_name=None):
     env_name = env_name
-    if topology_name:
+    if topology_name and component_name:
+        _print_component_status(env_name, topology_name, component_name)
+    elif topology_name:
         _print_topology_status(env_name, topology_name)
     else:
         _print_cluster_status(env_name)
@@ -395,6 +397,79 @@ def _print_bolts(ui_detail):
     table.align["boltId"] = 'l'
     for bolt in ui_detail['bolts']:
         table.add_row([bolt.get(key, "MISSING") for key in columns])
+    print(table)
+
+def _get_component_ui_detail(env_name, topology_name, component_name):
+    env_name, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    topology_id = _get_topology_id(env_name, topology_name)
+    detail_url = '/api/v1/topology/%s/component/%s' % (topology_id, component_name)
+    detail = _get_ui_json(env_name, detail_url)
+    return detail
+
+def _print_component_status(env_name, topology_name, component_name):
+    ui_detail = _get_component_ui_detail(env_name, topology_name, component_name)
+    _print_component_summary(ui_detail)
+    if ui_detail.get("componentType") == "spout":
+        _print_spout_status(ui_detail)
+    elif ui_detail.get("componentType") == "bolt":
+        _print_bolt_status(ui_detail)
+
+def _print_component_summary(ui_detail):
+    columns = ['id', 'name', 'executors', 'tasks']
+    _print_stats_dict("Component summary",
+                      ui_detail,
+                      columns,
+                      'r'
+                      )
+
+def _print_bolt_status(ui_detail):
+    _print_bolt_stats(ui_detail)
+    _print_input_stats(ui_detail)
+    _print_bolt_output_stats(ui_detail)
+
+def _print_bolt_stats(ui_detail):
+    columns = ['windowPretty', 'emitted', 'transferred',
+               'executeLatency', 'executed', 'processLatency',
+               'acked', 'failed']
+    _print_stats_dict("Bolt stats",
+                      ui_detail['boltStats'],
+                      columns,
+                      'r'
+                      )
+
+def _print_input_stats(ui_detail):
+    columns = ['component', 'stream', 'executeLatency', 'processLatency',
+               'executed', 'acked', 'failed']
+    _print_stats_dict("Input Stats",
+                      ui_detail['inputStats'],
+                      columns,
+                      'r'
+                      )
+
+def _print_bolt_output_stats(ui_detail):
+    columns = ['stream', 'emitted', 'transferred']
+    _print_stats_dict("Output Stats",
+                      ui_detail['outputStats'],
+                      columns,
+                      'r'
+                      )
+
+def _print_spout_status(ui_detail):
+    pass
+
+def _print_stats_dict(header, data, columns, default_alignment, custom_alignment=None):
+    print("# %s" % header)
+    table = PrettyTable(columns)
+    table.align = default_alignment
+    if isinstance(data, list):
+        for row in data:
+            table.add_row([row.get(key, "MISSING") for key in columns])
+    else:
+        table.add_row([data.get(key, "MISSING") for key in columns])
+    if custom_alignment:
+        for column, alignment in custom_alignment:
+            table.align[column] = alignment
     print(table)
 
 def _get_topology_id(env_name, topology_name):
