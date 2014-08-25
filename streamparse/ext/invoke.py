@@ -46,7 +46,7 @@ def get_user_tasks():
     try:
         sys.path.insert(0, os.getcwd())
         import tasks as user_invoke
-        import fabric as user_fabric
+        import fabfile as user_fabric
         return user_invoke, user_fabric
     except ImportError:
         return None, None
@@ -83,6 +83,7 @@ def _list_topologies(run_args=None, run_kwargs=None):
         run_args = []
     if run_kwargs is None:
         run_kwargs = {}
+    run_kwargs['pty'] = True
     cmd = ["lein",
            "run -m streamparse.commands.list/-main"]
     return run(" ".join(cmd), *run_args, **run_kwargs)
@@ -102,6 +103,7 @@ def _kill_topology(topology_name, run_args=None, run_kwargs=None):
         run_args = []
     if run_kwargs is None:
         run_kwargs = {}
+    run_kwargs['pty'] = True
     cmd = ["lein",
            "run -m streamparse.commands.kill_topology/-main",
            topology_name]
@@ -151,6 +153,17 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
         cmd.append("--debug")
     cmd.append("--option 'topology.workers={}'".format(par))
     cmd.append("--option 'topology.acker.executors={}'".format(par))
+
+    # Python logging settings
+    if not os.path.isdir("logs"):
+        os.makedirs("logs")
+    log_path = os.path.join(os.getcwd(), "logs")
+    print("Routing Python logging to {}.".format(log_path))
+    cmd.append("--option 'streamparse.log.path=\"{}\"'"
+                   .format(log_path))
+    cmd.append("--option 'streamparse.log.level=\"debug\"'")
+
+
     if options is None:
         options = []
     for option in options:
@@ -158,7 +171,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     full_cmd = " ".join(cmd)
     print("Running lein command to run local cluster:")
     print(full_cmd)
-    run(full_cmd)
+    run(full_cmd, pty=True)
 
 
 @task(pre=["prepare_topology"])
@@ -172,6 +185,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
+    activate_env(env_name)
+
     # pre-submit hooks for invoke and fabric
     user_invoke, user_fabric = get_user_tasks()
     pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
@@ -182,7 +197,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         pre_submit_fabric(name, env_name, env_config)
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-    activate_env(env_name)
+
     create_or_update_virtualenvs(
         name, "{}/{}.txt".format(config["virtualenv_specs"], name)
     )
@@ -220,6 +235,24 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         cmd.append("--option 'topology.workers={}'".format(par))
         cmd.append("--option 'topology.acker.executors={}'".format(par))
         cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
+
+        # Python logging settings
+        log_config = env_config.get("log", {})
+        log_path = log_config.get("path") or env_config.get("log_path")
+        print("Routing Python logging to {}.".format(log_path))
+        if log_path:
+            cmd.append("--option 'streamparse.log.path=\"{}\"'"
+                       .format(log_path))
+        if isinstance(log_config.get("max_bytes"), int):
+            cmd.append("--option 'streamparse.log.max_bytes={}'"
+                       .format(log_config["max_bytes"]))
+        if isinstance(log_config.get("backup_count"), int):
+            cmd.append("--option 'streamparse.log.backup_count={}'"
+                       .format(log_config["backup_count"]))
+        if isinstance(log_config.get("level"), basestring):
+            cmd.append("--option 'streamparse.log.level=\"{}\"'"
+                       .format(log_config["level"].lower()))
+
         if options is None:
             options = []
         for option in options:
@@ -239,9 +272,11 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
 
 @task
-def tail_topology(env_name="prod", pattern=None):
+def tail_topology(topology_name=None, env_name=None, pattern=None):
+    get_topology_definition(topology_name)
     activate_env(env_name)
-    tail_logs(pattern)
+    tail_logs(topology_name, pattern)
+
 
 @task
 def visualize_topology(name=None, flip=False):
@@ -255,5 +290,4 @@ def visualize_topology(name=None, flip=False):
     full_cmd = " ".join(cmd)
     print("Running lein command to visualize topology:")
     print(full_cmd)
-    run(full_cmd)
-
+    run(full_cmd, pty=True)
