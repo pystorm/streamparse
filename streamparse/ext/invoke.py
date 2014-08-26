@@ -171,7 +171,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     full_cmd = " ".join(cmd)
     print("Running lein command to run local cluster:")
     print(full_cmd)
-    run(full_cmd, pty=True)
+    run(full_cmd)
 
 
 @task(pre=["prepare_topology"])
@@ -290,4 +290,4 @@ def visualize_topology(name=None, flip=False):
     full_cmd = " ".join(cmd)
     print("Running lein command to visualize topology:")
     print(full_cmd)
-    run(full_cmd, pty=True)
+    run(full_cmd)
