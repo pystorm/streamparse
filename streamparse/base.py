@@ -17,6 +17,7 @@ _STORM_LOG_LEVELS = {
     'debug': _STORM_LOG_DEBUG,
     'info': _STORM_LOG_INFO,
     'warn': _STORM_LOG_WARN,
+    'warning': _STORM_LOG_WARN,
     'error': _STORM_LOG_ERROR,
 }
 
