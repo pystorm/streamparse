@@ -38,7 +38,7 @@ class StormHandler(Handler):
         """
         try:
             msg = self.format(record)
-            level = _STORM_LOG_LEVELS.get(record.levelname.upper(),
+            level = _STORM_LOG_LEVELS.get(record.levelname.lower(),
                                           _STORM_LOG_INFO)
             send_message({'command': 'log', 'msg': str(msg), 'level': level})
         except Exception:
