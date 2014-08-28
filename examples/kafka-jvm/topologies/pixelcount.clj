@@ -1,34 +1,35 @@
 (ns pixelcount
-  (:use [backtype.storm.clojure])
-  (:import [storm.kafka SpoutConfig
-                        KafkaSpout
-                        StringScheme]
-           [com.google.common.collect.ImmutableList]
-           [backtype.storm.spout.SchemeAsMultiScheme])
+  (:use [backtype.storm.clojure]
+        [pixelcount.spouts.pixel_spout :only [spout] :rename {spout pixel-spout}]
+        [streamparse.specs])
   (:gen-class))
 
 
-(def kafka-config
-  (SpoutConfig. (. ImmutableList of "kafkahost1" "kafkahost2")
-                "pixels"
-                "/storm_kafka"
-                "pixel_reader"))
-(set! (.scheme kafka-config) (SchemeAsMultiScheme. (StringScheme.)))
-(def kafka-spout (KafkaSpout. kafka-config))
-
-
-(def pixelcount
+(defn pixelcount [options]
    [
-    ;; spout configuration
-    {"pixel-spout" (spout-spec kafka-spout)}
+    ;; spout configurations
+    {"pixel-spout" (spout-spec pixel-spout :p 1)}
 
-    ;; bolt configuration
-    {"count-bolt" (shell-bolt-spec
-           {"count-bolt" :shuffle}
-           ["python" "pixelcount.py"]
-           ["hour" "count"]
-           :p 2
-           )
+    ;; bolt configurations
+    {
+      ;; Technically, this bolt isn't really needed, just need to add a proper
+      ;; deserializer to Kafka spout so that it doesn't stupidly treat all
+      ;; messages as strings, but this is fine for a demo
+      "pixel-deserializer-bolt" (python-bolt-spec
+        options
+        {"pixel-spout" :shuffle}
+        "bolts.pixel_deserializer.PixelDeserializerBolt"
+        ["ip" "ts" "url"]
+        :p 1)
+
+      "pixel-count-bolt" (python-bolt-spec
+        options
+        ;; fields grouping on url
+        {"pixel-deserializer-bolt" ["url"]}
+        "bolts.pixel_count.PixelCounterBolt"
+        ;; terminal bolt
+        []
+        :p 1)
     }
   ]
 )

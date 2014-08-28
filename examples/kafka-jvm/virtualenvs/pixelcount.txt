@@ -1,0 +1,2 @@
+streamparse==1.0.1
+simplejson==3.6.3
