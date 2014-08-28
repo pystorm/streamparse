@@ -110,7 +110,8 @@ which should allow you to ssh into your new virtual machine without Vagrant.
 First, install necessary requirements via `pip install -r requirements.txt`
 (preferrably inside a virtualenv).
 
-Next, seed the `pixels` topic in Kafka with some sample data by running:
+Next, seed the `pixels` topic in Kafka with some sample data by running the
+following command from outside of your VM:
 
 ```bash
 invoke seed_kafka
