@@ -1,3 +1,8 @@
+### 1.0.1 - Aug 28, 2014
+
+Fixes bug in #57 regarding executing local tasks (like sparse run) with
+pty=True.
+
 ### 1.0.0 - Aug 25, 2014
 
 This is a major release that introduces several potentially breaking API
