@@ -13,29 +13,21 @@
 
 
 ;; Default path, shouldn't be a need to change this
-(def ^{:private true
-       :doc "Zookeeper broker path"}
+(def ^{:doc "Zookeeper broker path"}
   zk-broker-path "/brokers")
 
-;; Need to use ZkHosts instead of StaticHosts to configure hosts --
-;; see https://groups.google.com/forum/#!topic/storm-user/RniihgIQxCI
-;; (def kafka-hosts (KafkaConfig$StaticHosts/fromHostString host 1))
 (def kafka-zk-hosts (ZkHosts. zk-hosts zk-broker-path))
 
-(def ^{:private true
-       :doc "Topic name"}
+(def ^{:doc "Topic name"}
   topic-name "pixels")
 
-(def ^{:private true
-       :doc "Root path of Zookeeper for spout to store consumer offsets"}
+(def ^{:doc "Root path of Zookeeper for spout to store consumer offsets"}
   kafka-zk-root "/kafka_storm")
 
-(def ^{:private true
-       :doc "ID for this Kafka consumer"}
+(def ^{:doc "ID for this Kafka consumer"}
   kafka-consumer-id "pixel_reader")
 
-(def ^{:private true
-       :doc "Kafka spout config definition"}
+(def ^{:doc "Kafka spout config definition"}
   spout-config (let [cfg (SpoutConfig. kafka-zk-hosts topic-name kafka-zk-root kafka-consumer-id)]
                   (set! (. cfg scheme) (SchemeAsMultiScheme. (StringScheme.)))
                   ;; During testing, it's usually valuable to force a spout to
