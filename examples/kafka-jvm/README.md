@@ -110,12 +110,16 @@ which should allow you to ssh into your new virtual machine without Vagrant.
 First, install necessary requirements via `pip install -r requirements.txt`
 (preferrably inside a virtualenv).
 
-Next, seed the `pixels` topic in Kafka with some sample data by running
-`invoke seed_kafka`. By default, this will seed the topic with 100,000
-randomized pixels. Pixels are JSON-formatted strings that look something like
-this:
+Next, seed the `pixels` topic in Kafka with some sample data by running:
 
+```bash
+invoke seed_kafka
 ```
+
+By default, this will seed the topic with 100,000 randomized pixels. Pixels are
+JSON-formatted strings that look something like this:
+
+```python
 '{"ip": "192.168.1.122", "url": "http://example.com/", "ts": 1409253061}'
 ```
 
@@ -132,14 +136,14 @@ Done.
 
 Test the topology locally with:
 
-```
+```bash
 sparse run --debug -t 15
 ```
 
 It's helpful just to see the end result of this topology, so you can filter
 the debug output to only those tuples emitted from the final bolt:
 
-```
+```bash
 sparse run --debug -t 60 | grep "Emitting: pixel-count-bolt default"
 ```
 
