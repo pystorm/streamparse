@@ -13,7 +13,8 @@ as an exercise for the reader.
 
 Pixles are counted by URL in `pixel_count.PixelCounterBolt`.
 
-**Note**: This topology currently depends on an uncomitted branch of streamparse.
+**Note**: This topology currently depends on an unmerged branch of
+[streamparse](https://github.com/Parsely/streamparse/tree/feature/uberjar).
 
 
 # Instructions
