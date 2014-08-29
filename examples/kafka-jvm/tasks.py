@@ -4,12 +4,41 @@ import time
 import logging
 
 from invoke import task, run
+from kafka.common import UnknownTopicOrPartitionError
 from kafka.client import KafkaClient
 from kafka.producer import SimpleProducer
 from streamparse.ext.invoke import *
 
 
 logging.basicConfig(format='%(asctime)-15s %(module)s %(name)s %(message)s')
+log = logging.getLogger()
+
+def retry(tries, delay=3, backoff=2, safe_exc_types=None):
+    """Retry a function call."""
+    if safe_exc_types is None:
+        # By default, all exception types are "safe" and retried
+        safe_exc_types = (Exception,)
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            mtries, mdelay = tries, delay
+
+            while mtries > 0:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if not isinstance(e, safe_exc_types):
+                        raise e
+
+
+                    mtries -= 1
+                    time.sleep(mdelay)
+                    mdelay *= backoff
+        wrapper.__doc__ = func.__doc__
+        wrapper.__name__ = func.__name__
+        return wrapper
+    return decorator
+
 
 def random_pixel_generator():
     urls = (
@@ -27,7 +56,9 @@ def random_pixel_generator():
             "ts": ts,
         }
 
+
 @task
+@retry(2, safe_exc_types=(UnknownTopicOrPartitionError,))
 def seed_kafka(kafka_hosts=None, topic_name=None, num_pixels=100000):
     """Seed the local Kafka cluster's "pixels" topic with sample pixel data."""
     topic_name = topic_name or "pixels"
