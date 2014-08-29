@@ -19,7 +19,7 @@ Pixles are counted by URL in `pixel_count.PixelCounterBolt`.
 
 # Instructions
 
-### 1. Install Vagrant
+### 1. Install Vagrant and Virtualbox
 Install [Vagrant](https://www.vagrantup.com/) and [Virtualbox](https://www.virtualbox.org/).
 
 ### 2. Create Virtual Machine
