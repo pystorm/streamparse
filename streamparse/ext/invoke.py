@@ -198,9 +198,13 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
 
-    create_or_update_virtualenvs(
-        name, "{}/{}.txt".format(config["virtualenv_specs"], name)
-    )
+    requirements_txt = "{}/{}.txt".format(config["virtualenv_specs"], name)
+    if os.path.exists(requirements_txt):
+        create_or_update_virtualenvs(name, requirements_txt)
+    else:
+        print('Path to requirements.txt `{0}` not found. '
+              'Not updating the virutalenv'.format(requirements_txt))
+
     python_path = '/'.join([env_config["virtualenv_root"],
                            name, "bin", "python"])
 
