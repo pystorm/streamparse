@@ -81,8 +81,12 @@ def activate_env(env_name=None):
     env.user = env_config["user"]
     env.log_path = env_config.get("log_path") or \
                    env_config.get("log", {}).get("path")
-    env.virtualenv_root = env_config.get("virtualenv_root") or \
-                          env_config.get("virtualenv_path")
+    env.provisioner = env_config.get("provisioner", "virtualenv")
+    if env.provisioner == "virtualenv":
+        env.virtualenv_root = env_config.get("virtualenv_root") or \
+                              env_config.get("virtualenv_path")
+    elif env.provisioner == "shell":
+        env.shell_cmd = "foo"
     env.disable_known_hosts = True
     env.forward_agent = True
 

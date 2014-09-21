@@ -197,12 +197,16 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         pre_submit_fabric(name, env_name, env_config)
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-
-    create_or_update_virtualenvs(
-        name, "{}/{}.txt".format(config["virtualenv_specs"], name)
-    )
-    python_path = '/'.join([env_config["virtualenv_root"],
-                           name, "bin", "python"])
+    if env_config["provisioner"] == "virtualenv":
+        create_or_update_virtualenvs(
+            name, "{}/{}.txt".format(config["virtualenv_specs"], name)
+        )
+        python_path = '/'.join([env_config["virtualenv_root"],
+                            name, "bin", "python"])
+    elif env_config["provisioner"] == "shell":
+        python_path = "/usr/bin/python"
+    else:
+        raise ValueError("Invalid provisioner specified: {!r}".format(env_config["provisioner"]))
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
