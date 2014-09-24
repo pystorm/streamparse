@@ -85,10 +85,17 @@ def activate_env(env_name=None):
     if env.provisioner == "virtualenv":
         env.virtualenv_root = env_config.get("virtualenv_root") or \
                               env_config.get("virtualenv_path")
+        env.virtualenv_specs = env_config.get("virtualenv_specs")
+    elif env.provisioner == "conda":
+        conda_config = env_config.get("conda")
+        env.conda_root = conda_config.get("conda_root")
+        env.conda_env_root = conda_config.get("conda_env_root")
+        env.python_version = conda_config.get("python_version")
     elif env.provisioner == "shell":
         env.shell_cmd = "foo"
     env.disable_known_hosts = True
     env.forward_agent = True
+    return env
 
 
 @parallel
@@ -111,6 +118,36 @@ def _create_or_update_virtualenv(virtualenv_root,
 
     run("rm {}".format(tmpfile))
 
+@parallel
+def _conda_provision():
+    env.use_ssh_config = True
+    python_version = env.python_version
+    python_bin = env.conda_root + "/bin/python"
+    conda_bin = env.conda_root + "/bin/conda"
+    conda_env_root = env.conda_env_root
+    env_prefix = "{conda_env_root}/{topology_name}".format(
+                conda_env_root=conda_env_root,
+                topology_name="wordcount-mem")
+    if not exists(env_prefix):
+        cmd = "{conda} create -q --yes "\
+                "-p {env_prefix} "\
+                "python={python_version} "\
+                "pip"
+        cmd = cmd.format(conda=conda_bin,
+                        env_prefix=env_prefix,
+                        python_version=python_version)
+        run(cmd)
+    pip_bin = env_prefix + "/bin/pip"
+    # XXX install other requirements
+    run("{pip} install streamparse".format(pip=pip_bin))
+
+
+@task
+def provision():
+    if env.provisioner == "conda":
+        execute(_conda_provision, hosts=env.storm_workers)
+    else:
+        raise ValueError("no provisioner found")
 
 @task
 def create_or_update_virtualenvs(virtualenv_name, requirements_file):
