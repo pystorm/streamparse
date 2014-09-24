@@ -125,9 +125,7 @@ def _conda_provision():
     python_bin = env.conda_root + "/bin/python"
     conda_bin = env.conda_root + "/bin/conda"
     conda_env_root = env.conda_env_root
-    env_prefix = "{conda_env_root}/{topology_name}".format(
-                conda_env_root=conda_env_root,
-                topology_name="wordcount-mem")
+    env_prefix = env.env_prefix
     if not exists(env_prefix):
         cmd = "{conda} create -q --yes "\
                 "-p {env_prefix} "\
@@ -141,13 +139,26 @@ def _conda_provision():
     # XXX install other requirements
     run("{pip} install streamparse".format(pip=pip_bin))
 
+@task
+def _virtualenv_provision():
+    pass
+
+@task
+def _shell_provision():
+    pass
 
 @task
 def provision():
-    if env.provisioner == "conda":
-        execute(_conda_provision, hosts=env.storm_workers)
-    else:
-        raise ValueError("no provisioner found")
+    provision_tasks = {
+        "virtualenv": _virtualenv_provision,
+        "conda": _conda_provision,
+        "shell": _shell_provision
+    }
+    provision_task = provision_tasks.get(env.provisioner, None)
+    if provision_task is None:
+        raise ValueError("no provisioner found; use one of {}"
+                         .format(provision_tasks.keys()))
+    execute(provision_task, hosts=env.storm_workers)
 
 @task
 def create_or_update_virtualenvs(virtualenv_name, requirements_file):
