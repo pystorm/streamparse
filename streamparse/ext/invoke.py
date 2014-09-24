@@ -24,12 +24,13 @@ from invoke import run, task
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
                    get_nimbus_for_env_config, get_config)
-from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
+from .fabric import (activate_env, create_or_update_virtualenvs, tail_logs,
+                     provision)
 
 
 
 __all__ = ["list_topologies", "kill_topology", "run_local_topology",
-           "submit_topology", "tail_topology"]
+           "submit_topology", "tail_topology", "provision_topology"]
 
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
 # from all these with something like
@@ -173,6 +174,27 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     print(full_cmd)
     run(full_cmd)
 
+@task
+def provision_topology(name=None, env_name="prod"):
+    prepare_topology()
+
+    env = activate_env(env_name)
+
+    if env.provisioner == "virtualenv":
+        create_or_update_virtualenvs(
+            name, "{}/{}.txt".format(env.virtualenv_specs, name)
+        )
+        python_path = '/'.join([env.virtualenv_root,
+                            name, "bin", "python"])
+    elif env.provisioner == "conda":
+        print("about to create conda env")
+        print("root={}, version={}".format(env.conda_root, env.python_version))
+    elif env.provisioner == "shell":
+        python_path = "/usr/bin/python"
+    else:
+        raise ValueError("Invalid provisioner specified: {!r}".format(env_config["provisioner"]))
+    provision()
+
 
 @task(pre=["prepare_topology"])
 def submit_topology(name=None, env_name="prod", par=2, options=None,
@@ -195,18 +217,6 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
     if callable(pre_submit_fabric):
         pre_submit_fabric(name, env_name, env_config)
-
-    config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-    if env_config["provisioner"] == "virtualenv":
-        create_or_update_virtualenvs(
-            name, "{}/{}.txt".format(config["virtualenv_specs"], name)
-        )
-        python_path = '/'.join([env_config["virtualenv_root"],
-                            name, "bin", "python"])
-    elif env_config["provisioner"] == "shell":
-        python_path = "/usr/bin/python"
-    else:
-        raise ValueError("Invalid provisioner specified: {!r}".format(env_config["provisioner"]))
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
