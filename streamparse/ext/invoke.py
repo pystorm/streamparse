@@ -181,16 +181,21 @@ def provision_topology(name=None, env_name="prod"):
     env = activate_env(env_name)
 
     if env.provisioner == "virtualenv":
+        # XXX: no need for this step here anymore?
         create_or_update_virtualenvs(
             name, "{}/{}.txt".format(env.virtualenv_specs, name)
         )
-        python_path = '/'.join([env.virtualenv_root,
-                            name, "bin", "python"])
+        prefix = "{virtualenv_root}/{topology_name}".format(
+                    virtualenv_root=env.virtualenv_root,
+                    topology_name=name)
+        env.env_prefix = prefix
     elif env.provisioner == "conda":
-        print("about to create conda env")
-        print("root={}, version={}".format(env.conda_root, env.python_version))
+        prefix = "{conda_env_root}/{topology_name}".format(
+                    conda_env_root=env.conda_env_root,
+                    topology_name=name)
+        env.env_prefix = prefix
     elif env.provisioner == "shell":
-        python_path = "/usr/bin/python"
+        env.env_prefix = "/usr"
     else:
         raise ValueError("Invalid provisioner specified: {!r}".format(env_config["provisioner"]))
     provision()
@@ -207,7 +212,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    activate_env(env_name)
+    env = activate_env(env_name)
 
     # pre-submit hooks for invoke and fabric
     user_invoke, user_fabric = get_user_tasks()
@@ -220,6 +225,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
+
+    provision_topology(name=name, env_name=env_name)
 
     print('Deploying "{}" topology...'.format(name))
     with ssh_tunnel(env_config["user"], host, 6627, port):
@@ -248,6 +255,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
             cmd.append("--debug")
         cmd.append("--option 'topology.workers={}'".format(par))
         cmd.append("--option 'topology.acker.executors={}'".format(par))
+        python_path = env.env_prefix + "/bin/python"
         cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
 
         # Python logging settings
