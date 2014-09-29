@@ -42,15 +42,26 @@ def remove_logs(topology_name):
     execute(_remove_logs, topology_name, hosts=env.storm_workers)
 
 
+def _get_file_names_command(path, patterns):
+    """Given a list of bash `find` patterns, return a string for the
+    bash command that will find those streamparse log files
+    """
+    patterns = "' -o -name '".join(patterns)
+    return "cd {path} && find . -name '{patterns}'".format(path=path, patterns=patterns)
+
+
 @task
 def _tail_logs(topology_name=None, pattern=None):
     # list log files found
-    ls_cmd = ("cd {log_path} && ls worker* supervisor* access* metrics* "
-              "streamparse_{topo_name}_*"
-              .format(log_path=env.log_path, topo_name=topology_name))
+    log_name_patterns = ["worker*",
+                         "supervisor*",
+                         "access*",
+                         "metrics*",
+                         "streamparse_{topo_name}*".format(topo_name=topology_name),
+                         ]
+    ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
-    run(ls_cmd)
     tail_pipe = " | xargs tail -f"
     run(ls_cmd + tail_pipe)
 
