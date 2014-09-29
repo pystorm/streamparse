@@ -23,6 +23,7 @@ from prettytable import PrettyTable
 from random import shuffle
 
 from invoke import run, task
+from itertools import chain
 
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
@@ -281,9 +282,11 @@ def tail_topology(topology_name=None, env_name=None, pattern=None):
     tail_logs(topology_name, pattern)
 
 @task
-def display_stats(env_name, topology_name=None, component_name=None):
+def display_stats(env_name, topology_name=None, component_name=None, all_components=None):
     env_name = env_name
-    if topology_name and component_name:
+    if topology_name and all_components:
+        _print_all_components(env_name, topology_name)
+    elif topology_name and component_name:
         _print_component_status(env_name, topology_name, component_name)
     elif topology_name:
         _print_topology_status(env_name, topology_name)
@@ -411,16 +414,36 @@ def _print_bolts(ui_detail):
                       {'boltId': 'l'}
                       )
 
-def _get_component_ui_detail(env_name, topology_name, component_name):
+def _get_component_ui_detail(env_name, topology_name, component_names):
+    if isinstance(component_names, basestring):
+        component_names = [component_names]
     env_name, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
     topology_id = _get_topology_id(env_name, topology_name)
-    detail_url = '/api/v1/topology/%s/component/%s' % (topology_id, component_name)
-    detail = _get_ui_json(env_name, detail_url)
-    return detail
+    base_url = '/api/v1/topology/%s/component/%s'
+    detail_urls = [base_url % (topology_id, name) for name in component_names]
+    detail = _get_ui_jsons(env_name, detail_urls)
+    if len(detail) == 1:
+        return detail.values()[0]
+    else:
+        return detail
 
-def _print_component_status(env_name, topology_name, component_name):
-    ui_detail = _get_component_ui_detail(env_name, topology_name, component_name)
+
+def _print_all_components(env_name, topology_name):
+    topology_ui_detail = _get_topology_ui_detail(env_name, topology_name)
+    spouts = map(lambda spout: spout['spoutId'], topology_ui_detail.get('spouts', {}))
+    bolts = map(lambda spout: spout['boltId'], topology_ui_detail.get('bolts', {}))
+    ui_details = _get_component_ui_detail(env_name, topology_name, chain(spouts, bolts))
+    names_and_keys = zip(map(lambda ui_detail: ui_detail['name'], ui_details.values()),
+                         ui_details.keys())
+    for component_name, key in names_and_keys:
+        _print_component_status(env_name, topology_name,
+                                component_name, ui_details[key])
+
+
+def _print_component_status(env_name, topology_name, component_name, ui_detail=None):
+    if not ui_detail:
+        ui_detail = _get_component_ui_detail(env_name, topology_name, component_name)
     _print_component_summary(ui_detail)
     if ui_detail.get("componentType") == "spout":
         _print_spout_stats(ui_detail)

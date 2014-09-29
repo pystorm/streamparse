@@ -35,7 +35,7 @@ def main():
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
-        sparse stats [-e <env>] [-n <topology>] [-c <component>]
+        sparse stats [-e <env>] [-n <topology>] [-c <component>|--all]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
@@ -98,7 +98,8 @@ def main():
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
     elif args["stats"]:
-        display_stats(args["--environment"], args.get("--name"), args.get("--component"))
+        display_stats(args["--environment"], args.get("--name"),
+                      args.get("--component"), args.get("--all"))
     elif args["visualize"]:
         visualize_topology(args["--name"])
 
