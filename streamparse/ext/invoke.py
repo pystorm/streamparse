@@ -331,11 +331,8 @@ def _print_cluster_status(env_name):
     jsons = _get_ui_jsons(env_name, ["/api/v1/cluster/summary",
                                      "/api/v1/topology/summary",
                                      "/api/v1/supervisor/summary"])
-    _print_cluster_summary(env_name, jsons["/api/v1/cluster/summary"])
-    _print_topologies_summary(env_name, jsons["/api/v1/topology/summary"])
-    _print_supervisor_summary(env_name, jsons["/api/v1/supervisor/summary"])
-
-def _print_cluster_summary(env_name, ui_cluster_summary):
+    # Print Cluster Summary
+    ui_cluster_summary = jsons["/api/v1/cluster/summary"]
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
                'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
     _print_stats_dict("Cluster summary",
@@ -343,8 +340,8 @@ def _print_cluster_summary(env_name, ui_cluster_summary):
                   columns,
                   'r'
                   )
-
-def _print_topologies_summary(env_name, ui_topologies_summary):
+    # Print Topologies Summary
+    ui_topologies_summary = jsons["/api/v1/topology/summary"]
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
     _print_stats_dict("Topology summary",
@@ -352,8 +349,8 @@ def _print_topologies_summary(env_name, ui_topologies_summary):
                   columns,
                   'r'
                   )
-
-def _print_supervisor_summary(env_name, ui_supervisor_summary):
+    # Print Supervisor Summary
+    ui_supervisor_summary = jsons["/api/v1/supervisor/summary"]
     columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
     _print_stats_dict("Supervisor summary",
                   ui_supervisor_summary['supervisors'],
@@ -372,20 +369,14 @@ def _get_topology_ui_detail(env_name, topology_name):
 
 def _print_topology_status(env_name, topology_name):
     ui_detail = _get_topology_ui_detail(env_name, topology_name)
-    _print_topology_summary(ui_detail)
-    _print_topology_stats(ui_detail)
-    _print_spouts(ui_detail)
-    _print_bolts(ui_detail)
-
-def _print_topology_summary(ui_detail):
+    # Print topology summary
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
     _print_stats_dict("Topology summary",
                   ui_detail,
                   columns,
                   'r'
                   )
-
-def _print_topology_stats(ui_detail):
+    # Print topology stats
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
                'acked', 'failed']
     _print_stats_dict("Topology stats",
@@ -393,18 +384,15 @@ def _print_topology_stats(ui_detail):
                   columns,
                   'r'
                   )
-
-def _print_spouts(ui_detail):
-    if not ui_detail.get('spouts'): return
-    columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
-    _print_stats_dict("Spouts (All time)",
-                      ui_detail['spouts'],
-                      columns,
-                      'r',
-                      {'spoutId': 'l'}
-                      )
-
-def _print_bolts(ui_detail):
+    # Print spouts
+    if ui_detail.get('spouts'):
+      columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
+      _print_stats_dict("Spouts (All time)",
+                        ui_detail['spouts'],
+                        columns,
+                        'r',
+                        {'spoutId': 'l'}
+                        )
     columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred', 'capacity',
                'executeLatency', 'executed', 'processLatency', 'acked', 'failed', 'lastError']
     _print_stats_dict("Bolt (All time)",
