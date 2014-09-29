@@ -464,21 +464,23 @@ def _print_bolt_stats(ui_detail):
 def _print_input_stats(ui_detail):
     columns = ['component', 'stream', 'executeLatency', 'processLatency',
                'executed', 'acked', 'failed']
-    _print_stats_dict("Input stats (All time)",
-                      ui_detail['inputStats'],
-                      columns,
-                      'r',
-                      {'component': 'l'}
-                      )
+    if ui_detail['inputStats']:
+        _print_stats_dict("Input stats (All time)",
+                          ui_detail['inputStats'],
+                          columns,
+                          'r',
+                          {'component': 'l'}
+                          )
 
 def _print_bolt_output_stats(ui_detail):
-    columns = ['stream', 'emitted', 'transferred']
-    _print_stats_dict("Output stats (All time)",
-                      ui_detail['outputStats'],
-                      columns,
-                      'r',
-                      {'stream': 'l'}
-                      )
+    if ui_detail['outputStats']:
+        columns = ['stream', 'emitted', 'transferred']
+        _print_stats_dict("Output stats (All time)",
+                          ui_detail['outputStats'],
+                          columns,
+                          'r',
+                          {'stream': 'l'}
+                          )
 
 def _print_spout_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
