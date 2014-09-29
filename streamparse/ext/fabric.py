@@ -47,7 +47,9 @@ def _get_file_names_command(path, patterns):
     bash command that will find those streamparse log files
     """
     patterns = "' -o -name '".join(patterns)
-    return "cd {path} && find . -name '{patterns}'".format(path=path, patterns=patterns)
+    return ("cd {path} && "
+            "find . -name '{patterns}' -maxdepth 1  ") \
+            .format(path=path, patterns=patterns)
 
 
 @task
