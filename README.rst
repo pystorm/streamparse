@@ -1,5 +1,4 @@
-streamparse
-===========
+|logo|
 
 |Build Status|
 
@@ -42,6 +41,7 @@ Roadmap
 
 See the `Roadmap <https://github.com/Parsely/streamparse/wiki/Roadmap>`__.
 
+.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/streamparse-logo.png
 .. |Build Status| image:: https://travis-ci.org/Parsely/streamparse.svg?branch=master
    :target: https://travis-ci.org/Parsely/streamparse
 .. |Demo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif

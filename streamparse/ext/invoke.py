@@ -256,7 +256,13 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         if options is None:
             options = []
         for option in options:
-            cmd.append('--option {}'.format(option))
+            # XXX: hacky Parse.ly-related workaround; must fix root
+            # issue with -o options and string values
+            if "deployment_stage" in option:
+                key, val = option.split("=")
+                cmd.append("--option '{}=\"{}\"'".format(key, val))
+            else:
+                cmd.append("--option {}".format(option))
         full_cmd = " ".join(cmd)
         print("Running lein command to submit topology to nimbus:")
         print(full_cmd)

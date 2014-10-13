@@ -28,7 +28,7 @@ You should get output similar to this::
     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
 
 If ``lein`` isn't installed,
-`follow these directions <leiningen.org/#install>`_.
+`follow these directions <http://leiningen.org/#install>`_.
 
 Once that's all set, you install streamparse using ``pip``::
 
