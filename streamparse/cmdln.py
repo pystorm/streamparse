@@ -5,7 +5,7 @@ from docopt import docopt
 from .bootstrap import quickstart
 from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
                          submit_topology, tail_topology, visualize_topology,
-                         display_stats)
+                         display_stats, display_worker_uptime)
 from .version import __version__ as VERSION
 
 
@@ -36,6 +36,7 @@ def main():
         sparse kill [-n <topology>] [-e <env>] [-v]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
         sparse stats [-e <env>] [-n <topology>] [-c <component>|--all]
+        sparse worker-uptime [-e <env>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
@@ -100,6 +101,8 @@ def main():
     elif args["stats"]:
         display_stats(args["--environment"], args.get("--name"),
                       args.get("--component"), args.get("--all"))
+    elif args["worker-uptime"]:
+        display_worker_uptime(args["--environment"])
     elif args["visualize"]:
         visualize_topology(args["--name"])
 

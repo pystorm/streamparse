@@ -281,6 +281,34 @@ def tail_topology(topology_name=None, env_name=None, pattern=None):
     activate_env(env_name)
     tail_logs(topology_name, pattern)
 
+
+@task
+def display_worker_uptime(env_name):
+    topology_summary = '/api/v1/topology/summary'
+    topology_detail = '/api/v1/topology/{topology}'
+    component = '/api/v1/topology/{topology}/component/{component}'
+    topo_summary_json = _get_ui_json(env_name, topology_summary)
+    topology_ids = map(lambda x: x['id'], topo_summary_json['topologies'])
+    worker_stats = []
+
+    for topology in topology_ids:
+        topology_detail_json = _get_ui_json(env_name, topology_detail.format(topology=topology))
+        spouts = map(lambda x: x['spoutId'], topology_detail_json['spouts'])
+        bolts = map(lambda x: x['boltId'], topology_detail_json['bolts'])
+        for comp in spouts + bolts:
+            comp_detail = _get_ui_json(env_name, component.format(topology=topology, component = comp))
+            worker_stats += [(worker['host'], worker['id'], worker['uptime'])
+                             for worker in comp_detail['executorStats']]
+    worker_stats = sorted(list(set(worker_stats)))
+
+    print("# Worker Stats")
+    table = PrettyTable(["Host", "Worker ID", "Uptime"])
+    for row in worker_stats:
+        table.add_row(row)
+    print(table)
+    print()
+
+
 @task
 def display_stats(env_name, topology_name=None, component_name=None, all_components=None):
     env_name = env_name
@@ -292,6 +320,7 @@ def display_stats(env_name, topology_name=None, component_name=None, all_compone
         _print_topology_status(env_name, topology_name)
     else:
         _print_cluster_status(env_name)
+
 
 def _get_ui_jsons(env_name, api_paths):
     """Take env_name as a string and api_paths that should
@@ -321,11 +350,13 @@ def _get_ui_jsons(env_name, api_paths):
             raise
     raise Exception("Cannot find local port for SSH tunnel to Storm Head.")
 
+
 def _get_ui_json(env_name, api_path):
     """Take env_name as a string and api_path that should
     be a string like '/api/v1/topology/summary'
     """
     return _get_ui_jsons(env_name, [api_path])[api_path]
+
 
 def _print_cluster_status(env_name):
     jsons = _get_ui_jsons(env_name, ["/api/v1/cluster/summary",
