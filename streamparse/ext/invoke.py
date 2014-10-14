@@ -17,8 +17,6 @@ import shutil
 import sys
 import time
 import requests
-from io import open
-from tempfile import NamedTemporaryFile
 from prettytable import PrettyTable
 from random import shuffle
 
@@ -164,7 +162,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     log_path = os.path.join(os.getcwd(), "logs")
     print("Routing Python logging to {}.".format(log_path))
     cmd.append("--option 'streamparse.log.path=\"{}\"'"
-                   .format(log_path))
+       .format(log_path))
     cmd.append("--option 'streamparse.log.level=\"debug\"'")
 
 
@@ -328,10 +326,10 @@ def _get_ui_jsons(env_name, api_paths):
     """
     _, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
-    remote_ui_port = 8081 #TODO: Get this from storm?
+    remote_ui_port = 8081 # TODO: Get this from storm?
     # SSH tunnel can take a while to close. Check multiples
     # if necessary.
-    local_ports = range(8081,8090)
+    local_ports = range(8081, 8090)
     shuffle(local_ports)
     for local_port in local_ports:
         try:
@@ -367,28 +365,29 @@ def _print_cluster_status(env_name):
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
                'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
     _print_stats_dict("Cluster summary",
-                  ui_cluster_summary,
-                  columns,
-                  'r'
-                  )
+                      ui_cluster_summary,
+                      columns,
+                      'r'
+                      )
     # Print Topologies Summary
     ui_topologies_summary = jsons["/api/v1/topology/summary"]
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
     _print_stats_dict("Topology summary",
-                  ui_topologies_summary['topologies'],
-                  columns,
-                  'r'
-                  )
+                      ui_topologies_summary['topologies'],
+                      columns,
+                      'r'
+                      )
     # Print Supervisor Summary
     ui_supervisor_summary = jsons["/api/v1/supervisor/summary"]
     columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
     _print_stats_dict("Supervisor summary",
-                  ui_supervisor_summary['supervisors'],
-                  columns,
-                  'r',
-                  {'host': 'l', 'uptime': 'l'}
-                  )
+                      ui_supervisor_summary['supervisors'],
+                      columns,
+                      'r',
+                      {'host': 'l', 'uptime': 'l'}
+                      )
+
 
 def _get_topology_ui_detail(env_name, topology_name):
     env_name, env_config = get_env_config(env_name)
@@ -398,32 +397,33 @@ def _get_topology_ui_detail(env_name, topology_name):
     detail = _get_ui_json(env_name, detail_url)
     return detail
 
+
 def _print_topology_status(env_name, topology_name):
     ui_detail = _get_topology_ui_detail(env_name, topology_name)
     # Print topology summary
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
     _print_stats_dict("Topology summary",
-                  ui_detail,
-                  columns,
-                  'r'
-                  )
+                      ui_detail,
+                      columns,
+                      'r'
+                      )
     # Print topology stats
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
                'acked', 'failed']
     _print_stats_dict("Topology stats",
-                  ui_detail['topologyStats'],
-                  columns,
-                  'r'
-                  )
+                      ui_detail['topologyStats'],
+                      columns,
+                      'r'
+                      )
     # Print spouts
     if ui_detail.get('spouts'):
-      columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
-      _print_stats_dict("Spouts (All time)",
-                        ui_detail['spouts'],
-                        columns,
-                        'r',
-                        {'spoutId': 'l'}
-                        )
+        columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
+        _print_stats_dict("Spouts (All time)",
+                          ui_detail['spouts'],
+                          columns,
+                          'r',
+                          {'spoutId': 'l'}
+                          )
     columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred', 'capacity',
                'executeLatency', 'executed', 'processLatency', 'acked', 'failed', 'lastError']
     _print_stats_dict("Bolt (All time)",
@@ -432,6 +432,7 @@ def _print_topology_status(env_name, topology_name):
                       'r',
                       {'boltId': 'l'}
                       )
+
 
 def _get_component_ui_detail(env_name, topology_name, component_names):
     if isinstance(component_names, basestring):
@@ -473,6 +474,7 @@ def _print_component_status(env_name, topology_name, component_name, ui_detail=N
         _print_input_stats(ui_detail)
         _print_bolt_output_stats(ui_detail)
 
+
 def _print_component_summary(ui_detail):
     columns = ['id', 'name', 'executors', 'tasks']
     _print_stats_dict("Component summary",
@@ -480,6 +482,7 @@ def _print_component_summary(ui_detail):
                       columns,
                       'r'
                       )
+
 
 def _print_bolt_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred',
@@ -492,6 +495,7 @@ def _print_bolt_stats(ui_detail):
                       {'windowPretty': 'l'}
                       )
 
+
 def _print_input_stats(ui_detail):
     columns = ['component', 'stream', 'executeLatency', 'processLatency',
                'executed', 'acked', 'failed']
@@ -503,6 +507,7 @@ def _print_input_stats(ui_detail):
                           {'component': 'l'}
                           )
 
+
 def _print_bolt_output_stats(ui_detail):
     if ui_detail['outputStats']:
         columns = ['stream', 'emitted', 'transferred']
@@ -512,6 +517,7 @@ def _print_bolt_output_stats(ui_detail):
                           'r',
                           {'stream': 'l'}
                           )
+
 
 def _print_spout_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
@@ -524,6 +530,7 @@ def _print_spout_stats(ui_detail):
                       {'windowPretty': 'l'}
                       )
 
+
 def _print_spout_output_stats(ui_detail):
     columns = ['stream', 'emitted', 'transferred', 'completeLatency',
                'acked', 'failed']
@@ -534,6 +541,7 @@ def _print_spout_output_stats(ui_detail):
                       {'stream': 'l'}
                       )
 
+
 def _print_spout_executors(ui_detail):
     columns = ['id', 'uptime', 'host', 'port', 'emitted',
                'transferred', 'completeLatency', 'acked', 'failed']
@@ -543,6 +551,7 @@ def _print_spout_executors(ui_detail):
                       'r',
                       {'host': 'l'}
                       )
+
 
 def _print_stats_dict(header, data, columns, default_alignment, custom_alignment=None):
     print("# %s" % header)
@@ -558,6 +567,7 @@ def _print_stats_dict(header, data, columns, default_alignment, custom_alignment
             table.align[column] = alignment
     print(table)
 
+
 def _get_topology_id(env_name, topology_name):
     """Get toplogy ID from summary json provided by UI api
     """
@@ -566,6 +576,7 @@ def _get_topology_id(env_name, topology_name):
     for topology in topology_summary["topologies"]:
         if topology_name == topology["name"]:
             return topology["id"]
+
 
 @task
 def visualize_topology(name=None, flip=False):
