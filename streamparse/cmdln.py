@@ -5,7 +5,7 @@ from docopt import docopt
 from .bootstrap import quickstart
 from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
                          submit_topology, tail_topology, visualize_topology,
-                         display_stats, display_worker_uptime)
+                         display_stats, display_worker_uptime, storm_has_stats_api)
 from .version import __version__ as VERSION
 
 
@@ -99,10 +99,12 @@ def main():
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
     elif args["stats"]:
-        display_stats(args["--environment"], args.get("--name"),
-                      args.get("--component"), args.get("--all"))
+        if storm_has_stats_api():
+            display_stats(args["--environment"], args.get("--name"),
+                          args.get("--component"), args.get("--all"))
     elif args["worker-uptime"]:
-        display_worker_uptime(args["--environment"])
+        if storm_has_stats_api():
+            display_worker_uptime(args["--environment"])
     elif args["visualize"]:
         visualize_topology(args["--name"])
 
