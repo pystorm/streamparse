@@ -20,6 +20,7 @@ from io import open
 from tempfile import NamedTemporaryFile
 
 from invoke import run, task
+from six import string_types
 
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
@@ -249,7 +250,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         if isinstance(log_config.get("backup_count"), int):
             cmd.append("--option 'streamparse.log.backup_count={}'"
                        .format(log_config["backup_count"]))
-        if isinstance(log_config.get("level"), basestring):
+        if isinstance(log_config.get("level"), string_types):
             cmd.append("--option 'streamparse.log.level=\"{}\"'"
                        .format(log_config["level"].lower()))
 
