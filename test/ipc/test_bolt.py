@@ -98,7 +98,7 @@ class BoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
         self.shell_proc.write_message(msg)
         res = self.shell_proc.read_message()
 
-        self.assertEqual(res["command"], "log")
+        self.assertEqual(res["command"], "error")
         self.assertIn("Exception: ", res["msg"])
 
         res = self.shell_proc.read_message()
@@ -181,7 +181,7 @@ class BoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
         self.shell_proc.write_message(msg)
 
         res = self.shell_proc.read_message()
-        self.assertEqual(res["command"], "log")
+        self.assertEqual(res["command"], "error")
         self.assertIn("Exception: ", res["msg"])
 
         res = self.shell_proc.read_message()
