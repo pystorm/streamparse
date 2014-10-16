@@ -50,7 +50,7 @@ class Component(object):
         message = message.format(exception_name=exception.__class__.__name__,
                                  tup=tup,
                                  traceback=format_exc())
-        self.log(message, 'error')
+        send_message({'command': 'error', 'msg': str(message)})
         send_message({'command': 'sync'})  # sync up right away
 
     def log(self, message, level=None):
