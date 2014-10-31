@@ -64,42 +64,10 @@ copy. In order to allow streamparse to ssh into the box, we need to modify your
 ssh config. Note that if you only wish to run this example via `sparse run`,
 this step isn't necessary.
 
-Run `vagrant ssh-config` and you should see output similar to:
+Run this command to append the necessary info to your local `~/.ssh/config`.
 
 ```
-Host default
-  HostName 127.0.0.1
-  User vagrant
-  Port 2222
-  UserKnownHostsFile /dev/null
-  StrictHostKeyChecking no
-  PasswordAuthentication no
-  IdentityFile /Users/someguy/.vagrant.d/insecure_private_key
-  IdentitiesOnly yes
-  LogLevel FATAL
-  ForwardAgent yes
-```
-
-Copy this config into `~/.ssh/config` but apply the following modifications:
-
-1. Modify `Host default` > `Host streamparse-box`
-2. Delete line `HostName 127.0.0.1`
-3. Modify `Port 2222` > `Port 22`
-4. Modify `LogLevel FATAL` > `LogLevel INFO`
-
-The final additions to `~/.ssh/config` should look like:
-
-```
-Host streamparse-box
-  User vagrant
-  Port 22
-  UserKnownHostsFile /dev/null
-  StrictHostKeyChecking no
-  PasswordAuthentication no
-  IdentityFile /Users/someguy/.vagrant.d/insecure_private_key
-  IdentitiesOnly yes
-  LogLevel INFO
-  ForwardAgent yes
+vagrant ssh-config | sed -e 's/Host default/Host streamparse-box/' -e 's/HostName 127.0.0.1/HostName 192.168.50.50/' -e 's/Port 2222/Port 22/' -e 's/LogLevel FATAL/LogLevel INFO/' >> ~/.ssh/config
 ```
 
 You can confirm that ssh is configured properly by running `ssh streamparse-box`
