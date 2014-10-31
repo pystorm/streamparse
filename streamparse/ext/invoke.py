@@ -208,7 +208,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     topology_jar = jar_for_deploy()
 
     print('Deploying "{}" topology...'.format(name))
-    with ssh_tunnel(env_config["user"], host, 6627, port):
+    with ssh_tunnel(env_config["user"], host, 16627, port):
         print("ssh tunnel to Nimbus {}:{} established."
               .format(host, port))
 
