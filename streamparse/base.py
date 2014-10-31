@@ -1,6 +1,7 @@
 """Base primititve classes for working with Storm."""
 from __future__ import absolute_import, print_function, unicode_literals
 
+from logging import Handler
 from traceback import format_exc
 
 from .ipc import send_message
@@ -16,8 +17,33 @@ _STORM_LOG_LEVELS = {
     'debug': _STORM_LOG_DEBUG,
     'info': _STORM_LOG_INFO,
     'warn': _STORM_LOG_WARN,
+    'warning': _STORM_LOG_WARN,
     'error': _STORM_LOG_ERROR,
 }
+
+
+class StormHandler(Handler):
+    """Handler that will send messages back to Storm."""
+
+    def __init__(self):
+        """ Initialize handler """
+        Handler.__init__(self)
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        If a formatter is specified, it is used to format the record.
+        If exception information is present, it is formatted using
+        traceback.print_exception and sent to Storm.
+        """
+        try:
+            msg = self.format(record)
+            level = _STORM_LOG_LEVELS.get(record.levelname.lower(),
+                                          _STORM_LOG_INFO)
+            send_message({'command': 'log', 'msg': str(msg), 'level': level})
+        except Exception:
+            self.handleError(record)
 
 
 class Component(object):
