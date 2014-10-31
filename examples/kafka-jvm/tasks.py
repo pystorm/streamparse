@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 import random
 import time
@@ -7,6 +8,7 @@ from invoke import task, run
 from kafka.common import UnknownTopicOrPartitionError
 from kafka.client import KafkaClient
 from kafka.producer import SimpleProducer
+from six.moves import range
 from streamparse.ext.invoke import *
 
 
@@ -69,11 +71,11 @@ def seed_kafka(kafka_hosts=None, topic_name=None, num_pixels=100000):
     # producer = SimpleProducer(kafka, batch_send=True, batch_send_every_n=1000,
     #                           batch_send_every_t=5)
 
-    print ("Seeding Kafka ({}) topic '{}' with {:,} fake pixels."
+    print("Seeding Kafka ({}) topic '{}' with {:,} fake pixels."
            .format(kafka_hosts, topic_name, num_pixels))
     pixels = random_pixel_generator()
-    for i in xrange(num_pixels):
-        pixel = json.dumps(pixels.next())
+    for i in range(num_pixels):
+        pixel = json.dumps(next(pixels)).encode("utf-8", "ignore")
         producer.send_messages(topic_name, pixel)
-    print "Done."
+    print("Done.")
 
