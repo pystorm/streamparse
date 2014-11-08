@@ -5,160 +5,143 @@ import subprocess
 import time
 import unittest
 
-from six.moves import range
+from six.moves import range, zip
 
-from .util import ShellProcess
-
-_ROOT = os.path.dirname(os.path.realpath(__file__))
-def here(*x):
-    return os.path.join(_ROOT, *x)
+from .util import ShellProcess, ShellComponentTestCaseMixin, get_message
 
 
-class ShellBatchingBoltTester(unittest.TestCase):
+_multiprocess_can_split_ = True
 
-    @classmethod
-    def setUpClass(cls):
-        args = ["python", here("dummy_batching_bolt.py")]
-        cls.proc = subprocess.Popen(args, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-        print("Waiting for subprocess to start...")
-        time.sleep(1)  # time for the subprocess to start
-        if cls.proc.poll() is not None:
-            raise Exception("Could not create subprocess.\n{}"
-                            .format(cls.proc.stderr.read().decode('utf-8')))
-        cls.shell_proc = ShellProcess(cls.proc.stdout, cls.proc.stdin)
+BATCH = (
+    get_message(id="0", tuple=["mike"]),
+    get_message(id="1", tuple=["mike"]),
+    get_message(id="2", tuple=["lida"]),
+    get_message(id="3", tuple=["lida"]),
+)
 
-    def test_1_initial_handshake(self):
-        msg = {
-            "conf": {},
-            "context": {},
-            "pidDir": here()
-        }
-        ShellBatchingBoltTester.shell_proc.write_message(msg)
-        res = ShellBatchingBoltTester.shell_proc.read_message()
+class BatchingBoltTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-        self.assertIsInstance(res, dict)
-        self.assertEqual(res.get("pid"), ShellBatchingBoltTester.proc.pid)
-        pid = str(res["pid"])
-        self.assertTrue(os.path.exists(here(pid)))
-        self.assertTrue(os.path.isfile(here(pid)))
+    component = "dummy_batching_bolt.py"
 
-    def test_2_ack_tuple(self):
-        msg = {
-            "id": "2285924946354050200",
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252],
-        }
-        ShellBatchingBoltTester.shell_proc.write_message(msg)
+    def test_single_tuple(self):
+        msg = get_message()
 
-        res = ShellBatchingBoltTester.shell_proc.read_message()
-        self.assertEqual(res.get("command"), "emit")
-        self.assertEqual(res.get("tuple"),
+        self.shell_proc.write_message(msg)
+        res = self.shell_proc.read_message()
+
+        self.assertEqual(res["command"], "emit")
+        self.assertEqual(res["tuple"],
                          ["snow white and the seven dwarfs", msg["id"]])
 
-        res = ShellBatchingBoltTester.shell_proc.read_message()
-        self.assertEqual(res.get("command"), "ack")
-        self.assertEqual(res.get("id"), msg["id"])
-
-    def test_3_multi_ack(self):
-        msg = {
-            "id": None,
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["snow white and the seven dwarfs", "field2", 3, 4.252],
-        }
+    def test_multi_tuple(self):
+        msg = get_message()
         for i in range(5):
             msg["id"] = str(i)
-            ShellBatchingBoltTester.shell_proc.write_message(msg)
-        time.sleep(2.5)
-        # Ensure that we have a series of emits followed by a series of acks
+            self.shell_proc.write_message(msg)
+
+        time.sleep(1.5)  # Wait for batch to complete
+        # Ensure that we have a series of emits
         for i in range(5):
-            res = ShellBatchingBoltTester.shell_proc.read_message()
+            res = self.shell_proc.read_message()
             self.assertEqual(res.get("command"), "emit")
             self.assertEqual(res.get("tuple"),
                              ["snow white and the seven dwarfs", str(i)])
-        for i in range(5):
-            res = ShellBatchingBoltTester.shell_proc.read_message()
-            self.assertEqual(res.get("command"), "ack")
-            self.assertEqual(res.get("id"), str(i))
 
-    def test_4_batches(self):
-        # Create two batches the "mike" batch and the "lida" batch
-        messages = (
-            {
-                "id": "0",
-                "comp": "word-spout",
-                "stream": "default",
-                "task": 0,
-                "tuple": ["mike", "smith"],
-            },
-            {
-                "id": "1",
-                "comp": "word-spout",
-                "stream": "default",
-                "task": 0,
-                "tuple": ["mike", "sukmanowsky"],
-            },
-            {
-                "id": "3",
-                "comp": "word-spout",
-                "stream": "default",
-                "task": 0,
-                "tuple": ["lida", "elias"],
-            },
-            {
-                "id": "4",
-                "comp": "word-spout",
-                "stream": "default",
-                "task": 0,
-                "tuple": ["lida", "smith"],
-            },
-        )
-        for message in messages:
-            ShellBatchingBoltTester.shell_proc.write_message(message)
+    def test_batches(self):
+        for message in BATCH:
+            self.shell_proc.write_message(message)
 
-        time.sleep(2.5)
+        time.sleep(1.5)  # wait for batch to complete
+
+        expected_commands = ["emit"] * 4
 
         results = []
-        # should have series of emits, then series of acks repeated twice
-        for i in range(2*2*2):
-            results.append(ShellBatchingBoltTester.shell_proc.read_message())
+        for i in range(len(expected_commands)):
+            results.append(self.shell_proc.read_message())
 
-        expected_commands = ["emit"] * 2
-        expected_commands += ["ack"] * 2
-        expected_commands += ["emit"] * 2
-        expected_commands += ["ack"] * 2
-        for i, command in enumerate(expected_commands):
-            res = results[i]
-            self.assertEqual(res.get("command"), command)
+        for actual, expected in zip(results, expected_commands):
+            self.assertEqual(actual["command"], expected)
 
-    def test_5_worker_exception(self):
-        msg = {
-            "id": "0",
-            "comp": "word-spout",
-            "stream": "default",
-            "task": 0,
-            "tuple": ["fail"],
-        }
-        ShellBatchingBoltTester.shell_proc.write_message(msg)
-        res = ShellBatchingBoltTester.shell_proc.read_message()
-        self.assertEqual(res.get("command"), "log")
-        self.assertIn("Exception", res.get("msg"))
+    # TODO: Test emit_many
 
-        res = ShellBatchingBoltTester.shell_proc.read_message()
-        self.assertEqual(res.get("command"), "sync")
 
-        self.assertRaises(Exception,
-                          ShellBatchingBoltTester.shell_proc.read_message)
+class BatchingBoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(here(str(cls.proc.pid)))
-        cls.proc.kill()
+    component = "dummy_batching_bolt.py"
+
+    def test_worker_exception(self):
+        msg = get_message(tuple=["fail"])
+
+        self.shell_proc.write_message(msg)
+        time.sleep(1.5)  # wait for batch to complete
+
+        for i in range(2):
+            # we'll get an error message from the _batcher thread and then
+            # the main thread
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], "log")
+            self.assertIn("Exception", res["msg"])
+
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], "sync")
+
+        # Ensure bolt exited
+        self.assertRaises(Exception, self.shell_proc.read_message)
+
+
+class BatchingBoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    component = "dummy_batching_bolt_auto_ack.py"
+
+    def test_auto_ack(self):
+        for message in BATCH:
+            self.shell_proc.write_message(message)
+
+        time.sleep(1.5)  # wait for batch to complete
+
+        expected_commands = ["emit", "ack", "ack", "emit", "ack", "ack"]
+        for cmd in expected_commands:
+            msg = self.shell_proc.read_message()
+            self.assertEqual(msg["command"], cmd)
+
+
+class BatchingBoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    component = "dummy_batching_bolt_auto_anchor.py"
+
+    def test_auto_anchor(self):
+        for message in BATCH:
+            self.shell_proc.write_message(message)
+
+        time.sleep(1.5)  # wait for batch to complete
+
+        expected_commands = ["emit", "emit"]
+
+        results = []
+        for i in range(len(expected_commands)):
+            results.append(self.shell_proc.read_message())
+
+        for actual, expected in zip(results, expected_commands):
+            self.assertEqual(actual["command"], expected)
+            self.assertEqual(len(actual["anchors"]), 2)
+
+
+class BatchingBoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
+
+    component = "dummy_batching_bolt_auto_fail.py"
+
+    def test_auto_fail(self):
+        for message in BATCH:
+            self.shell_proc.write_message(message)
+
+        time.sleep(1.5)  # wait for batch to complete
+
+        # log the exception and sync up, then fail all tuples in the current
+        # batch
+        expected_commands = ["log", "sync", "fail", "fail"]
+        for i in range(len(expected_commands)):
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], expected_commands[i])
 
 
 if __name__ == '__main__':

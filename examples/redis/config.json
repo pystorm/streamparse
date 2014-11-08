@@ -1,0 +1,19 @@
+{
+    "library": "",
+    "topology_specs": "topologies/",
+    "virtualenv_specs": "virtualenvs/",
+    "envs": {
+        "prod": {
+            "user": "",
+            "nimbus": "",
+            "workers": [],
+            "log": {
+                "path": "",
+                "max_bytes": 1000000,
+                "backup_count": 10,
+                "level": "info"
+            },
+            "virtualenv_root": ""
+        }
+    }
+}

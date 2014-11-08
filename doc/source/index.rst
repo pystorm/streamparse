@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-streamparse
-===========
+|logo| |release|
+=====================
 
 streamparse lets you run Python code against real-time streams of data.
 Integrates with Apache Storm.
@@ -29,3 +29,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/streamparse-logo.png

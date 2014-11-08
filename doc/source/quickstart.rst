@@ -28,7 +28,7 @@ You should get output similar to this::
     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
 
 If ``lein`` isn't installed,
-`follow these directions <leiningen.org/#install>`_.
+`follow these directions <http://leiningen.org/#install>`_.
 
 Once that's all set, you install streamparse using ``pip``::
 
@@ -51,8 +51,12 @@ the command-line tool, ``sparse``::
         create    wordcount/project.clj
         create    wordcount/README.md
         create    wordcount/src
-        create    wordcount/src/wordcount.py
-        create    wordcount/src/words.py
+        create    wordcount/src/bolts/
+        create    wordcount/src/bolts/__init__.py
+        create    wordcount/src/bolts/wordcount.py
+        create    wordcount/src/spouts/
+        create    wordcount/src/spouts/__init__.py
+        create    wordcount/src/spouts/words.py
         create    wordcount/tasks.py
         create    wordcount/topologies
         create    wordcount/topologies/wordcount.clj
@@ -106,24 +110,26 @@ Let's have a look at the definition file created by using the
 .. code-block:: clojure
 
     (ns wordcount
-      (:use     [backtype.storm.clojure])
+      (:use     [streamparse.specs])
       (:gen-class))
 
-    (def wordcount
+    (defn wordcount [options]
        [
         ;; spout configuration
-        {"word-spout" (shell-spout-spec
-              ["python" "words.py"]
+        {"word-spout" (python-spout-spec
+              options
+              "spouts.words.WordSpout"
               ["word"]
               )
         }
         ;; bolt configuration
-        {"count-bolt" (shell-bolt-spec
-               {"word-spout" :shuffle}
-               ["python" "wordcount.py"]
-               ["word" "count"]
-               :p 2
-               )
+        {"count-bolt" (python-bolt-spec
+              options
+              {"word-spout" :shuffle}
+              "bolts.wordcount.WordCounter"
+              ["word" "count"]
+              :p 2
+              )
         }
       ]
     )
@@ -137,92 +143,106 @@ Clojure DSL functions for Storm":
       (:use     [backtype.storm.clojure])
       (:gen-class))
 
-The next block of code actually defines the topology and stores it into a var
-named "wordcount".
+The next block of code actually defines the topology and stores it into a
+function named "wordcount".
 
 .. code-block:: clojure
 
-    (def wordcount
+    (defn wordcount [options]
        [
         ;; spout configuration
-        {"word-spout" (shell-spout-spec
-              ["python" "words.py"]
+        {"word-spout" (python-spout-spec
+              options
+              "spouts.words.WordSpout"
               ["word"]
               )
         }
         ;; bolt configuration
-        {"count-bolt" (shell-bolt-spec
-               {"word-spout" :shuffle}
-               ["python" "wordcount.py"]
-               ["word" "count"]
-               :p 2
-               )
+        {"count-bolt" (python-bolt-spec
+              options
+              {"word-spout" :shuffle}
+              "bolts.wordcount.WordCounter"
+              ["word" "count"]
+              :p 2
+              )
         }
       ]
     )
 
-It turns out, the name of the name of the var doesn't matter much, we've used
-``wordcount`` above, but it could just as easily be ``bananas``. What is
-important, is that **the var must be an array with only two dictionaries**.
+It turns out, the name of the name of the function doesn't matter much, we've
+used ``wordcount`` above, but it could just as easily be ``bananas``. What is
+important, is that **the function must return an array with only two
+dictionaries and take one argument**.
 
 The first dictionary holds a named mapping of all the spouts that exist in the
-topology, the second holds a named mapping of all the bolts. An additional
-benefit of defining topologies in Clojure is that we're able to mix and match
-the types of spouts and bolts.  In most cases, you may want to use a pure
-Python topology, but you could easily use JVM-based spouts and bolts or even
-spouts and bolts written in other languages like Ruby, Go, etc.
+topology, the second holds a named mapping of all the bolts. The ``options``
+argument contains a mapping of topology settings.
+
+An additional benefit of defining topologies in Clojure is that we're able to
+mix and match the types of spouts and bolts.  In most cases, you may want to
+use a pure Python topology, but you could easily use JVM-based spouts and bolts
+or even spouts and bolts written in other languages like Ruby, Go, etc.
 
 Since you'll most often define spouts and bolts in Python however, we'll look
-at the two most important functions exposed by the Clojure DSL
-``shell-spout-spec`` and ``shell-bolt-spec``.
+at two important functions provided by streamparse: ``python-spout-spec``
+and ``python-bolt-spec``.
 
 When creating a Python-based spout, we provide a name for the spout and a
-definition of that spout via ``shell-spout-spec``:
+definition of that spout via ``python-spout-spec``:
 
 .. code-block:: clojure
 
-    {"sentence-spout-1" (shell-spout-spec
-                         ;; the command to run, can be any executable
-                         ["python" "sentence.py"]
+    {"sentence-spout-1" (python-spout-spec
+                         ;; topology options passed in
+                         options
+                         ;; name of the python class to ``run``
+                         "spouts.SentenceSpout"
                          ;; output specification, what named fields will this spout emit?
                          ["sentence"]
                          ;; configuration parameters, can specify multiple
                          :p 2)
      "sentence-spout-2" (shell-spout-spec
-                         ["python" "other_sentence_spout.py"]
+                         options
+                         "spouts.OtherSentenceSpout"
                          ["sentence"])}
 
 In the example above, we've defined two spouts in our topology:
-``sentence-spout-1`` and ``sentence-spout-2`` and told Storm to run these components
-using the ``python`` commmand with the appropriate script in relative to our
-``src`` directory.  We've also let Storm know exactly what these spouts will be
-emitting, namely a single field called ``sentence``.
+``sentence-spout-1`` and ``sentence-spout-2`` and told Storm to run these
+components. ``python-spout-spec`` will use the ``options`` mapping to get
+the path to the python executable that Storm will use and streamparse will
+run the class provided.  We've also let Storm know exactly what these spouts
+will be emitting, namely a single field called ``sentence``.
 
 You'll notice that in ``sentence-spout-1``, we've passed an optional map of
 configuration parameters ``:p 2``, we'll get back to this later.
 
-Creating bolts is very similar and uses the ``shell-bolt-spec`` function:
+Creating bolts is very similar and uses the ``python-bolt-spec`` function:
 
 .. code-block:: clojure
 
-    {"sentence-splitter" (shell-bolt-spec
+    {"sentence-splitter" (python-bolt-spec
+                          ;; topology options passed in
+                          options
                           ;; inputs, where does this bolt recieve it's tuples from?
                           {"sentence-spout-1" :shuffle
                            "sentence-spout-2" :shuffle}
-                          ;; command to run
-                          ["python" "sentence_splitter.py"]
+                          ;; class to run
+                          "bolts.SentenceSplitter"
                           ;; output spec, what tuples does this bolt emit?
                           ["word"]
                           ;; configuration parameters
                           :p 2)
-     "word-counter" (shell-bolt-spec
+     "word-counter" (python-bolt-spec
+                     options
                      ;; recieves tuples from "sentence-splitter", grouped by word
                      {"sentence-splitter" ["word"]}
-                     ["python" "word_counter.py"]
+                     "bolts.WordCounter"
                      ["word" "count"])
-     "word-count-saver" (shell-bolt-spec
+     "word-count-saver" (python-bolt-spec
+                         ;; topology options passed in
+                         options
                          {"word-counter" :shuffle}
-                         ["python" "word_saver.py"]
+                         "bolts.WordSaver"
                          ;; does not emit any fields
                          [])}
 
@@ -233,7 +253,7 @@ where a bolts inputs come from and whether or not we'd like Storm to use any
 stream grouping on the tuples from the input source.
 
 In the ``sentence-splitter`` bolt, you'll notice that we define two input
-sources for the bolt, completely fine to add multiple sources to any bolts.
+sources for the bolt. It's completely fine to add multiple sources to any bolts.
 
 In the ``word-counter`` bolt, we've told Storm that we'd like the stream of
 input tuples to be grouped by the named field ``word``. Storm offers
@@ -289,13 +309,9 @@ Let's create a spout that emits sentences until the end of time:
         def fail(self, tup_id):
             pass  # if a tuple fails to process, do nothing
 
-
-    if __name__ == '__main__':
-        SentenceSpout().run()
-
 The magic in the code above happens in the ``initialize()`` and
-``next_tuple()`` functions.  Once the spout enters the main run loop (via the
-``run()`` method), streamparse will call your spout's ``initialize()`` method.
+``next_tuple()`` functions.  Once the spout enters the main run loop,
+streamparse will call your spout's ``initialize()`` method.
 After initialization is complete, streamparse will continually call the spout's
 ``next_tuple()`` method where you're expected to emit tuples that match
 whatever you've defined in your topology definition.
@@ -320,10 +336,7 @@ Now let's create a bolt that takes in sentences, and spits out words:
                 return
 
             self.emit_many(words)
-            self.ack(tup)  # tell Storm the tuple has been processed successfully
-
-    if __name__ == '__main__':
-        SentenceSplitterBolt().run()
+            # tuple acknowledgement is handled automatically
 
 The bolt implementation is even simpler. We simply override the default
 ``process()`` method which streamparse calls when a tuple has been emitted by
@@ -335,11 +348,38 @@ In the ``SentenceSplitterBolt`` above, we have decided to use the
 ``emit_many()`` method instead of ``emit()`` which is a bit more efficient when
 sending a larger number of tuples to Storm.
 
-After processing of the tuple is complete, we tell Storm the tuple was
-successfully processed by calling the bolt's ``ack()`` method and passing the
-input tuple we received.  If you're writing simple bolt that should always call
-``ack()`` after processing completes, you can use the
-:class:`streamparse.bolt.BasicBolt` class.
+If your ``process()`` method completes without raising an Exception, streamparse
+will automatically ensure any emits you have are anchored to the current tuple
+being processed and acknowledged after ``process()`` completes.
+
+If an Exception is raised while ``process()`` is called, streamparse
+automatically fails the current tuple prior to killing the Python process.
+
+Bolt Configuration Options
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can disable the automatic acknowleding, anchoring or failing of tuples by
+adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
+``auto_fail``.  All three options are documented in
+:class:`streamparse.bolt.Bolt`.
+
+**Example**:
+
+.. code-block:: python
+
+    from streamparse.bolt import Bolt
+
+    class MyBolt(Bolt):
+
+        auto_ack = False
+        auto_fail = False
+
+        def process(self, tup):
+            # do stuff...
+            if error:
+              self.fail(tup)  # perform failure manually
+            self.ack(tup)  # perform acknowledgement manually
+
 
 Failed Tuples
 ^^^^^^^^^^^^^
@@ -381,7 +421,12 @@ in our ``config.json`` file:
                     "storm2.my-cluster.com",
                     "storm3.my-cluster.com"
                 ],
-                "log_path": "",
+                "log": {
+                    "path": "/var/log/storm/streamparse",
+                    "max_bytes": 100000,
+                    "backup_count": 10,
+                    "level": "info"
+                },
                 "virtualenv_root": "/data/virtualenvs/"
             }
         }
@@ -413,3 +458,34 @@ these explicitly. streamparse will now:
 1. Package up a JAR containing all your Python source files
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
+
+Logging
+^^^^^^^
+
+The Storm supervisor needs to have access to the ``log.path`` directory for
+logging to work (in the example above, ``/var/log/storm/streamparse``). If you
+have properly configured the ``log.path`` option in your config, streamparse
+will automatically set up a log files on each Storm worker in this path using
+the following filename convention::
+
+    streamparse_<topology_name>_<component_name>_<task_id>_<process_id>.log
+
+Where:
+
+* ``topology_name``: is the ``topology.name`` variable set in Storm
+* ``component_name``: is the name of the currently executing component as defined in your topology definition file (.clj file)
+* ``task_id``: is the task ID running this component in the topology
+* ``process_id``: is the process ID of the Python process
+
+streamparse uses Python's ``logging.handlers.RotatingFileHandler`` and by
+default will only save 10 1 MB log files (10 MB in total), but this can be
+tuned with the ``log.max_bytes`` and ``log.backup_count`` variables.
+
+The default logging level is set to ``INFO``, but if you can tune this with the
+``log.level`` setting which can be one of critical, error, warning, info or
+debug.  **Note** that if you perform ``sparse run`` or ``sparse submit`` with
+the ``--debug`` set, this will override your ``log.level`` setting and set the
+log level to debug.
+
+When running your topology locally via ``sparse run``, your log path will be
+automatically set to ``/path/to/your/streamparse/project/logs``.

@@ -6,6 +6,7 @@ General Questions
 
 * `Is streamparse compatible with Python 3?`_
 * `How can I contribute to streamparse?`_
+* `How do I trigger some code before or after I submit my topology?`_
 
 Is streamparse compatible with Python 3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,6 +38,37 @@ we'll review.
 
 .. _open issues: https://github.com/Parsely/streamparse/issues?state=open
 .. _streamparse user group: https://groups.google.com/forum/#!forum/streamparse
+
+How do I trigger some code before or after I submit my topology?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After you create a streamparse project using ``sparse quickstart``, you'll have
+both a ``tasks.py`` in that directory as well as ``fabric.py``. In either of
+these files, you can specify two functions: ``pre_submit`` and ``post_submit``
+which are expected to accept three arguments:
+
+* ``topology_name``: the name of the topology being submitted
+* ``env_name``: the name of the environment where the topology is being
+  submitted (e.g. ``"prod"``)
+* ``env_config``: the relevant config portion from the ``config.json`` file for
+  the environment you are submitting the topology to
+
+Here is a sample ``tasks.py`` file that sends a message to IRC after a topology
+is successfully submitted to prod.
+
+.. code-block:: python
+
+    # my_project/tasks.py
+    from __future__ import absolute_import, print_function, unicode_literals
+
+    from invoke import task, run
+    from streamparse.ext.invoke import *
+
+
+    def post_submit(topo_name, env_name, env_config):
+        if env_name == "prod":
+            write_to_irc("Deployed {} to {}".format(topo_name, env_name))
+
 
 Errors While Running streamparse
 --------------------------------
