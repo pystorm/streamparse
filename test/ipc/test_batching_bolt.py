@@ -79,7 +79,7 @@ class BatchingBoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
             # we'll get an error message from the _batcher thread and then
             # the main thread
             res = self.shell_proc.read_message()
-            self.assertEqual(res["command"], "log")
+            self.assertEqual(res["command"], "error")
             self.assertIn("Exception", res["msg"])
 
             res = self.shell_proc.read_message()
@@ -138,7 +138,7 @@ class BatchingBoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
         # log the exception and sync up, then fail all tuples in the current
         # batch
-        expected_commands = ["log", "sync", "fail", "fail"]
+        expected_commands = ["error", "sync", "fail", "fail"]
         for i in range(len(expected_commands)):
             res = self.shell_proc.read_message()
             self.assertEqual(res["command"], expected_commands[i])
