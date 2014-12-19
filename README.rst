@@ -18,6 +18,29 @@ Documentation
 
 `http://streamparse.readthedocs.org/en/latest/ <http://streamparse.readthedocs.org/en/latest/>`__
 
+FAQs
+-----
+
+**Q: Should I install Clojure?**
+
+**A:** The Java requirements for streamparse are identical to that of Storm itself (we don't need anything special).  Storm requires Java and bundles Clojure as a requirement https://github.com/apache/storm/blob/master/pom.xml#L300-L302 so no, you don't need to do any separate install of Clojure, just Java on all Storm servers.
+
+**Q: We are using Python 2.7 - Anaconda, is it ok?**
+
+**A:** Should be just fine so long as that matches the Python version you guys are using for local development.
+
+**Q: Which version of streamparse should I install in case I am using the Kafka + Storm + streamparse example?**
+
+**A:** You'll want to use the feature/jvm-example branch as we had to modify the way in which we create uberjar's for topologies to ensure we captured Java-requirements.  Let me know if you experience any issues, there may still be problems.
+
+**Q: What is the way to install streamparse on cluster servers? Should I use pip?**
+
+**A:** streamparse assumes your Storm servers have: Python, pip and virtualenv installed.  After that, the installation of all required dependencies (including streamparse itself) is taken care of via the config.json file for the streamparse project and the sparse submit command. See Remote Deployment for more information and let me know if that part of the docs is missing anything. 
+
+**Q: What should I do for ssh configuration?**
+
+**A:** This is also covered in Remote Deployment.  Basically, streamparse needs an ssh user that has access to all Storm servers and has write access to the virtualenv_root path.
+
 User Group
 ----------
 
