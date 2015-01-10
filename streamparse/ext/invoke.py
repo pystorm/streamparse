@@ -128,15 +128,18 @@ def jar_for_deploy():
     if not res.ok:
         raise Exception("Unable to run 'lein clean'!\nSTDOUT:\n{}"
                         "\nSTDERR:\n{}".format(res.stdout, res.stderr))
-    print("Creating topology JAR...")
-    res = run("lein jar", hide="stdout")
+    print("Creating topology uberjar...")
+    res = run("lein uberjar", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to run 'lein jar'!\nSTDOUT:\n{}"
+        raise Exception("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
                         "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     # XXX: This will fail if more than one JAR is built
-    lines = [l.strip().lstrip("Created ") for l in res.stdout.split()
-             if l.endswith(".jar")]
-    return lines[0]
+    lines = res.stdout.split()
+    lines = [l.strip().lstrip("Created ") for l in lines
+             if l.endswith("standalone.jar")]
+    uberjar = lines[0]
+    print("Uberjar created: {}".format(uberjar))
+    return uberjar
 
 
 @task(pre=["prepare_topology"])

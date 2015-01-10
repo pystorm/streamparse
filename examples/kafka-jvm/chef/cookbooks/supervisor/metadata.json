@@ -1,0 +1,38 @@
+{
+  "name": "supervisor",
+  "version": "0.4.12",
+  "description": "Installs supervisor and provides resources to configure services",
+  "long_description": "",
+  "maintainer": "Noah Kantrowitz",
+  "maintainer_email": "noah@coderanger.net",
+  "license": "Apache 2.0",
+  "platforms": {
+    "ubuntu": ">= 0.0.0",
+    "debian": ">= 0.0.0",
+    "redhat": ">= 0.0.0",
+    "centos": ">= 0.0.0",
+    "fedora": ">= 0.0.0",
+    "amazon": ">= 0.0.0",
+    "smartos": ">= 0.0.0"
+  },
+  "dependencies": {
+    "python": ">= 0.0.0"
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+    "supervisor": "Installs and configures supervisord"
+  }
+}
