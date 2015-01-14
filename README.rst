@@ -32,6 +32,7 @@ Alphabetical, by last name:
 -  Dan Blanchard (`@dsblanch <https://twitter.com/dsblanch>`__)
 -  Keith Bourgoin (`@kbourgoin <https://twitter.com/kbourgoin>`__)
 -  Jeffrey Godwyll (`@rey12rey <https://twitter.com/rey12rey>`__)
+-  Tim Hopper (`@tdhopper <https://twitter.com/tdhopper>`__)
 -  Andrew Montalenti (`@amontalenti <https://twitter.com/amontalenti>`__)
 -  Rohit Sankaran (`@roadhead <https://twitter.com/roadhead>`__)
 -  Mike Sukmanowsky (`@msukmanowsky <https://twitter.com/msukmanowsky>`__)
