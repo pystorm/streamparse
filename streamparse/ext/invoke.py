@@ -105,13 +105,13 @@ def _kill_topology(topology_name, wait, run_args=None, run_kwargs=None):
     if run_kwargs is None:
         run_kwargs = {}
     run_kwargs['pty'] = True
-    wait_arg = ("--wait %s" % wait) if wait is not None else ""
+    wait_arg = ("--wait {wait}".format(wait=wait)) if wait is not None else ""
     cmd = ("lein run -m streamparse.commands.kill_topology/-main"
-           " %(topology_name)s %(wait)s") % \
-        {
-            "topology_name": topology_name,
-            "wait": wait_arg
-        }
+           " {topology_name} {wait}") \
+        .format(
+            topology_name=topology_name,
+            wait=wait_arg
+        )
     return run(cmd, *run_args, **run_kwargs)
 
 
