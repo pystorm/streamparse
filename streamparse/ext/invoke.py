@@ -99,26 +99,30 @@ def list_topologies(env_name="prod"):
         return _list_topologies()
 
 
-def _kill_topology(topology_name, run_args=None, run_kwargs=None):
+def _kill_topology(topology_name, wait, run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
         run_kwargs = {}
     run_kwargs['pty'] = True
-    cmd = ["lein",
-           "run -m streamparse.commands.kill_topology/-main",
-           topology_name]
-    return run(" ".join(cmd), *run_args, **run_kwargs)
+    wait_arg = ("--wait {wait}".format(wait=wait)) if wait is not None else ""
+    cmd = ("lein run -m streamparse.commands.kill_topology/-main"
+           " {topology_name} {wait}") \
+        .format(
+            topology_name=topology_name,
+            wait=wait_arg
+        )
+    return run(cmd, *run_args, **run_kwargs)
 
 
 @task
-def kill_topology(topology_name=None, env_name="prod"):
+def kill_topology(topology_name=None, env_name="prod", wait=None):
     topology_name, topology_file = get_topology_definition(topology_name)
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
     with ssh_tunnel(env_config["user"], host, 6627, port):
-        return _kill_topology(topology_name)
+        return _kill_topology(topology_name, wait)
 
 
 @task

@@ -32,7 +32,7 @@ def main():
         sparse run [-n <topology>] [-o <option>]... [-p <par>] [-t <time>] [-dv]
         sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf]
         sparse list [-e <env>] [-v]
-        sparse kill [-n <topology>] [-e <env>] [-v]
+        sparse kill [-n <topology>] [-e <env>] [-v] [--wait <seconds>]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
@@ -68,6 +68,7 @@ def main():
         --pattern <regex>           Apply pattern to files for "tail"
                                     subcommand.
         --flip                      Flip the visualization to be horizontal.
+        --wait <seconds>            Seconds to wait before killing topology.
         -f --force                  Force a topology to submit by killing any
                                     currently running topologies of the same
                                     name.
@@ -83,7 +84,7 @@ def main():
     elif args["list"]:
         list_topologies(args["--environment"])
     elif args["kill"]:
-        kill_topology(args["--name"], args["--environment"])
+        kill_topology(args["--name"], args["--environment"], args["--wait"])
     elif args["quickstart"]:
         quickstart(args['<project_name>'])
     elif args["submit"]:
