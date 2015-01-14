@@ -30,7 +30,7 @@ def main():
     Usage:
         sparse quickstart <project_name>
         sparse run [-n <topology>] [-o <option>]... [-p <par>] [-t <time>] [-dv]
-        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf]
+        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf] [--wait <seconds>]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v] [--wait <seconds>]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
@@ -91,7 +91,7 @@ def main():
         par = int(args["--par"])
         options = args["--option"]
         submit_topology(args["--name"], args["--environment"], par, options,
-                        args["--force"], args["--debug"])
+                        args["--force"], args["--debug"], args["--wait"])
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
     elif args["visualize"]:
