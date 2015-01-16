@@ -99,7 +99,7 @@ def list_topologies(env_name="prod"):
         return _list_topologies()
 
 
-def _kill_topology(topology_name, wait, run_args=None, run_kwargs=None):
+def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
