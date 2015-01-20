@@ -10,7 +10,7 @@ Function definitions
     ``(defn fn-name [options] expressions)`` defines a function called 
     ``fn-name`` that takes ``options`` as an argument and evaluates each of the 
     ``expressions``, treating the last evaluated expression as the return value 
-    for a function without an explicit ``return`` statement.
+    for a function.
 
 Keyword arguments
     In Clojure, keyword arguments are specified using paired-up positional 
@@ -32,6 +32,7 @@ and ``[val1, val2]`` are identical lists. Function definitions can similarly
 take up multiple lines. 
 
 .. code-block:: clojure
+
     (defn fn-name [options]
         expression1
         expression2
@@ -131,6 +132,7 @@ The ``shell-spout-spec`` takes at least 2 arguments:
 3. Any optional keyword arguments 
 
 .. code-block:: clojure
+
     "my-shell-spout" (shell-spout-spec
         ;; Command to run
         "spouts.shellspout"
@@ -150,6 +152,7 @@ The ``shell-bolt-spec`` takes at least 4 arguments:
 5. Any optional keyword arguments 
 
 .. code-block:: clojure
+
     "my-shell-bolt" (shell-bolt-spec
         ;; input spouts and their groupings
         {"my-shell-spout" :shuffle}
