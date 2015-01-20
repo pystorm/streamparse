@@ -218,7 +218,7 @@ class Bolt(Component):
                 self._current_tups = [read_tuple()]
                 tup = self._current_tups[0]
                 if tup.task == -1 and tup.stream == '__heartbeat':
-                    self.send_message({'command': 'sync'})
+                    send_message({'command': 'sync'})
                 else:
                     self.process(tup)
                     if self.auto_ack:
