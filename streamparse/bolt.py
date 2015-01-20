@@ -216,12 +216,16 @@ class Bolt(Component):
             self.initialize(storm_conf, context)
             while True:
                 self._current_tups = [read_tuple()]
-                self.process(self._current_tups[0])
-                if self.auto_ack:
-                    self.ack(self._current_tups[0])
-                # reset so that we don't accidentally fail the wrong tuples
-                # if a successive call to read_tuple fails
-                self._current_tups = []
+                tup = self._current_tups[0]
+                if tup.task == -1 and tup.stream == '__heartbeat':
+                    send_message({'command': 'sync'})
+                else:
+                    self.process(tup)
+                    if self.auto_ack:
+                        self.ack(tup)
+                    # reset so that we don't accidentally fail the wrong tuples
+                    # if a successive call to read_tuple fails
+                    self._current_tups = []
         except Exception as e:
             log_msg = "Exception in {}.run()".format(self.__class__.__name__)
 
