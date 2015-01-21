@@ -29,8 +29,8 @@ def main():
 
     Usage:
         sparse quickstart <project_name>
-        sparse run [-n <topology>] [-o <option>]... [-p <par>] [-t <time>] [-dv]
-        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-e <env>] [-dvf]
+        sparse run [-n <topology>] [-o <option>]... [-p <par>] [-w <workers>] [-a <ackers>] [-t <time>] [-dv]
+        sparse submit [-n <topology>] [-o <option>]... [-p <par>] [-w <workers>] [-a <ackers>] [-e <env>] [-dvf]
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v] [--wait <seconds>]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
@@ -63,6 +63,10 @@ def main():
         -p --par <par>              Parallelism of topology; conveniently sets
                                     number of Storm workers and acker bolts
                                     at once to passed value [default: 2].
+        -a --ackers <ackers>        Set number of acker bolts. Takes precedence 
+                                    over --par if both set.
+        -w --workers <workers>      Set number of Storm workers. Takes 
+                                    precedence over --par if both set.
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
         --pattern <regex>           Apply pattern to files for "tail"
@@ -79,8 +83,11 @@ def main():
     if args["run"]:
         time = int(args["--time"])
         par = int(args["--par"])
+        ackers = int(args["--ackers"]) if args.get("--ackers") else par
+        workers = int(args["--workers"]) if args.get("--workers") else par
         options = args["--option"]
-        run_local_topology(args["--name"], time, par, options, args["--debug"])
+        run_local_topology(args["--name"], time, workers, ackers, options, 
+                           args["--debug"])
     elif args["list"]:
         list_topologies(args["--environment"])
     elif args["kill"]:
@@ -89,9 +96,11 @@ def main():
         quickstart(args['<project_name>'])
     elif args["submit"]:
         par = int(args["--par"])
+        ackers = int(args["--ackers"]) if args["--ackers"] else par
+        workers = int(args["--workers"]) if args["--workers"] else par
         options = args["--option"]
-        submit_topology(args["--name"], args["--environment"], par, options,
-                        args["--force"], args["--debug"])
+        submit_topology(args["--name"], args["--environment"], workers, ackers, 
+                        options, args["--force"], args["--debug"])
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
     elif args["visualize"]:

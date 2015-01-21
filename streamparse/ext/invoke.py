@@ -147,7 +147,8 @@ def jar_for_deploy():
 
 
 @task(pre=["prepare_topology"])
-def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
+def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None, 
+                       debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
     prepare_topology()
 
@@ -159,8 +160,8 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     cmd.append("-t {}".format(time))
     if debug:
         cmd.append("--debug")
-    cmd.append("--option 'topology.workers={}'".format(par))
-    cmd.append("--option 'topology.acker.executors={}'".format(par))
+    cmd.append("--option 'topology.workers={}'".format(workers))
+    cmd.append("--option 'topology.acker.executors={}'".format(ackers))
 
     # Python logging settings
     if not os.path.isdir("logs"):
@@ -183,8 +184,8 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
 
 
 @task(pre=["prepare_topology"])
-def submit_topology(name=None, env_name="prod", par=2, options=None,
-                    force=False, debug=False):
+def submit_topology(name=None, env_name="prod", workers=2, ackers=2, 
+                    options=None, force=False, debug=False):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
 
@@ -240,8 +241,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
                topology_file]
         if debug:
             cmd.append("--debug")
-        cmd.append("--option 'topology.workers={}'".format(par))
-        cmd.append("--option 'topology.acker.executors={}'".format(par))
+        cmd.append("--option 'topology.workers={}'".format(workers))
+        cmd.append("--option 'topology.acker.executors={}'".format(ackers))
         cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
 
         # Python logging settings
