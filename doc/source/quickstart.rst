@@ -427,6 +427,7 @@ in our ``config.json`` file:
                     "backup_count": 10,
                     "level": "info"
                 },
+                "ssh_tunnel": true,
                 "virtualenv_root": "/data/virtualenvs/"
             }
         }
@@ -458,6 +459,13 @@ these explicitly. streamparse will now:
 1. Package up a JAR containing all your Python source files
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
+
+Local Clusters
+^^^^^^^^^^^^^^
+
+Streamparse assumes that your Storm cluster is not on your local machine. If it 
+is, such as the case with VMs or Docker images, change ``"ssh_tunnel"`` in 
+``config.json`` to ``false``.
 
 Logging
 ^^^^^^^
