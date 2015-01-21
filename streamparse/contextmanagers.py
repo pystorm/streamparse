@@ -27,6 +27,7 @@ def _port_in_use(port, server_type="tcp"):
 
 @contextmanager
 def ssh_tunnel(user, host, local_port, remote_port):
+    """Opens SSH tunnel to run commands in"""
     if _port_in_use(local_port):
         raise Exception("Local port: {} already in use, unable to open ssh "
                         "tunnel to {}:{}."
@@ -50,3 +51,12 @@ def ssh_tunnel(user, host, local_port, remote_port):
         yield
     finally:
         ssh_proc.terminate()
+
+@contextmanager
+def manage_connection(tunnel, user, host, local_port, remote_port):
+    """Determines if a SSH tunnel is required, and if so, open one"""
+    if tunnel:
+        with ssh_tunnel(user, host, local_port, remote_port):
+            yield
+    else:
+        yield
