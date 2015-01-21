@@ -48,7 +48,7 @@ def _get_file_names_command(path, patterns):
     """
     patterns = "' -o -name '".join(patterns)
     return ("cd {path} && "
-            "find . -name '{patterns}' -maxdepth 1  ") \
+            "find . -maxdepth 1 -name '{patterns}' ") \
             .format(path=path, patterns=patterns)
 
 
