@@ -63,9 +63,9 @@ def main():
         -p --par <par>              Parallelism of topology; conveniently sets
                                     number of Storm workers and acker bolts
                                     at once to passed value [default: 2].
-        -a --ackers <ackers>        Set number of acker bolts. Takes precedence 
+        -a --ackers <ackers>        Set number of acker bolts. Takes precedence
                                     over --par if both set.
-        -w --workers <workers>      Set number of Storm workers. Takes 
+        -w --workers <workers>      Set number of Storm workers. Takes
                                     precedence over --par if both set.
         -t --time <time>            Time (in seconds) to keep local cluster
                                     running [default: 5].
@@ -83,10 +83,10 @@ def main():
     if args["run"]:
         time = int(args["--time"])
         par = int(args["--par"])
-        ackers = int(args["--ackers"]) if args.get("--ackers") else par
-        workers = int(args["--workers"]) if args.get("--workers") else par
+        ackers = int(args.get("--ackers", par))
+        workers = int(args.get("--workers", par))
         options = args["--option"]
-        run_local_topology(args["--name"], time, workers, ackers, options, 
+        run_local_topology(args["--name"], time, workers, ackers, options,
                            args["--debug"])
     elif args["list"]:
         list_topologies(args["--environment"])
@@ -96,10 +96,10 @@ def main():
         quickstart(args['<project_name>'])
     elif args["submit"]:
         par = int(args["--par"])
-        ackers = int(args["--ackers"]) if args["--ackers"] else par
-        workers = int(args["--workers"]) if args["--workers"] else par
+        ackers = int(args.get("--ackers", par))
+        workers = int(args.get("--workers", par))
         options = args["--option"]
-        submit_topology(args["--name"], args["--environment"], workers, ackers, 
+        submit_topology(args["--name"], args["--environment"], workers, ackers,
                         options, args["--force"], args["--debug"])
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
