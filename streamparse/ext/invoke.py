@@ -22,7 +22,7 @@ from tempfile import NamedTemporaryFile
 from invoke import run, task
 from six import string_types
 
-from ..contextmanagers import ssh_tunnel
+from ..contextmanagers import manage_connection
 from .util import (get_env_config, get_topology_definition,
                    get_nimbus_for_env_config, get_config)
 from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
@@ -95,7 +95,8 @@ def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env_config["user"], host, 6627, port):
+    with manage_connection(env_config.get("ssh_tunnel", True),
+                           env_config["user"], host, 6627, port):
         return _list_topologies()
 
 
@@ -121,7 +122,8 @@ def kill_topology(topology_name=None, env_name="prod", wait=None):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env_config["user"], host, 6627, port):
+    with manage_connection(env_config.get("ssh_tunnel", True),
+                           env_config["user"], host, 6627, port):
         return _kill_topology(topology_name, wait)
 
 
@@ -216,8 +218,9 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     topology_jar = jar_for_deploy()
 
     print('Deploying "{}" topology...'.format(name))
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        print("ssh tunnel to Nimbus {}:{} established."
+    with manage_connection(env_config.get("ssh_tunnel", True),
+                           env_config["user"], host, 6627, port):
+        print("connection to Nimbus {}:{} established."
               .format(host, port))
 
         if force and not is_safe_to_submit(name):
