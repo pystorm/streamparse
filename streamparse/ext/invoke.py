@@ -184,7 +184,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
 
 @task(pre=["prepare_topology"])
 def submit_topology(name=None, env_name="prod", par=2, options=None,
-                    force=False, debug=False):
+                    force=False, debug=False, wait=None):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
 
@@ -222,7 +222,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
         if force and not is_safe_to_submit(name):
             print("Killing current \"{}\" topology.".format(name))
-            _kill_topology(name, run_kwargs={"hide": "both"})
+            _kill_topology(name, run_kwargs={"hide": "both"}, wait=wait)
             while not is_safe_to_submit(name):
                 print("Waiting for topology {} to quit...".format(name))
                 time.sleep(0.5)
