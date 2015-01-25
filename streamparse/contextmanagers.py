@@ -49,4 +49,4 @@ def ssh_tunnel(user, host, local_port, remote_port):
     try:
         yield
     finally:
-        ssh_proc.terminate()
+        ssh_proc.kill()
