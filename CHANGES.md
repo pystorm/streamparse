@@ -4,6 +4,7 @@ This release adds support for Storm 0.9.3 in addition to a number of bug fixes.
 New and updated examples available.
 
 * Adds: [Support for Storm 0.9.3 heartbeats (#82)](https://github.com/Parsely/streamparse/issues/82)
+* Adds: [`StormHandler` class for logging to Storm](https://github.com/Parsely/streamparse/pull/58)
 * Adds: `--wait` timeout to `sparse kill` and `spare submit`
 * Adds: "kafka-jvm" example -- mixed language topology (JVM/clojure + Python) with JVM-based Kafka Spout 
 * Adds: "wordcount-on-redis" example
