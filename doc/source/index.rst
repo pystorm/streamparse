@@ -17,6 +17,7 @@ Integrates with Apache Storm.
 
    quickstart
    api
+   develop
    faq
 
 .. image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif
