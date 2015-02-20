@@ -20,6 +20,7 @@ from io import open
 from tempfile import NamedTemporaryFile
 
 from invoke import run, task
+from six import string_types
 
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
@@ -98,26 +99,30 @@ def list_topologies(env_name="prod"):
         return _list_topologies()
 
 
-def _kill_topology(topology_name, run_args=None, run_kwargs=None):
+def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
         run_kwargs = {}
     run_kwargs['pty'] = True
-    cmd = ["lein",
-           "run -m streamparse.commands.kill_topology/-main",
-           topology_name]
-    return run(" ".join(cmd), *run_args, **run_kwargs)
+    wait_arg = ("--wait {wait}".format(wait=wait)) if wait is not None else ""
+    cmd = ("lein run -m streamparse.commands.kill_topology/-main"
+           " {topology_name} {wait}") \
+        .format(
+            topology_name=topology_name,
+            wait=wait_arg
+        )
+    return run(cmd, *run_args, **run_kwargs)
 
 
 @task
-def kill_topology(topology_name=None, env_name="prod"):
+def kill_topology(topology_name=None, env_name="prod", wait=None):
     topology_name, topology_file = get_topology_definition(topology_name)
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
     with ssh_tunnel(env_config["user"], host, 6627, port):
-        return _kill_topology(topology_name)
+        return _kill_topology(topology_name, wait)
 
 
 @task
@@ -127,15 +132,18 @@ def jar_for_deploy():
     if not res.ok:
         raise Exception("Unable to run 'lein clean'!\nSTDOUT:\n{}"
                         "\nSTDERR:\n{}".format(res.stdout, res.stderr))
-    print("Creating topology JAR...")
-    res = run("lein jar", hide="stdout")
+    print("Creating topology uberjar...")
+    res = run("lein uberjar", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to run 'lein jar'!\nSTDOUT:\n{}"
+        raise Exception("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
                         "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     # XXX: This will fail if more than one JAR is built
-    lines = [l.strip().lstrip("Created ") for l in res.stdout.split()
-             if l.endswith(".jar")]
-    return lines[0]
+    lines = res.stdout.split()
+    lines = [l.strip().lstrip("Created ") for l in lines
+             if l.endswith("standalone.jar")]
+    uberjar = lines[0]
+    print("Uberjar created: {}".format(uberjar))
+    return uberjar
 
 
 @task(pre=["prepare_topology"])
@@ -176,7 +184,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
 
 @task(pre=["prepare_topology"])
 def submit_topology(name=None, env_name="prod", par=2, options=None,
-                    force=False, debug=False):
+                    force=False, debug=False, wait=None):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
 
@@ -214,7 +222,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
         if force and not is_safe_to_submit(name):
             print("Killing current \"{}\" topology.".format(name))
-            _kill_topology(name, run_kwargs={"hide": "both"})
+            _kill_topology(name, run_kwargs={"hide": "both"}, wait=wait)
             while not is_safe_to_submit(name):
                 print("Waiting for topology {} to quit...".format(name))
                 time.sleep(0.5)
@@ -249,7 +257,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         if isinstance(log_config.get("backup_count"), int):
             cmd.append("--option 'streamparse.log.backup_count={}'"
                        .format(log_config["backup_count"]))
-        if isinstance(log_config.get("level"), basestring):
+        if isinstance(log_config.get("level"), string_types):
             cmd.append("--option 'streamparse.log.level=\"{}\"'"
                        .format(log_config["level"].lower()))
 

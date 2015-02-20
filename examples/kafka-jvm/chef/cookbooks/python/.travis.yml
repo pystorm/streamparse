@@ -1,0 +1,10 @@
+language: ruby
+rvm:
+  - 1.9.3
+  - 2.0.0
+bundler_args: --deployment --binstubs
+before_script:
+  - ./bin/berks install
+script:
+  - ./bin/foodcritic -f any .
+  - ./bin/rake

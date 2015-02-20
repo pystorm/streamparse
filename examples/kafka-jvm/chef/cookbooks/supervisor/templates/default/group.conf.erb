@@ -1,0 +1,5 @@
+[group:<%= @prog.group_name %>]
+programs=<%= @prog.programs.join(',') %>
+<% if @prog.priority %>
+priority=<%= @prog.priority %>
+<% end %>
