@@ -223,9 +223,9 @@ class Bolt(Component):
                     self.process(tup)
                     if self.auto_ack:
                         self.ack(tup)
-                    # reset so that we don't accidentally fail the wrong tuples
-                    # if a successive call to read_tuple fails
-                    self._current_tups = []
+                # reset so that we don't accidentally fail the wrong tuples
+                # if a successive call to read_tuple fails
+                self._current_tups = []
         except Exception as e:
             log_msg = "Exception in {}.run()".format(self.__class__.__name__)
 
