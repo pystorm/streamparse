@@ -242,7 +242,7 @@ def read_handshake():
         send_message({
             'command': 'log',
             'msg': ('WARNING: streamparse logging is not configured. Please '
-                    'set streamparse.log.path in you config.json.')})
+                    'set streamparse.log.path in your config.json.')})
 
     # Redirect stdout and stderr to ensure that print statements/functions
     # won't disrupt the multilang protocol
