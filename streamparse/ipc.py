@@ -218,7 +218,7 @@ def read_handshake():
     log_path = _conf.get('streamparse.log.path')
     if log_path:
         root_log = logging.getLogger()
-        max_bytes = _conf.get('stremparse.log.max_bytes', 1000000)  # 1 MB
+        max_bytes = _conf.get('streamparse.log.max_bytes', 1000000)  # 1 MB
         backup_count = _conf.get('streamparse.log.backup_count', 10)
         log_file = ('{log_path}/streamparse_{topology_name}_{component_name}_'
                     '{task_id}_{pid}.log'
