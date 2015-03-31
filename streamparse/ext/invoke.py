@@ -219,12 +219,9 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         pre_submit_fabric(name, env_name, env_config)
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-
     create_or_update_virtualenvs(
         name, "{}/{}.txt".format(config["virtualenv_specs"], name)
     )
-    python_path = '/'.join([env_config["virtualenv_root"],
-                           name, "bin", "python"])
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
@@ -236,6 +233,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
         if force and not is_safe_to_submit(name):
             print("Killing current \"{}\" topology.".format(name))
+
+
             _kill_topology(name, run_kwargs={"hide": "both"}, wait=wait)
             while not is_safe_to_submit(name):
                 print("Waiting for topology {} to quit...".format(name))
@@ -243,52 +242,8 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
             print("Killed.")
 
-        jvm_opts = [
-            "-Dstorm.jar={}".format(topology_jar),
-            "-Dstorm.options=",
-            "-Dstorm.conf.file=",
-        ]
-        os.environ["JVM_OPTS"] = " ".join(jvm_opts)
-        cmd = ["lein",
-               "run -m streamparse.commands.submit_topology/-main",
-               topology_file]
-        if debug:
-            cmd.append("--debug")
-        cmd.append("--option 'topology.workers={}'".format(par))
-        cmd.append("--option 'topology.acker.executors={}'".format(par))
-        cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
-
-        # Python logging settings
-        log_config = env_config.get("log", {})
-        log_path = log_config.get("path") or env_config.get("log_path")
-        print("Routing Python logging to {}.".format(log_path))
-        if log_path:
-            cmd.append("--option 'streamparse.log.path=\"{}\"'"
-                       .format(log_path))
-        if isinstance(log_config.get("max_bytes"), int):
-            cmd.append("--option 'streamparse.log.max_bytes={}'"
-                       .format(log_config["max_bytes"]))
-        if isinstance(log_config.get("backup_count"), int):
-            cmd.append("--option 'streamparse.log.backup_count={}'"
-                       .format(log_config["backup_count"]))
-        if isinstance(log_config.get("level"), string_types):
-            cmd.append("--option 'streamparse.log.level=\"{}\"'"
-                       .format(log_config["level"].lower()))
-
-        if options is None:
-            options = []
-        for option in options:
-            # XXX: hacky Parse.ly-related workaround; must fix root
-            # issue with -o options and string values
-            if "deployment_stage" in option:
-                key, val = option.split("=")
-                cmd.append("--option '{}=\"{}\"'".format(key, val))
-            else:
-                cmd.append("--option {}".format(option))
-        full_cmd = " ".join(cmd)
-        print("Running lein command to submit topology to nimbus:")
-        print(full_cmd)
-        run(full_cmd)
+            _form_and_run_submit_command(name, topology_file, topology_jar,
+                                         env_config, par, options, debug)
 
         # post-submit hooks for invoke and fabric
         post_submit_invoke = getattr(user_invoke, "post_submit", None)
@@ -297,6 +252,62 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         post_submit_fabric = getattr(user_fabric, "post_submit", None)
         if callable(post_submit_fabric):
             post_submit_fabric(name, env_name, env_config)
+
+
+def _form_and_run_submit_command(topology_name, topology_file, topology_jar,
+                                 env_config, par, options, debug):
+    jvm_opts = [
+        "-Dstorm.jar={}".format(topology_jar),
+        "-Dstorm.options=",
+        "-Dstorm.conf.file=",
+    ]
+    os.environ["JVM_OPTS"] = " ".join(jvm_opts)
+    cmd = [
+        "lein",
+        "run -m streamparse.commands.submit_topology/-main",
+        topology_file]
+
+    if debug:
+        cmd.append("--debug")
+    cmd.append("--option 'topology.workers={}'".format(par))
+    cmd.append("--option 'topology.acker.executors={}'".format(par))
+
+    python_path = '/'.join([env_config["virtualenv_root"],
+                           topology_name, "bin", "python"])
+
+    cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
+
+    # Python logging settings
+    log_config = env_config.get("log", {})
+    log_path = log_config.get("path") or env_config.get("log_path")
+    print("Routing Python logging to {}.".format(log_path))
+    if log_path:
+        cmd.append("--option 'streamparse.log.path=\"{}\"'"
+                   .format(log_path))
+    if isinstance(log_config.get("max_bytes"), int):
+        cmd.append("--option 'streamparse.log.max_bytes={}'"
+                   .format(log_config["max_bytes"]))
+    if isinstance(log_config.get("backup_count"), int):
+        cmd.append("--option 'streamparse.log.backup_count={}'"
+                   .format(log_config["backup_count"]))
+    if isinstance(log_config.get("level"), string_types):
+        cmd.append("--option 'streamparse.log.level=\"{}\"'"
+                   .format(log_config["level"].lower()))
+
+    if options is None:
+        options = []
+    for option in options:
+        # XXX: hacky Parse.ly-related workaround; must fix root
+        # issue with -o options and string values
+        if "deployment_stage" in option:
+            key, val = option.split("=")
+            cmd.append("--option '{}=\"{}\"'".format(key, val))
+        else:
+            cmd.append("--option {}".format(option))
+    full_cmd = " ".join(cmd)
+    print("Running lein command to submit topology to nimbus:")
+    print(full_cmd)
+    run(full_cmd)
 
 
 @task
