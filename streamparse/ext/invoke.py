@@ -80,7 +80,7 @@ def prepare_topology():
     shutil.copytree("src", "_resources/resources")
 
 
-def _list_topologies(run_args=None, run_kwargs=None, host=None, port=None):
+def _list_topologies(host=None, port=None, run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
@@ -106,7 +106,9 @@ def list_topologies(env_name="prod"):
     return _list_topologies(host=host, port=port)
 
 
-def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
+def _kill_topology(topology_name, wait=None,
+                   host=None, port=None,
+                   run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
@@ -119,6 +121,10 @@ def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
             topology_name=topology_name,
             wait=wait_arg
         )
+    if host:
+        cmd += " --host " + host
+    if port:
+        cmd += " --port " + str(port)
     return run(cmd, *run_args, **run_kwargs)
 
 
@@ -128,9 +134,10 @@ def kill_topology(topology_name=None, env_name="prod", wait=None):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        return _kill_topology(topology_name, wait)
-
+    if is_ssh_access_for_nimbus(env_config):
+        with ssh_tunnel(env_config["user"], host, 6627, port):
+            return _kill_topology(topology_name, wait)
+    return _kill_topology(topology_name, wait, host=host, port=port)
 
 @task
 def jar_for_deploy():
