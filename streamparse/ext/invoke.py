@@ -206,22 +206,24 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
+    use_venv = env_config.get('use_virtualenv', True)
 
-    activate_env(env_name)
+    if use_venv:
+        activate_env(env_name)
 
-    # pre-submit hooks for invoke and fabric
-    user_invoke, user_fabric = get_user_tasks()
-    pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
-    if callable(pre_submit_invoke):
-        pre_submit_invoke(name, env_name, env_config)
-    pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
-    if callable(pre_submit_fabric):
-        pre_submit_fabric(name, env_name, env_config)
+        # pre-submit hooks for invoke and fabric
+        user_invoke, user_fabric = get_user_tasks()
+        pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
+        if callable(pre_submit_invoke):
+            pre_submit_invoke(name, env_name, env_config)
+        pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
+        if callable(pre_submit_fabric):
+            pre_submit_fabric(name, env_name, env_config)
 
-    config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-    create_or_update_virtualenvs(
-        name, "{}/{}.txt".format(config["virtualenv_specs"], name)
-    )
+        config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
+        create_or_update_virtualenvs(
+            name, "{}/{}.txt".format(config["virtualenv_specs"], name)
+        )
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
@@ -234,28 +236,27 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
         if force and not is_safe_to_submit(name):
             print("Killing current \"{}\" topology.".format(name))
 
-
             _kill_topology(name, run_kwargs={"hide": "both"}, wait=wait)
             while not is_safe_to_submit(name):
                 print("Waiting for topology {} to quit...".format(name))
                 time.sleep(0.5)
-
             print("Killed.")
 
             _form_and_run_submit_command(name, topology_file, topology_jar,
-                                         env_config, par, options, debug)
+                                         env_config, par, options, debug, use_venv)
 
-        # post-submit hooks for invoke and fabric
-        post_submit_invoke = getattr(user_invoke, "post_submit", None)
-        if callable(post_submit_invoke):
-            post_submit_invoke(name, env_name, env_config)
-        post_submit_fabric = getattr(user_fabric, "post_submit", None)
-        if callable(post_submit_fabric):
-            post_submit_fabric(name, env_name, env_config)
+        if use_venv:
+            # post-submit hooks for invoke and fabric
+            post_submit_invoke = getattr(user_invoke, "post_submit", None)
+            if callable(post_submit_invoke):
+                post_submit_invoke(name, env_name, env_config)
+            post_submit_fabric = getattr(user_fabric, "post_submit", None)
+            if callable(post_submit_fabric):
+                post_submit_fabric(name, env_name, env_config)
 
 
 def _form_and_run_submit_command(topology_name, topology_file, topology_jar,
-                                 env_config, par, options, debug):
+                                 env_config, par, options, debug, use_venv=True):
     jvm_opts = [
         "-Dstorm.jar={}".format(topology_jar),
         "-Dstorm.options=",
@@ -272,10 +273,11 @@ def _form_and_run_submit_command(topology_name, topology_file, topology_jar,
     cmd.append("--option 'topology.workers={}'".format(par))
     cmd.append("--option 'topology.acker.executors={}'".format(par))
 
-    python_path = '/'.join([env_config["virtualenv_root"],
-                           topology_name, "bin", "python"])
+    if use_venv:
+        python_path = '/'.join([env_config["virtualenv_root"],
+                               topology_name, "bin", "python"])
 
-    cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
+        cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
 
     # Python logging settings
     log_config = env_config.get("log", {})
