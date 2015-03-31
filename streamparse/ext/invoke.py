@@ -54,10 +54,11 @@ def get_user_tasks():
         return None, None
 
 
-def is_safe_to_submit(topology_name):
+def is_safe_to_submit(topology_name, host=None, port=None):
     """Check to see if a topology is currently running or is in the process of
     being killed. Assumes tunnel is already connected to Nimbus."""
-    result = _list_topologies(run_kwargs={"hide": "both"})
+    result = _list_topologies(run_kwargs={"hide": "both"},
+                              host=host, port=port)
 
     if result.failed:
         raise Exception("Error running streamparse.commands.list/-main")
@@ -244,12 +245,12 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
 
 def _kill_existing_topology(topology_name, force, wait, host=None, port=None):
-    if force and not is_safe_to_submit(topology_name):
+    if force and not is_safe_to_submit(topology_name, host=host, port=port):
         print("Killing current \"{}\" topology.".format(topology_name))
 
         _kill_topology(topology_name, run_kwargs={"hide": "both"},
                        wait=wait, host=host, port=port)
-        while not is_safe_to_submit(topology_name):
+        while not is_safe_to_submit(topology_name, host=host, port=port):
             print("Waiting for topology {} to quit...".format(topology_name))
             time.sleep(0.5)
         print("Killed.")
