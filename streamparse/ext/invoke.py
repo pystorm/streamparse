@@ -25,7 +25,7 @@ from six import string_types
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
                    get_nimbus_for_env_config, get_config,
-                   check_if_use_ssh_for_nimbus)
+                   is_ssh_for_nimbus)
 from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
@@ -101,7 +101,7 @@ def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    if check_if_use_ssh_for_nimbus(env_config):
+    if is_ssh_for_nimbus(env_config):
         with ssh_tunnel(env_config["user"], host, 6627, port):
             return _list_topologies()
     return _list_topologies(host=host, port=port)
@@ -135,7 +135,7 @@ def kill_topology(topology_name=None, env_name="prod", wait=None):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    if check_if_use_ssh_for_nimbus(env_config):
+    if is_ssh_for_nimbus(env_config):
         with ssh_tunnel(env_config["user"], host, 6627, port):
             return _kill_topology(topology_name, wait)
     return _kill_topology(topology_name, wait, host=host, port=port)
@@ -226,7 +226,7 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
 
     print('Deploying "{}" topology...'.format(name))
     # Use ssh tunnel with Nimbus or use host/port for Thrift connection
-    if check_if_use_ssh_for_nimbus(env_config):
+    if is_ssh_for_nimbus(env_config):
         with ssh_tunnel(env_config["user"], host, 6627, port):
             print("ssh tunnel to Nimbus {}:{} established."
                   .format(host, port))
@@ -234,14 +234,13 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
             _submit_topology(name, topology_file, topology_jar,
                              env_config, par, options, debug)
             _post_submit_hooks(name, env_name, env_config)
-            return
-
-    # This part doesn't use SSH tunnel at all
-    _kill_existing_topology(name, force, wait, host=host, port=port)
-    _submit_topology(name, topology_file, topology_jar,
-                     env_config, par, options, debug,
-                     host=host, port=port)
-    _post_submit_hooks(name, env_name, env_config)
+    else:
+        # This part doesn't use SSH tunnel at all
+        _kill_existing_topology(name, force, wait, host=host, port=port)
+        _submit_topology(name, topology_file, topology_jar,
+                         env_config, par, options, debug,
+                         host=host, port=port)
+        _post_submit_hooks(name, env_name, env_config)
 
 
 def _kill_existing_topology(topology_name, force, wait, host=None, port=None):
