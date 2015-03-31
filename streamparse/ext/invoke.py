@@ -206,20 +206,15 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
-    use_venv = env_config.get('use_virtualenv', True)
 
+    # Check if we need to maintain virtualenv during the process
+    use_venv = env_config.get('use_virtualenv', True)
     if use_venv:
         activate_env(env_name)
 
-        # pre-submit hooks for invoke and fabric
-        user_invoke, user_fabric = get_user_tasks()
-        pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
-        if callable(pre_submit_invoke):
-            pre_submit_invoke(name, env_name, env_config)
-        pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
-        if callable(pre_submit_fabric):
-            pre_submit_fabric(name, env_name, env_config)
+    _pre_submit_hooks(name, env_name, env_config)
 
+    if use_venv:
         config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
         create_or_update_virtualenvs(
             name, "{}/{}.txt".format(config["virtualenv_specs"], name)
@@ -229,34 +224,40 @@ def submit_topology(name=None, env_name="prod", par=2, options=None,
     topology_jar = jar_for_deploy()
 
     print('Deploying "{}" topology...'.format(name))
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        print("ssh tunnel to Nimbus {}:{} established."
-              .format(host, port))
+    # Use ssh tunnel with Nimbus or use host/port for Thrift connection
+    if check_if_use_ssh_for_nimbus(env_config):
+        with ssh_tunnel(env_config["user"], host, 6627, port):
+            print("ssh tunnel to Nimbus {}:{} established."
+                  .format(host, port))
+            _kill_existing_topology(name, force, wait)
+            _submit_topology(name, topology_file, topology_jar,
+                             env_config, par, options, debug)
+            _post_submit_hooks(name, env_name, env_config)
+            return
 
-        if force and not is_safe_to_submit(name):
-            print("Killing current \"{}\" topology.".format(name))
-
-            _kill_topology(name, run_kwargs={"hide": "both"}, wait=wait)
-            while not is_safe_to_submit(name):
-                print("Waiting for topology {} to quit...".format(name))
-                time.sleep(0.5)
-            print("Killed.")
-
-            _form_and_run_submit_command(name, topology_file, topology_jar,
-                                         env_config, par, options, debug, use_venv)
-
-        if use_venv:
-            # post-submit hooks for invoke and fabric
-            post_submit_invoke = getattr(user_invoke, "post_submit", None)
-            if callable(post_submit_invoke):
-                post_submit_invoke(name, env_name, env_config)
-            post_submit_fabric = getattr(user_fabric, "post_submit", None)
-            if callable(post_submit_fabric):
-                post_submit_fabric(name, env_name, env_config)
+    # This part doesn't use SSH tunnel at all
+    _kill_existing_topology(name, force, wait, host=host, port=port)
+    _submit_topology(name, topology_file, topology_jar,
+                     env_config, par, options, debug,
+                     host=host, port=port)
+    _post_submit_hooks(name, env_name, env_config)
 
 
-def _form_and_run_submit_command(topology_name, topology_file, topology_jar,
-                                 env_config, par, options, debug, use_venv=True):
+def _kill_existing_topology(topology_name, force, wait, host=None, port=None):
+    if force and not is_safe_to_submit(topology_name):
+        print("Killing current \"{}\" topology.".format(topology_name))
+
+        _kill_topology(topology_name, run_kwargs={"hide": "both"},
+                       wait=wait, host=host, port=port)
+        while not is_safe_to_submit(topology_name):
+            print("Waiting for topology {} to quit...".format(topology_name))
+            time.sleep(0.5)
+        print("Killed.")
+
+
+def _submit_topology(topology_name, topology_file, topology_jar,
+                     env_config, par, options, debug,
+                     host=None, port=None):
     jvm_opts = [
         "-Dstorm.jar={}".format(topology_jar),
         "-Dstorm.options=",
@@ -268,12 +269,17 @@ def _form_and_run_submit_command(topology_name, topology_file, topology_jar,
         "run -m streamparse.commands.submit_topology/-main",
         topology_file]
 
+    if host:
+        cmd.append("--host " + host)
+    if port:
+        cmd.append("--port " + str(port))
     if debug:
         cmd.append("--debug")
+
     cmd.append("--option 'topology.workers={}'".format(par))
     cmd.append("--option 'topology.acker.executors={}'".format(par))
 
-    if use_venv:
+    if env_config.get('use_virtualenv', True):
         python_path = '/'.join([env_config["virtualenv_root"],
                                topology_name, "bin", "python"])
 
@@ -310,6 +316,29 @@ def _form_and_run_submit_command(topology_name, topology_file, topology_jar,
     print("Running lein command to submit topology to nimbus:")
     print(full_cmd)
     run(full_cmd)
+
+
+def _pre_submit_hooks(topology_name, env_name, env_config):
+    """Pre-submit hooks for invoke and fabric.
+    """
+    user_invoke, user_fabric = get_user_tasks()
+    pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
+    if callable(pre_submit_invoke):
+        pre_submit_invoke(topology_name, env_name, env_config)
+    pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
+    if callable(pre_submit_fabric):
+        pre_submit_fabric(topology_name, env_name, env_config)
+
+def _post_submit_hooks(topology_name, env_name, env_config):
+    """Post-submit hooks for invoke and fabric.
+    """
+    user_invoke, user_fabric = get_user_tasks()
+    post_submit_invoke = getattr(user_invoke, "post_submit", None)
+    if callable(post_submit_invoke):
+        post_submit_invoke(topology_name, env_name, env_config)
+    post_submit_fabric = getattr(user_fabric, "post_submit", None)
+    if callable(post_submit_fabric):
+        post_submit_fabric(topology_name, env_name, env_config)
 
 
 @task
