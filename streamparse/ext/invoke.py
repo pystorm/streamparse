@@ -25,7 +25,7 @@ from six import string_types
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
                    get_nimbus_for_env_config, get_config,
-                   is_ssh_access_for_nimbus)
+                   check_if_use_ssh_for_nimbus)
 from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
@@ -100,7 +100,7 @@ def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    if is_ssh_access_for_nimbus(env_config):
+    if check_if_use_ssh_for_nimbus(env_config):
         with ssh_tunnel(env_config["user"], host, 6627, port):
             return _list_topologies()
     return _list_topologies(host=host, port=port)
@@ -134,7 +134,7 @@ def kill_topology(topology_name=None, env_name="prod", wait=None):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    if is_ssh_access_for_nimbus(env_config):
+    if check_if_use_ssh_for_nimbus(env_config):
         with ssh_tunnel(env_config["user"], host, 6627, port):
             return _kill_topology(topology_name, wait)
     return _kill_topology(topology_name, wait, host=host, port=port)
@@ -182,7 +182,7 @@ def run_local_topology(name=None, time=5, par=2, options=None, debug=False):
     log_path = os.path.join(os.getcwd(), "logs")
     print("Routing Python logging to {}.".format(log_path))
     cmd.append("--option 'streamparse.log.path=\"{}\"'"
-                   .format(log_path))
+               .format(log_path))
     cmd.append("--option 'streamparse.log.level=\"debug\"'")
 
 
