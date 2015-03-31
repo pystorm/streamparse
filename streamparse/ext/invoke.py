@@ -24,7 +24,8 @@ from six import string_types
 
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
-                   get_nimbus_for_env_config, get_config)
+                   get_nimbus_for_env_config, get_config,
+                   is_ssh_access_for_nimbus)
 from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
@@ -79,7 +80,7 @@ def prepare_topology():
     shutil.copytree("src", "_resources/resources")
 
 
-def _list_topologies(run_args=None, run_kwargs=None):
+def _list_topologies(run_args=None, run_kwargs=None, host=None, port=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
@@ -87,6 +88,10 @@ def _list_topologies(run_args=None, run_kwargs=None):
     run_kwargs['pty'] = True
     cmd = ["lein",
            "run -m streamparse.commands.list/-main"]
+    if host:
+        cmd.append("--host " + host)
+    if port:
+        cmd.append("--port " + str(port))
     return run(" ".join(cmd), *run_args, **run_kwargs)
 
 
@@ -95,8 +100,10 @@ def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        return _list_topologies()
+    if is_ssh_access_for_nimbus(env_config):
+        with ssh_tunnel(env_config["user"], host, 6627, port):
+            return _list_topologies()
+    return _list_topologies(host=host, port=port)
 
 
 def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
