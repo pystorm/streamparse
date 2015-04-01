@@ -24,7 +24,8 @@ from six import string_types
 
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
-                   get_nimbus_for_env_config, get_config)
+                   get_nimbus_for_env_config, get_config,
+                   is_ssh_for_nimbus)
 from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
@@ -53,10 +54,11 @@ def get_user_tasks():
         return None, None
 
 
-def is_safe_to_submit(topology_name):
+def is_safe_to_submit(topology_name, host=None, port=None):
     """Check to see if a topology is currently running or is in the process of
     being killed. Assumes tunnel is already connected to Nimbus."""
-    result = _list_topologies(run_kwargs={"hide": "both"})
+    result = _list_topologies(run_kwargs={"hide": "both"},
+                              host=host, port=port)
 
     if result.failed:
         raise Exception("Error running streamparse.commands.list/-main")
@@ -79,7 +81,7 @@ def prepare_topology():
     shutil.copytree("src", "_resources/resources")
 
 
-def _list_topologies(run_args=None, run_kwargs=None):
+def _list_topologies(host=None, port=None, run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
@@ -87,6 +89,10 @@ def _list_topologies(run_args=None, run_kwargs=None):
     run_kwargs['pty'] = True
     cmd = ["lein",
            "run -m streamparse.commands.list/-main"]
+    if host:
+        cmd.append("--host " + host)
+    if port:
+        cmd.append("--port " + str(port))
     return run(" ".join(cmd), *run_args, **run_kwargs)
 
 
@@ -95,11 +101,15 @@ def list_topologies(env_name="prod"):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        return _list_topologies()
+    if is_ssh_for_nimbus(env_config):
+        with ssh_tunnel(env_config["user"], host, 6627, port):
+            return _list_topologies()
+    return _list_topologies(host=host, port=port)
 
 
-def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
+def _kill_topology(topology_name, wait=None,
+                   host=None, port=None,
+                   run_args=None, run_kwargs=None):
     if run_args is None:
         run_args = []
     if run_kwargs is None:
@@ -112,6 +122,10 @@ def _kill_topology(topology_name, wait=None, run_args=None, run_kwargs=None):
             topology_name=topology_name,
             wait=wait_arg
         )
+    if host:
+        cmd += " --host " + host
+    if port:
+        cmd += " --port " + str(port)
     return run(cmd, *run_args, **run_kwargs)
 
 
@@ -121,9 +135,10 @@ def kill_topology(topology_name=None, env_name="prod", wait=None):
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        return _kill_topology(topology_name, wait)
-
+    if is_ssh_for_nimbus(env_config):
+        with ssh_tunnel(env_config["user"], host, 6627, port):
+            return _kill_topology(topology_name, wait)
+    return _kill_topology(topology_name, wait, host=host, port=port)
 
 @task
 def jar_for_deploy():
@@ -169,7 +184,7 @@ def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None,
     log_path = os.path.join(os.getcwd(), "logs")
     print("Routing Python logging to {}.".format(log_path))
     cmd.append("--option 'streamparse.log.path=\"{}\"'"
-                   .format(log_path))
+               .format(log_path))
     cmd.append("--option 'streamparse.log.level=\"debug\"'")
 
 
@@ -194,96 +209,137 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     env_name, env_config = get_env_config(env_name)
     host, port = get_nimbus_for_env_config(env_config)
 
-    activate_env(env_name)
+    # Check if we need to maintain virtualenv during the process
+    use_venv = env_config.get('use_virtualenv', True)
+    if use_venv:
+        activate_env(env_name)
 
-    # pre-submit hooks for invoke and fabric
-    user_invoke, user_fabric = get_user_tasks()
-    pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
-    if callable(pre_submit_invoke):
-        pre_submit_invoke(name, env_name, env_config)
-    pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
-    if callable(pre_submit_fabric):
-        pre_submit_fabric(name, env_name, env_config)
+    _pre_submit_hooks(name, env_name, env_config)
 
-    config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-
-    create_or_update_virtualenvs(
-        name, "{}/{}.txt".format(config["virtualenv_specs"], name)
-    )
-    python_path = '/'.join([env_config["virtualenv_root"],
-                           name, "bin", "python"])
+    if use_venv:
+        config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
+        create_or_update_virtualenvs(
+            name, "{}/{}.txt".format(config["virtualenv_specs"], name)
+        )
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
 
     print('Deploying "{}" topology...'.format(name))
-    with ssh_tunnel(env_config["user"], host, 6627, port):
-        print("ssh tunnel to Nimbus {}:{} established."
-              .format(host, port))
+    # Use ssh tunnel with Nimbus or use host/port for Thrift connection
+    if is_ssh_for_nimbus(env_config):
+        with ssh_tunnel(env_config["user"], host, 6627, port):
+            print("ssh tunnel to Nimbus {}:{} established."
+                  .format(host, port))
+            _kill_existing_topology(name, force, wait)
+            _submit_topology(name, topology_file, topology_jar,
+                             env_config, par, options, debug)
+            _post_submit_hooks(name, env_name, env_config)
+    else:
+        # This part doesn't use SSH tunnel at all
+        _kill_existing_topology(name, force, wait, host=host, port=port)
+        _submit_topology(name, topology_file, topology_jar,
+                         env_config, par, options, debug,
+                         host=host, port=port)
+        _post_submit_hooks(name, env_name, env_config)
 
-        if force and not is_safe_to_submit(name):
-            print("Killing current \"{}\" topology.".format(name))
-            _kill_topology(name, run_kwargs={"hide": "both"}, wait=wait)
-            while not is_safe_to_submit(name):
-                print("Waiting for topology {} to quit...".format(name))
-                time.sleep(0.5)
 
-            print("Killed.")
+def _kill_existing_topology(topology_name, force, wait, host=None, port=None):
+    if force and not is_safe_to_submit(topology_name, host=host, port=port):
+        print("Killing current \"{}\" topology.".format(topology_name))
 
-        jvm_opts = [
-            "-Dstorm.jar={}".format(topology_jar),
-            "-Dstorm.options=",
-            "-Dstorm.conf.file=",
-        ]
-        os.environ["JVM_OPTS"] = " ".join(jvm_opts)
-        cmd = ["lein",
-               "run -m streamparse.commands.submit_topology/-main",
-               topology_file]
-        if debug:
-            cmd.append("--debug")
-        cmd.append("--option 'topology.workers={}'".format(workers))
-        cmd.append("--option 'topology.acker.executors={}'".format(ackers))
+        _kill_topology(topology_name, run_kwargs={"hide": "both"},
+                       wait=wait, host=host, port=port)
+        while not is_safe_to_submit(topology_name, host=host, port=port):
+            print("Waiting for topology {} to quit...".format(topology_name))
+            time.sleep(0.5)
+        print("Killed.")
+
+
+def _submit_topology(topology_name, topology_file, topology_jar,
+                     env_config, par, options, debug,
+                     host=None, port=None):
+    jvm_opts = [
+        "-Dstorm.jar={}".format(topology_jar),
+        "-Dstorm.options=",
+        "-Dstorm.conf.file=",
+    ]
+    os.environ["JVM_OPTS"] = " ".join(jvm_opts)
+    cmd = [
+        "lein",
+        "run -m streamparse.commands.submit_topology/-main",
+        topology_file]
+
+    if host:
+        cmd.append("--host " + host)
+    if port:
+        cmd.append("--port " + str(port))
+    if debug:
+        cmd.append("--debug")
+
+    cmd.append("--option 'topology.workers={}'".format(workers))
+    cmd.append("--option 'topology.acker.executors={}'".format(ackers))
+
+    if env_config.get('use_virtualenv', True):
+        python_path = '/'.join([env_config["virtualenv_root"],
+                               topology_name, "bin", "python"])
+
         cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
 
-        # Python logging settings
-        log_config = env_config.get("log", {})
-        log_path = log_config.get("path") or env_config.get("log_path")
-        print("Routing Python logging to {}.".format(log_path))
-        if log_path:
-            cmd.append("--option 'streamparse.log.path=\"{}\"'"
-                       .format(log_path))
-        if isinstance(log_config.get("max_bytes"), int):
-            cmd.append("--option 'streamparse.log.max_bytes={}'"
-                       .format(log_config["max_bytes"]))
-        if isinstance(log_config.get("backup_count"), int):
-            cmd.append("--option 'streamparse.log.backup_count={}'"
-                       .format(log_config["backup_count"]))
-        if isinstance(log_config.get("level"), string_types):
-            cmd.append("--option 'streamparse.log.level=\"{}\"'"
-                       .format(log_config["level"].lower()))
+    # Python logging settings
+    log_config = env_config.get("log", {})
+    log_path = log_config.get("path") or env_config.get("log_path")
+    print("Routing Python logging to {}.".format(log_path))
+    if log_path:
+        cmd.append("--option 'streamparse.log.path=\"{}\"'"
+                   .format(log_path))
+    if isinstance(log_config.get("max_bytes"), int):
+        cmd.append("--option 'streamparse.log.max_bytes={}'"
+                   .format(log_config["max_bytes"]))
+    if isinstance(log_config.get("backup_count"), int):
+        cmd.append("--option 'streamparse.log.backup_count={}'"
+                   .format(log_config["backup_count"]))
+    if isinstance(log_config.get("level"), string_types):
+        cmd.append("--option 'streamparse.log.level=\"{}\"'"
+                   .format(log_config["level"].lower()))
 
-        if options is None:
-            options = []
-        for option in options:
-            # XXX: hacky Parse.ly-related workaround; must fix root
-            # issue with -o options and string values
-            if "deployment_stage" in option:
-                key, val = option.split("=")
-                cmd.append("--option '{}=\"{}\"'".format(key, val))
-            else:
-                cmd.append("--option {}".format(option))
-        full_cmd = " ".join(cmd)
-        print("Running lein command to submit topology to nimbus:")
-        print(full_cmd)
-        run(full_cmd)
+    if options is None:
+        options = []
+    for option in options:
+        # XXX: hacky Parse.ly-related workaround; must fix root
+        # issue with -o options and string values
+        if "deployment_stage" in option:
+            key, val = option.split("=")
+            cmd.append("--option '{}=\"{}\"'".format(key, val))
+        else:
+            cmd.append("--option {}".format(option))
+    full_cmd = " ".join(cmd)
+    print("Running lein command to submit topology to nimbus:")
+    print(full_cmd)
+    run(full_cmd)
 
-        # post-submit hooks for invoke and fabric
-        post_submit_invoke = getattr(user_invoke, "post_submit", None)
-        if callable(post_submit_invoke):
-            post_submit_invoke(name, env_name, env_config)
-        post_submit_fabric = getattr(user_fabric, "post_submit", None)
-        if callable(post_submit_fabric):
-            post_submit_fabric(name, env_name, env_config)
+
+def _pre_submit_hooks(topology_name, env_name, env_config):
+    """Pre-submit hooks for invoke and fabric.
+    """
+    user_invoke, user_fabric = get_user_tasks()
+    pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
+    if callable(pre_submit_invoke):
+        pre_submit_invoke(topology_name, env_name, env_config)
+    pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
+    if callable(pre_submit_fabric):
+        pre_submit_fabric(topology_name, env_name, env_config)
+
+def _post_submit_hooks(topology_name, env_name, env_config):
+    """Post-submit hooks for invoke and fabric.
+    """
+    user_invoke, user_fabric = get_user_tasks()
+    post_submit_invoke = getattr(user_invoke, "post_submit", None)
+    if callable(post_submit_invoke):
+        post_submit_invoke(topology_name, env_name, env_config)
+    post_submit_fabric = getattr(user_fabric, "post_submit", None)
+    if callable(post_submit_fabric):
+        post_submit_fabric(topology_name, env_name, env_config)
 
 
 @task
