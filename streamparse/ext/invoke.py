@@ -29,14 +29,12 @@ from .util import (get_env_config, get_topology_definition,
 from .fabric import activate_env, create_or_update_virtualenvs, tail_logs
 
 
-
 __all__ = ["list_topologies", "kill_topology", "run_local_topology",
            "submit_topology", "tail_topology"]
 
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
 # from all these with something like
 # @task("setup")
-
 
 
 def get_user_tasks():
@@ -90,9 +88,9 @@ def _list_topologies(host=None, port=None, run_args=None, run_kwargs=None):
     cmd = ["lein",
            "run -m streamparse.commands.list/-main"]
     if host:
-        cmd.append("--host " + host)
+        cmd.append("--host {}".format(host))
     if port:
-        cmd.append("--port " + str(port))
+        cmd.append("--port {}".format(port))
     return run(" ".join(cmd), *run_args, **run_kwargs)
 
 
@@ -121,7 +119,7 @@ def _kill_topology(topology_name, wait=None,
         .format(
             topology_name=topology_name,
             wait=wait_arg
-        )
+    )
     if host:
         cmd += " --host " + host
     if port:
@@ -139,6 +137,7 @@ def kill_topology(topology_name=None, env_name="prod", wait=None):
         with ssh_tunnel(env_config["user"], host, 6627, port):
             return _kill_topology(topology_name, wait)
     return _kill_topology(topology_name, wait, host=host, port=port)
+
 
 @task
 def jar_for_deploy():
@@ -162,7 +161,7 @@ def jar_for_deploy():
 
 
 @task(pre=["prepare_topology"])
-def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None, 
+def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None,
                        debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
     prepare_topology()
@@ -187,7 +186,6 @@ def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None,
                .format(log_path))
     cmd.append("--option 'streamparse.log.level=\"debug\"'")
 
-
     if options is None:
         options = []
     for option in options:
@@ -199,7 +197,7 @@ def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None,
 
 
 @task(pre=["prepare_topology"])
-def submit_topology(name=None, env_name="prod", workers=2, ackers=2, 
+def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                     options=None, force=False, debug=False, wait=None):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
@@ -233,13 +231,13 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                   .format(host, port))
             _kill_existing_topology(name, force, wait)
             _submit_topology(name, topology_file, topology_jar,
-                             env_config, par, options, debug)
+                             env_config, workers, ackers, options, debug)
             _post_submit_hooks(name, env_name, env_config)
     else:
         # This part doesn't use SSH tunnel at all
         _kill_existing_topology(name, force, wait, host=host, port=port)
         _submit_topology(name, topology_file, topology_jar,
-                         env_config, par, options, debug,
+                         env_config, workers, ackers, options, debug,
                          host=host, port=port)
         _post_submit_hooks(name, env_name, env_config)
 
@@ -257,7 +255,7 @@ def _kill_existing_topology(topology_name, force, wait, host=None, port=None):
 
 
 def _submit_topology(topology_name, topology_file, topology_jar,
-                     env_config, par, options, debug,
+                     env_config, workers, ackers, options=None, debug=False,
                      host=None, port=None):
     jvm_opts = [
         "-Dstorm.jar={}".format(topology_jar),
@@ -271,9 +269,9 @@ def _submit_topology(topology_name, topology_file, topology_jar,
         topology_file]
 
     if host:
-        cmd.append("--host " + host)
+        cmd.append("--host {}".format(host))
     if port:
-        cmd.append("--port " + str(port))
+        cmd.append("--port {}".format(port))
     if debug:
         cmd.append("--debug")
 
@@ -282,7 +280,7 @@ def _submit_topology(topology_name, topology_file, topology_jar,
 
     if env_config.get('use_virtualenv', True):
         python_path = '/'.join([env_config["virtualenv_root"],
-                               topology_name, "bin", "python"])
+                                topology_name, "bin", "python"])
 
         cmd.append("--option 'topology.python.path=\"{}\"'".format(python_path))
 
@@ -329,6 +327,7 @@ def _pre_submit_hooks(topology_name, env_name, env_config):
     pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
     if callable(pre_submit_fabric):
         pre_submit_fabric(topology_name, env_name, env_config)
+
 
 def _post_submit_hooks(topology_name, env_name, env_config):
     """Post-submit hooks for invoke and fabric.
