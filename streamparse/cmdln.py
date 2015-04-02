@@ -82,7 +82,7 @@ def main():
 
     if args["run"]:
         time = int(args["--time"])
-        ackers = workers = par = int(args["--par"])
+        ackers = workers = int(args["--par"])
         if args["--ackers"] is not None:
             ackers = int(args["--ackers"])
         if args["--workers"] is not None:
@@ -97,9 +97,11 @@ def main():
     elif args["quickstart"]:
         quickstart(args['<project_name>'])
     elif args["submit"]:
-        par = int(args["--par"])
-        ackers = int(args.get("--ackers", par))
-        workers = int(args.get("--workers", par))
+        ackers = workers = int(args["--par"])
+        if args["--ackers"] is not None:
+            ackers = int(args["--ackers"])
+        if args["--workers"] is not None:
+            workers = int(args["--workers"])
         options = args["--option"]
         submit_topology(name=args["--name"], env_name=args["--environment"],
                         workers=workers, ackers=ackers, options=options,
