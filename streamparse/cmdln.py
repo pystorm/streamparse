@@ -82,9 +82,11 @@ def main():
 
     if args["run"]:
         time = int(args["--time"])
-        par = int(args["--par"])
-        ackers = int(args.get("--ackers", par))
-        workers = int(args.get("--workers", par))
+        ackers = workers = par = int(args["--par"])
+        if args["--ackers"] is not None:
+            ackers = int(args["--ackers"])
+        if args["--workers"] is not None:
+            workers = int(args["--workers"])
         options = args["--option"]
         run_local_topology(args["--name"], time, workers, ackers, options,
                            args["--debug"])
