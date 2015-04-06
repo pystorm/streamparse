@@ -11,7 +11,7 @@ Simply include the `java` recipe wherever you would like Java installed, such as
 
 ### Examples
 
-To install Oracle Java 7 (note that when installing Oracle JDK, `accept_oracle_download_terms` must be set -- see below for details):
+To install Oracle Java 7 (note that when installing Oracle JDK, `accept_oracle_download_terms` attribute must be set -- see below role for an example):
 ```ruby
 name "java"
 description "Install Oracle Java"
@@ -29,7 +29,7 @@ run_list(
 )
 ```
 
-To install IBM flavored Java:
+Example role to install IBM flavored Java:
 ```ruby
 name "java"
 description "Install IBM Java on Ubuntu"
@@ -112,6 +112,10 @@ the .tar.gz.
   the EULA for openjdk package installation.
 * `node['java']['set_default']` - Indicates whether or not you want the
   JDK installed to be default on the system.  Defaults to true.
+* `node['java']['oracle']['jce']['enabled']` - Indicates if the JCE Unlimited Strength Jurisdiction Policy Files should be installed for oracle JDKs
+* `node['java']['oracle']['jce']['home']` - Where the JCE policy files should be installed to
+* `node['java']['oracle']['jce'][java_version]['checksum']` - Checksum of the JCE policy zip. Can be sha256 or md5
+* `node['java']['oracle']['jce'][java_version]['url']` - URL which to download the JCE policy zip
 
 Recipes
 -----
@@ -267,6 +271,7 @@ By default, the extracted directory is extracted to
   the `bin` subdirectory of the extracted folder. Will be ignored if this
   `java_ark` is not the default
 - `owner`: owner of extracted directory, set to "root" by default
+- `group`: group of extracted directory, set to `:owner` by default
 - `default`: whether this the default installation of this package,
   boolean true or false
 

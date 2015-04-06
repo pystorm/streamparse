@@ -56,3 +56,5 @@ package package_name  do
   version node['java']['oracle_rpm']['package_version'] if node['java']['oracle_rpm']['package_version']
   notifies :run, 'bash[update-java-alternatives]', :immediately if platform_family?('rhel', 'fedora') and node['java']['set_default']
 end
+
+include_recipe 'java::oracle_jce' if node['java']['oracle']['jce']['enabled']

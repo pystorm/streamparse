@@ -30,6 +30,7 @@ default['java']['set_etc_environment'] = false
 # the following retry parameters apply when downloading oracle java
 default['java']['ark_retries'] = 0
 default['java']['ark_retry_delay'] = 2
+default['java']['ark_timeout'] = 600
 
 case node['platform_family']
 when "windows"
@@ -100,15 +101,15 @@ default['java']['jdk']['7']['bin_cmds'] = [ "appletviewer", "apt", "ControlPanel
                                             "schemagen", "serialver", "servertool", "tnameserv", "unpack200", "wsgen", "wsimport", "xjc"]
 
 # Oracle doesn't seem to publish SHA256 checksums for Java releases, so we use MD5 instead.
-# Official checksums for the latest release can be found at http://www.oracle.com/technetwork/java/javase/downloads/java-se-binaries-checksum-1956892.html
+# Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/7u75checksum.html
 
 # x86_64
-default['java']['jdk']['7']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/7u67-b01/jdk-7u67-linux-x64.tar.gz'
-default['java']['jdk']['7']['x86_64']['checksum'] = '81e3e2df33e13781e5fac5756ed90e67'
+default['java']['jdk']['7']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/7u75-b13/jdk-7u75-linux-x64.tar.gz'
+default['java']['jdk']['7']['x86_64']['checksum'] = '6f1f81030a34f7a9c987f8b68a24d139'
 
 # i586
-default['java']['jdk']['7']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/7u67-b01/jdk-7u67-linux-i586.tar.gz'
-default['java']['jdk']['7']['i586']['checksum'] = '715b0e8ba2a06bded75f6a92427e2701'
+default['java']['jdk']['7']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/7u75-b13/jdk-7u75-linux-i586.tar.gz'
+default['java']['jdk']['7']['i586']['checksum'] = 'e4371a4fddc049eca3bfef293d812b8e'
 
 # jdk8 attributes
 
@@ -120,12 +121,22 @@ default['java']['jdk']['8']['bin_cmds'] = [ "appletviewer", "apt", "ControlPanel
                                             "unpack200", "wsgen", "wsimport", "xjc"]
 
 # Oracle doesn't seem to publish SHA256 checksums for Java releases, so we use MD5 instead.
-# Official checksums for the latest release can be found at http://www.oracle.com/technetwork/java/javase/downloads/javase8-binaries-checksum-2133161.html
+# Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/8u31checksum.html
 
 # x86_64
-default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u20-b26/jdk-8u20-linux-x64.tar.gz'
-default['java']['jdk']['8']['x86_64']['checksum'] = 'ec7f89dc3697b402e2c851d0488f6299'
+default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz'
+default['java']['jdk']['8']['x86_64']['checksum'] = '173e24bc2d5d5ca3469b8e34864a80da'
 
 # i586
-default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u20-b26/jdk-8u20-linux-i586.tar.gz'
-default['java']['jdk']['8']['i586']['checksum'] = '5dafdef064e18468f21c65051a6918d7'
+default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-i586.tar.gz'
+default['java']['jdk']['8']['i586']['checksum'] = '4e9aec24367672412c7d10105a2a2bbb'
+
+
+default['java']['oracle']['jce']['enabled'] = false
+default['java']['oracle']['jce']['8']['url'] = 'http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip'
+default['java']['oracle']['jce']['8']['checksum'] = 'f3020a3922efd6626c2fff45695d527f34a8020e938a49292561f18ad1320b59'
+default['java']['oracle']['jce']['7']['url'] = 'http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip'
+default['java']['oracle']['jce']['7']['checksum'] = '7a8d790e7bd9c2f82a83baddfae765797a4a56ea603c9150c87b7cdb7800194d'
+default['java']['oracle']['jce']['6']['url'] = 'http://download.oracle.com/otn-pub/java/jce_policy/6/jce_policy-6.zip'
+default['java']['oracle']['jce']['6']['checksum'] = 'd0c2258c3364120b4dbf7dd1655c967eee7057ac6ae6334b5ea8ceb8bafb9262'
+default['java']['oracle']['jce']['home'] = '/opt/java_jce'

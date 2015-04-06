@@ -53,8 +53,8 @@ def oracle_downloaded?(download_path, new_resource)
   if ::File.exists? download_path
     require 'digest'
     if new_resource.checksum =~ /^[0-9a-f]{32}$/
-      downloaded_sha =  Digest::MD5.file(download_path).hexdigest
-      downloaded_sha == new_resource.md5 
+      downloaded_md5 =  Digest::MD5.file(download_path).hexdigest
+      downloaded_md5 == new_resource.checksum
     else
       downloaded_sha =  Digest::SHA256.file(download_path).hexdigest
       downloaded_sha == new_resource.checksum
@@ -78,7 +78,7 @@ def download_direct_from_oracle(tarball_name, new_resource)
     converge_by(description) do
        Chef::Log.debug "downloading oracle tarball straight from the source"
        cmd = shell_out!(
-                                  %Q[ curl --create-dirs -L --retry #{new_resource.retries} --retry-delay #{new_resource.retry_delay} --cookie "#{cookie}" #{new_resource.url} -o #{download_path} ]
+                                  %Q[ curl --create-dirs -L --retry #{new_resource.retries} --retry-delay #{new_resource.retry_delay} --cookie "#{cookie}" #{new_resource.url} -o #{download_path} --connect-timeout #{new_resource.connect_timeout} ]
                                )
     end
   else
@@ -90,6 +90,11 @@ action :install do
   app_dir_name, tarball_name = parse_app_dir_name(new_resource.url)
   app_root = new_resource.app_home.split('/')[0..-2].join('/')
   app_dir = app_root + '/' + app_dir_name
+  if new_resource.group
+    app_group = new_resource.group
+  else
+    app_group = new_resource.owner
+  end
 
   unless new_resource.default
     Chef::Log.debug("processing alternate jdk")
@@ -104,10 +109,10 @@ action :install do
     require 'fileutils'
 
     unless ::File.exists?(app_root)
-      description = "create dir #{app_root} and change owner to #{new_resource.owner}"
+      description = "create dir #{app_root} and change owner to #{new_resource.owner}:#{app_group}"
       converge_by(description) do
           FileUtils.mkdir app_root, :mode => new_resource.app_home_mode
-          FileUtils.chown new_resource.owner, new_resource.owner, app_root
+          FileUtils.chown new_resource.owner, app_group, app_root
       end
     end
 
@@ -153,7 +158,7 @@ action :install do
          end
        when /^.*\.(tar.gz|tgz)/
          cmd = shell_out(
-                            %Q[ tar xvzf "#{Chef::Config[:file_cache_path]}/#{tarball_name}" -C "#{Chef::Config[:file_cache_path]}" ]
+                            %Q[ tar xvzf "#{Chef::Config[:file_cache_path]}/#{tarball_name}" -C "#{Chef::Config[:file_cache_path]}" --no-same-owner]
                                   )
          unless cmd.exitstatus == 0
            Chef::Application.fatal!("Failed to extract file #{tarball_name}!")
@@ -168,7 +173,7 @@ action :install do
          end
 
        # change ownership of extracted files
-       FileUtils.chown_R new_resource.owner, new_resource.owner, app_root
+       FileUtils.chown_R new_resource.owner, app_group, app_root
      end
      new_resource.updated_by_last_action(true)
   end
@@ -183,6 +188,8 @@ action :install do
       template jinfo_file do
         cookbook "java"
         source "oracle.jinfo.erb"
+        owner new_resource.owner
+        group app_group
         variables(
           :priority => new_resource.alternatives_priority,
           :bin_cmds => new_resource.bin_cmds,
@@ -204,6 +211,7 @@ action :install do
        Chef::Log.debug "Symlinking #{app_dir} to #{app_home}"
        FileUtils.rm_f app_home
        FileUtils.ln_sf app_dir, app_home
+       FileUtils.chown new_resource.owner, app_group, app_home
     end
   end
 

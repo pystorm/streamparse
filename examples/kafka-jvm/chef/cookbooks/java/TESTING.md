@@ -13,7 +13,7 @@ Setting up the test environment
 
 Install the latest version of [Vagrant](http://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads) (free) or [VMWare Fusion](http://www.vmware.com/products/fusion) (paid).
 
-The Chef tooling (chefspec/test kitchen/etc) is managed by the [Chef Development Kit](http://downloads.getchef.com/chef-dk/) - Version 0.2.0-2.
+The Chef tooling (chefspec/test kitchen/etc) is managed by the [Chef Development Kit](http://downloads.getchef.com/chef-dk/) - Version 0.3.4
 
 Clone the latest version of the cookbook from the repository.
 

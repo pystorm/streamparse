@@ -6,7 +6,7 @@ driver:
     memory: 1024
 
 provisioner:
-  name: chef_solo
+  name: chef_zero
   attributes:
     java:
       ark_retries: 2
@@ -38,11 +38,19 @@ platforms:
       box: opscode-debian-6.0.8
     run_list:
     - recipe[apt]
+  - name: debian-7.6
+    driver:
+      box: opscode-debian-7.6
+    run_list:
+    - recipe[apt]
   - name: debian-7.4
     driver:
       box: opscode-debian-7.4
     run_list:
     - recipe[apt]
+  - name: centos-7.0
+    driver:
+      box: opscode-centos-7.0
   - name: centos-6.5
     driver:
       box: opscode-centos-6.5
@@ -52,11 +60,15 @@ platforms:
   - name: fedora-19
     driver:
       box: opscode-fedora-19
+  - name: fedora-20
+    driver:
+      box: opscode-fedora-20
 
 suites:
   - name: openjdk
     excludes:
       - fedora-19
+      - fedora-20
     run_list:
       - recipe[java::default]
   - name: openjdk-7
@@ -70,29 +82,38 @@ suites:
         jdk_version: "7"
   - name: oracle
     run_list:
+      - recipe[test_java::default]
       - recipe[java::default]
     attributes:
       java:
         oracle:
           accept_oracle_download_terms: true
+          jce:
+            enabled: true
         install_flavor: oracle
   - name: oracle-7
     run_list:
+      - recipe[test_java::default]
       - recipe[java::default]
     attributes:
       java:
         jdk_version: "7"
         oracle:
           accept_oracle_download_terms: true
+          jce:
+            enabled: true
         install_flavor: oracle
   - name: oracle-8
     run_list:
+      - recipe[test_java::default]
       - recipe[java::default]
     attributes:
       java:
         jdk_version: "8"
         oracle:
           accept_oracle_download_terms: true
+          jce:
+            enabled: true
         install_flavor: oracle
   - name: oracle-direct
     run_list:
@@ -106,3 +127,13 @@ suites:
       - recipe[java::openjdk]
     excludes:
       - fedora-19
+      - fedora-20
+  - name: oracle-rpm
+    run_list:
+      - recipe[java]
+    attributes:
+      java:
+        install_flavor: oracle_rpm
+        jdk_version: 7
+        oracle: 
+          accept_oracle_download_terms: true
