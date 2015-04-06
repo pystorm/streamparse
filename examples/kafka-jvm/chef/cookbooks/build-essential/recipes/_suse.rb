@@ -2,7 +2,7 @@
 # Cookbook Name:: build-essential
 # Recipe:: suse
 #
-# Copyright 2008-2013, Opscode, Inc.
+# Copyright 2008-2013, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,20 +17,13 @@
 # limitations under the License.
 #
 
-%w{
-  autoconf
-  bison
-  flex
-  gcc
-  gcc-c++
-  kernel-default-devel
-  make
-  m4
-}.each do |pkg|
-
-  r = package pkg do
-    action(node['build_essential']['compiletime'] ? :nothing : :install)
-  end
-  r.run_action(:install) if node['build_essential']['compiletime']
-
+potentially_at_compile_time do
+  package 'autoconf'
+  package 'bison'
+  package 'flex'
+  package 'gcc'
+  package 'gcc-c++'
+  package 'kernel-default-devel'
+  package 'make'
+  package 'm4'
 end

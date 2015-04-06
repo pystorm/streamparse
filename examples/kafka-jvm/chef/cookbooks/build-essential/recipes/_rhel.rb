@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: build-essential
-# Recipe:: smartos
+# Recipe:: rhel
 #
-# Copyright 2008-2013, Opscode, Inc.
+# Copyright 2008-2013, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,20 @@
 # limitations under the License.
 #
 
-%w{
-  build-essential
-}.each do |pkg|
+potentially_at_compile_time do
+  package 'autoconf'
+  package 'bison'
+  package 'flex'
+  package 'gcc'
+  package 'gcc-c++'
+  package 'kernel-devel'
+  package 'make'
+  package 'm4'
+  package 'patch'
 
-  r = package pkg do
-    action(node['build_essential']['compiletime'] ? :nothing : :install)
+  # Ensure GCC 4 is available on older pre-6 EL
+  if node['platform_version'].to_i < 6
+    package 'gcc44'
+    package 'gcc44-c++'
   end
-  r.run_action(:install) if node['build_essential']['compiletime']
-
 end

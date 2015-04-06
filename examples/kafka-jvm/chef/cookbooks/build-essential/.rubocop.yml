@@ -1,0 +1,28 @@
+AllCops:
+  Exclude:
+    - bin/**/*
+    - script/**/*
+    - vendor/**/*
+
+AlignParameters:
+  Enabled: false
+ClassAndModuleChildren:
+  Enabled: false
+Documentation:
+  Enabled: false
+DoubleNegation:
+  Enabled: false
+Encoding:
+  Enabled: false
+GuardClause:
+  Enabled: false
+LineLength:
+  Max: 120
+MethodLength:
+  Max: 20
+PercentLiteralDelimiters:
+  Enabled: false
+SignalException:
+  Enabled: false
+SingleSpaceBeforeFirstArg:
+  Enabled: false

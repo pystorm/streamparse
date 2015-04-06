@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: build-essential
-# Recipe:: solaris2
+# Recipe:: freebsd
 #
-# Copyright 2013, Opscode, Inc.
+# Copyright 2014, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,26 +17,8 @@
 # limitations under the License.
 #
 
-%w{
-  autoconf
-  automake
-  bison
-  coreutils
-  flex
-  gcc4core
-  gcc4g++
-  gcc4objc
-  gcc3core
-  gcc3g++
-  ggrep
-  gmake
-  gtar
-  pkgconfig
-}.each do |pkg|
-
-  r = pkgutil_package pkg do
-    action(node['build_essential']['compiletime'] ? :nothing : :install)
-  end
-  r.run_action(:install) if node['build_essential']['compiletime']
-
+potentially_at_compile_time do
+  package 'devel/gmake'
+  package 'devel/autoconf'
+  package 'devel/m4'
 end
