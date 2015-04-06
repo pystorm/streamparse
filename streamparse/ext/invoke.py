@@ -22,6 +22,7 @@ from random import shuffle
 
 from invoke import run, task
 from itertools import chain
+from pkg_resources import parse_version
 from six import string_types
 
 from ..contextmanagers import ssh_tunnel
@@ -39,40 +40,22 @@ __all__ = ["list_topologies", "kill_topology", "run_local_topology",
 # @task("setup")
 
 
-def get_specified_storm_version():
+def storm_lib_version():
+    """Get the Storm library version being used by Leiningen and Streamparse.
+
+    :returns: The Storm library version specified in project.clj
+    :rtype: pkg_resources.Version
+    """
     deps_tree = run("lein deps :tree", hide=True).stdout
-    pattern = r"""\[storm "([0-9A-Za-z\.]+)"\]"""
+    pattern = r'\[storm "([0-9A-Za-z\.]+)"\]'
     versions = set(re.findall(pattern, deps_tree))
 
     if len(versions) > 1:
-        raise Exception("Multiple Storm Versions Detected.")
+        raise RuntimeError("Multiple Storm Versions Detected.")
     elif len(versions) == 0:
-        raise Exception("No Storm version specified in project.clj dependencies.")
+        raise RuntimeError("No Storm version specified in project.clj dependencies.")
     else:
-        return versions.pop()
-
-
-def storm_has_stats_api(print_on_false=True):
-    try:
-        version = get_specified_storm_version()
-    except Exception as e:
-        if print_on_false:
-            print(e)
-        return False
-
-    versions_without_rest_api = ["0.9.1", "0.9.1-incubating", "0.9.0.1",
-                                 "0.9.0", "0.9.0-rc3", "0.9.0-rc2 ", "0.9.0-rc1",
-                                 "0.8.3", "0.8.2", "0.8.1", "0.8.0", "0.7.4",
-                                 "0.7.3", "0.7.2", "0.7.1", "0.7.0", "0.6.2",
-                                 "0.6.1", "0.6.0", "0.5.4", "0.5.3", "0.5.2",
-                                 "0.5.1", "0.5.0"]
-
-    if version in versions_without_rest_api:
-        if print_on_false:
-            print("Storm version %s does not provide REST API for stats." % version)
-        return False
-    else:
-        return True
+        return parse_version(versions.pop())
 
 
 def get_user_tasks():

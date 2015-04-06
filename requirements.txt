@@ -5,3 +5,4 @@ invoke
 six
 requests
 prettytable
+setuptools

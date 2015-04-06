@@ -1,11 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from docopt import docopt
+from pkg_resources import parse_version
 
 from .bootstrap import quickstart
 from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
                          submit_topology, tail_topology, visualize_topology,
-                         display_stats, display_worker_uptime, storm_has_stats_api)
+                         display_stats, display_worker_uptime,
+                         storm_lib_version)
 from .version import __version__ as VERSION
 
 
@@ -114,13 +116,17 @@ def main():
                         wait=args["--wait"])
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
-    elif args["stats"]:
-        if storm_has_stats_api():
-            display_stats(args["--environment"], args.get("--name"),
-                          args.get("--component"), args.get("--all"))
-    elif args["worker-uptime"]:
-        if storm_has_stats_api():
-            display_worker_uptime(args["--environment"])
+    elif args["stats"] or args["worker-uptime"]:
+        storm_version = storm_lib_version()
+        if storm_version >= parse_version('0.9.2-incubating'):
+            if args["stats"]:
+                display_stats(args["--environment"], args.get("--name"),
+                              args.get("--component"), args.get("--all"))
+            else:
+                display_worker_uptime(args["--environment"])
+        else:
+            print("ERROR: Storm {} does not support this command."
+                  .format(storm_version))
     elif args["visualize"]:
         visualize_topology(args["--name"])
 
