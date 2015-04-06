@@ -1,5 +1,6 @@
 maintainer        "Webtrends, Inc."
 maintainer_email  "ivan.vonnagy@webtrends.com"
+name              "kafka"
 license           "Apache 2.0"
 description       "Intalls and configures a Kafka broker"
 long_description  IO.read(File.join(File.dirname(__FILE__), 'README.md'))
