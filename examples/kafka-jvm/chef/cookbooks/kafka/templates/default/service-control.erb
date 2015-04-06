@@ -12,16 +12,7 @@ SERVER_CONFIG="<%=@install_dir%>/config/server.properties"
 CP=""
 
 # Add all .jar files to the classpath.
-if [ -d "$HOME_DIR/lib" ]; then
-    LIB_DIR="$HOME_DIR/lib"
-elif [ -d "$HOME_DIR/libs" ]; then
-    LIB_DIR="$HOME_DIR/libs"
-else
-    echo "Unable to find a valid lib directory in $HOME_DIR"
-    exit 1
-fi
-
-for jar in `ls $LIB_DIR/*`; do
+for jar in `ls $HOME_DIR/lib/*`; do
     if [ "" = "$CP" ]; then
         CP=$jar
     else
@@ -64,11 +55,11 @@ case "$1" in
         if [ "" = "$FOUND_PID" ]; then
             cd   $HOME_DIR
             echo $CMD $MAIN $SERVER_CONFIG
-            # For compatibility with runit we cannot backgroud
+            # For compatibility with runit we cannot backgroud 
             # ourselves with a '&' at the end, though we do
             # need to exec.
             exec $CMD $MAIN $SERVER_CONFIG >$LOG_OUT 2>$LOG_ERR
-        else
+        else 
             echo "Service already running"
             exit 1
         fi
@@ -87,7 +78,7 @@ case "$1" in
                 kill -9 $FOUND_PID
             fi
             exit 0
-        fi
+        fi 
         ;;
     status)
         # Status is found via actual running processes, rather than

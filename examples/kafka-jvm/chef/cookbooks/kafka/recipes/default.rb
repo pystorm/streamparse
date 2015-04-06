@@ -19,7 +19,7 @@
 
 # == Recipes
 include_recipe "java"
-include_recipe "supervisor"
+include_recipe "runit"
 
 java_home   = node['java']['java_home']
 
@@ -34,8 +34,8 @@ if node[:kafka][:broker_host_name].nil? || node[:kafka][:broker_host_name].empty
     node[:kafka][:broker_host_name] = node[:fqdn]
 end
 
-log "Kafka Broker ID: #{node[:kafka][:broker_id]}"
-log "Kafka Broker name: #{node[:kafka][:broker_host_name]}"
+log "Broker id: #{node[:kafka][:broker_id]}"
+log "Broker name: #{node[:kafka][:broker_host_name]}"
 
 # == Users
 
@@ -55,7 +55,7 @@ end
 # create the install directory
 install_dir = node[:kafka][:install_dir]
 
-directory install_dir do
+directory "#{install_dir}" do
   owner "root"
   group "root"
   mode 00755
@@ -63,45 +63,66 @@ directory install_dir do
   action :create
 end
 
-# create the log and data directories
-[node[:kafka][:log_dir], node[:kafka][:data_dir]].each do |dir|
-  directory dir do
-    owner   user
-    group   group
-    mode    00755
-    recursive true
-    action :create
-  end
+directory "#{install_dir}/bin" do
+  owner "root"
+  group "root"
+  mode 00755
+  recursive true
+  action :create
 end
 
+directory "#{install_dir}/config" do
+  owner "root"
+  group "root"
+  mode 00755
+  recursive true
+  action :create
+end
+
+# create the log directory
+directory node[:kafka][:log_dir] do
+  owner   user
+  group   group
+  mode    00755
+  recursive true
+  action :create
+end
+
+# create the data directory
+directory node[:kafka][:data_dir] do
+  owner   user
+  group   group
+  mode    00755
+  recursive true
+  action :create
+end
 
 # pull the remote file only if we create the directory
-tarball = "kafka_#{node[:kafka][:scala_version]}-#{node[:kafka][:version]}.tgz"
-download_file = "#{node[:kafka][:download_url]}/#{node[:kafka][:version]}/#{tarball}"
+tarball = "kafka-#{node[:kafka][:version]}.tar.gz"
+download_file = "#{node[:kafka][:download_url]}/#{tarball}"
 
 remote_file "#{Chef::Config[:file_cache_path]}/#{tarball}" do
   source download_file
   mode 00644
+  checksum node[:kafka][:checksum]
+  ## notifies :run, "execute[tar]", :immediately
 end
 
 execute "tar" do
   user  "root"
   group "root"
   cwd install_dir
+  ## action :nothing
   command "tar zxvf #{Chef::Config[:file_cache_path]}/#{tarball}"
 end
 
-link "#{install_dir}/current" do
-  to "#{install_dir}/kafka_#{node[:kafka][:scala_version]}-#{node[:kafka][:version]}"
-end
-
-template "#{install_dir}/current/bin/service-control" do
+template "#{install_dir}/bin/service-control" do
   source  "service-control.erb"
   owner "root"
   group "root"
   mode  00755
   variables({
-    :install_dir => "#{install_dir}/current",
+    :install_dir => install_dir,
     :log_dir => node[:kafka][:log_dir],
     :java_home => java_home,
     :java_jmx_port => node[:kafka][:jmx_port],
@@ -116,9 +137,6 @@ if not Chef::Config.solo
   search(:node, "role:zookeeper AND chef_environment:#{node.chef_environment}").each do |n|
     zookeeper_pairs << n[:fqdn]
   end
-else
-  log "Assuming Zookeeper is running on localhost."
-  zookeeper_pairs << "127.0.0.1"
 end
 
 # append the zookeeper client port (defaults to 2181)
@@ -128,66 +146,45 @@ while i < zookeeper_pairs.size do
   i += 1
 end
 
-log "zookeeper_pairs: #{zookeeper_pairs}"
-
-# property files
-major, minor = node[:kafka][:version].split(".", 3)
-major, minor = Integer(major), Integer(minor)
-if major == 0 and minor >= 8
-  suffix = ".0.8.erb"
-  props = %w[ consumer.properties log4j.properties producer.properties server.properties ]
-else
-  suffix = ".erb"
-  props = %w[ server.properties log4j.properties ]
-end
-props.each do |template_file|
-  template "#{install_dir}/current/config/#{template_file}" do
-    source	"#{template_file}#{suffix}"
-    # owner user
-    # group group
+%w[server.properties log4j.properties].each do |template_file|
+  template "#{install_dir}/config/#{template_file}" do
+    source	"#{template_file}.erb"
+    owner user
+    group group
     mode  00755
     variables({
+      :kafka => node[:kafka],
       :zookeeper_pairs => zookeeper_pairs,
+      :client_port => node[:zookeeper][:client_port]
     })
-    notifies :restart, "supervisor_service[kafka]"
   end
 end
 
 # fix perms and ownership
-# execute "chmod" do
-#   command "find #{install_dir} -name bin -prune -o -type f -exec chmod 644 {} \\; && find #{install_dir} -type d -exec chmod 755 {} \\;"
-#   action :run
-# end
-
-# execute "chown" do
-#   command "chown -R root:root #{install_dir}"
-#   action :run
-# end
-
-# execute "chmod" do
-# 	command "chmod -R 755 #{install_dir}/current/bin"
-# 	action :run
-# end
-
-# kafka_2.9.2-0.8.1.1/
-supervisor_service "kafka" do
-  directory install_dir
-  command "#{install_dir}/current/bin/service-control start"
-  numprocs 1
-  redirect_stderr true
-  autostart true
-  autorestart true
-  stopsignal "KILL"
-  user user
+execute "chmod" do
+  command "find #{install_dir} -name bin -prune -o -type f -exec chmod 644 {} \\; && find #{install_dir} -type d -exec chmod 755 {} \\;"
+  action :run
 end
-# runit_service "kafka" do
-#   options({
-#     :log_dir => node[:kafka][:log_dir],
-#     :install_dir => install_dir,
-#     :java_home => java_home,
-#     :user => user
-#   })
-# end
+
+execute "chown" do
+  command "chown -R root:root #{install_dir}"
+  action :run
+end
+
+execute "chmod" do
+	command "chmod -R 755 #{install_dir}/bin"
+	action :run
+end
+
+# create the runit service
+runit_service "kafka" do
+  options({
+    :log_dir => node[:kafka][:log_dir],
+    :install_dir => install_dir,
+    :java_home => java_home,
+    :user => user
+  })
+end
 
 # create collectd plugin for kafka JMX objects if collectd has been applied.
 if node.attribute?("collectd")
@@ -201,6 +198,6 @@ if node.attribute?("collectd")
 end
 
 # start up Kafka broker
-# service "kafka" do
-#   action :start
-# end
+service "kafka" do
+  action :start
+end
