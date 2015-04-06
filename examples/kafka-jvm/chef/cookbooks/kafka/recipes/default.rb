@@ -27,11 +27,11 @@ user = node[:kafka][:user]
 group = node[:kafka][:group]
 
 if node[:kafka][:broker_id].nil? || node[:kafka][:broker_id].empty?
-    node[:kafka][:broker_id] = node[:ipaddress].gsub(".","")
+    node.default[:kafka][:broker_id] = node[:ipaddress].gsub(".","")
 end
 
 if node[:kafka][:broker_host_name].nil? || node[:kafka][:broker_host_name].empty?
-    node[:kafka][:broker_host_name] = node[:fqdn]
+    node.default[:kafka][:broker_host_name] = node[:fqdn]
 end
 
 log "Broker id: #{node[:kafka][:broker_id]}"
