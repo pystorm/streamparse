@@ -1,0 +1,28 @@
+{
+  "sources": {
+    "python": {
+      "path": "."
+    },
+    "minitest-handler": {
+      "locked_version": "1.1.2"
+    },
+    "apt": {
+      "locked_version": "2.3.4"
+    },
+    "yum": {
+      "locked_version": "3.0.2"
+    },
+    "build-essential": {
+      "locked_version": "1.4.2"
+    },
+    "python_test": {
+      "path": "./test/cookbooks/python_test"
+    },
+    "yum-epel": {
+      "locked_version": "0.2.0"
+    },
+    "chef_handler": {
+      "locked_version": "1.1.4"
+    }
+  }
+}

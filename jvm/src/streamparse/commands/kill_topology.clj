@@ -30,7 +30,7 @@
   (let [[opts args banner]
          (cli args
               ["-h" "--help" "Show this help screen." :flag true :default false]
-              ["-w" "--wait" "Amount of time to wait for topology to gracefully stop." :default 10 :parse-fn #(Integer/parseInt %)]
+              ["-w" "--wait" "Amount of time to wait for topology to gracefully stop." :parse-fn #(Integer/parseInt %)]
               ["-n" "--host" "Hostname for Nimbus." :default "localhost"]
               ["-p" "--port" "Port for Nimbus." :default 6627 :parse-fn #(Integer/parseInt %)])]
     (when (or (not= (count args) 1) (:help opts))

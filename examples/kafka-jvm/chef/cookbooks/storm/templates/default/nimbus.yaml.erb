@@ -1,0 +1,18 @@
+########### These MUST be filled in for a storm configuration
+storm.zookeeper.servers:
+<% node[:storm][:supervisor][:hosts].each do |host| %>
+- "<%= host %>"
+<% end %>
+
+storm.local.dir: "/home/<%= node[:storm][:deploy][:user] %>/storm-data"
+java.library.path: "/usr/local/lib"
+
+nimbus.host: "<%= node[:storm][:nimbus][:host] %>"
+
+nimbus.childopts: "<%= node[:storm][:nimbus][:childopts] %>"
+
+topology.debug: true
+
+nimbus.task.launch.secs : 240
+supervisor.worker.start.timeout.secs: 240
+supervisor.worker.timeout.secs: 240

@@ -96,3 +96,9 @@ def get_nimbus_for_env_config(env_config):
         port = 6627
 
     return (host, port)
+
+
+def is_ssh_for_nimbus(env_config):
+    """Check if we need to use SSH access to Nimbus or not.
+    """
+    return env_config.get('use_ssh_for_nimbus', True)

@@ -1,2 +1,0 @@
-# example library code package
-

@@ -1,0 +1,2 @@
+The script located at files/default/ez_setup.py is licensed under the
+Zope Public License, found at the root of this cookbook at ZPL.txt.

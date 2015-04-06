@@ -66,6 +66,8 @@
                      TOPOLOGY-WORKERS 2
                      TOPOLOGY-ACKER-EXECUTORS 2
                      TOPOLOGY-MAX-SPOUT-PENDING 5000
+                     NIMBUS-HOST (:host opts)
+                     NIMBUS-THRIFT-PORT (:port opts)
                      TOPOLOGY-MESSAGE-TIMEOUT-SECS 60}
           ;; overlay provided options
           options (merge defaults (:option opts))

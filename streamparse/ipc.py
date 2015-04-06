@@ -78,6 +78,12 @@ class LogStream(object):
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             raise
+        
+    def flush(self):
+        """No-op method to prevent crashes when someone does 
+        sys.stdout.flush.
+        """
+        pass
 
 
 class Tuple(object):
@@ -212,7 +218,7 @@ def read_handshake():
     log_path = _conf.get('streamparse.log.path')
     if log_path:
         root_log = logging.getLogger()
-        max_bytes = _conf.get('stremparse.log.max_bytes', 1000000)  # 1 MB
+        max_bytes = _conf.get('streamparse.log.max_bytes', 1000000)  # 1 MB
         backup_count = _conf.get('streamparse.log.backup_count', 10)
         log_file = ('{log_path}/streamparse_{topology_name}_{component_name}_'
                     '{task_id}_{pid}.log'
@@ -236,7 +242,7 @@ def read_handshake():
         send_message({
             'command': 'log',
             'msg': ('WARNING: streamparse logging is not configured. Please '
-                    'set streamparse.log.path in you config.json.')})
+                    'set streamparse.log.path in your config.json.')})
 
     # Redirect stdout and stderr to ensure that print statements/functions
     # won't disrupt the multilang protocol

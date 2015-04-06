@@ -28,7 +28,7 @@ You should get output similar to this::
     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
 
 If ``lein`` isn't installed,
-`follow these directions <leiningen.org/#install>`_.
+`follow these directions <http://leiningen.org/#install>`_.
 
 Once that's all set, you install streamparse using ``pip``::
 
@@ -427,6 +427,7 @@ in our ``config.json`` file:
                     "backup_count": 10,
                     "level": "info"
                 },
+                "use_ssh_for_nimbus": true,
                 "virtualenv_root": "/data/virtualenvs/"
             }
         }
@@ -458,6 +459,21 @@ these explicitly. streamparse will now:
 1. Package up a JAR containing all your Python source files
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
+
+Disabling Virtualenv Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you do not have ssh access to all of the servers in your Storm cluster, but
+you know they have all of the requirements for your Python code installed, you
+can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
+
+
+Local Clusters
+^^^^^^^^^^^^^^
+
+Streamparse assumes that your Storm cluster is not on your local machine. If it
+is, such as the case with VMs or Docker images, change ``"use_ssh_for_nimbus"``
+in ``config.json`` to ``false``.
 
 Logging
 ^^^^^^^
