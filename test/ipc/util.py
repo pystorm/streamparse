@@ -40,8 +40,8 @@ class ShellComponentTestCaseMixin(object):
               .format(cls.__name__))
         time.sleep(1)  # time for the subprocess to start
         if cls.proc.poll() is not None:
-            raise Exception("Could not create subprocess.\n{}"
-                            .format(cls.proc.stderr.read().decode('utf-8')))
+            raise OSError("Could not create subprocess.\n{}"
+                          .format(cls.proc.stderr.read().decode('utf-8')))
         print("Done.")
         cls.shell_proc = ShellProcess(cls.proc.stdout, cls.proc.stdin)
 
@@ -95,7 +95,7 @@ class ShellProcess(object):
         while True:
             in_line = self.in_buf.readline().decode('utf-8')[0:-1]
             if not in_line:
-                raise Exception("Pipe to subprocess seems to be broken!")
+                raise OSError("Pipe to subprocess seems to be broken!")
 
             if in_line == "end":
                 break

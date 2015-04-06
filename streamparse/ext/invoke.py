@@ -17,6 +17,7 @@ import shutil
 import sys
 import time
 import requests
+from operator import itemgetter
 from prettytable import PrettyTable
 from random import shuffle
 
@@ -47,7 +48,7 @@ def storm_lib_version():
     :rtype: pkg_resources.Version
     """
     deps_tree = run("lein deps :tree", hide=True).stdout
-    pattern = r'\[storm "([0-9A-Za-z\.]+)"\]'
+    pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
     versions = set(re.findall(pattern, deps_tree))
 
     if len(versions) > 1:
@@ -80,7 +81,7 @@ def is_safe_to_submit(topology_name, host=None, port=None):
                               host=host, port=port)
 
     if result.failed:
-        raise Exception("Error running streamparse.commands.list/-main")
+        raise RuntimeError("Error running streamparse.commands.list/-main")
 
     pattern = re.compile(r"{}\s+\|\s+(ACTIVE|KILLED)\s+\|"
                          .format(topology_name))
@@ -166,14 +167,14 @@ def jar_for_deploy():
     sys.stdout.flush()
     res = run("lein clean", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to run 'lein clean'!\nSTDOUT:\n{}"
-                        "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+        raise RuntimeError("Unable to run 'lein clean'!\nSTDOUT:\n{}"
+                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     print("Creating topology uberjar...")
     sys.stdout.flush()
     res = run("lein uberjar", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
-                        "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+        raise RuntimeError("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
+                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     # XXX: This will fail if more than one JAR is built
     lines = res.stdout.split()
     lines = [l.strip().lstrip("Created ") for l in lines
@@ -386,15 +387,18 @@ def display_worker_uptime(env_name):
     topology_detail = '/api/v1/topology/{topology}'
     component = '/api/v1/topology/{topology}/component/{component}'
     topo_summary_json = _get_ui_json(env_name, topology_summary)
-    topology_ids = map(lambda x: x['id'], topo_summary_json['topologies'])
+    topology_ids = [x['id'] for x in topo_summary_json['topologies']]
     worker_stats = []
 
     for topology in topology_ids:
-        topology_detail_json = _get_ui_json(env_name, topology_detail.format(topology=topology))
-        spouts = map(lambda x: x['spoutId'], topology_detail_json['spouts'])
-        bolts = map(lambda x: x['boltId'], topology_detail_json['bolts'])
+        topology_detail_json = _get_ui_json(env_name,
+                                            topology_detail.format(topology=topology))
+        spouts = [x['spoutId'] for x in topology_detail_json['spouts']]
+        bolts = [x['boltId'] for x in topology_detail_json['bolts']]
         for comp in spouts + bolts:
-            comp_detail = _get_ui_json(env_name, component.format(topology=topology, component = comp))
+            comp_detail = _get_ui_json(env_name,
+                                       component.format(topology=topology,
+                                                        component=comp))
             worker_stats += [(worker['host'], worker['id'], worker['uptime'])
                              for worker in comp_detail['executorStats']]
     worker_stats = sorted(list(set(worker_stats)))
@@ -408,7 +412,8 @@ def display_worker_uptime(env_name):
 
 
 @task
-def display_stats(env_name, topology_name=None, component_name=None, all_components=None):
+def display_stats(env_name, topology_name=None, component_name=None,
+                  all_components=None):
     env_name = env_name
     if topology_name and all_components:
         _print_all_components(env_name, topology_name)
@@ -426,10 +431,10 @@ def _get_ui_jsons(env_name, api_paths):
     """
     _, env_config = get_env_config(env_name)
     host, _ = get_nimbus_for_env_config(env_config)
-    remote_ui_port = 8081 # TODO: Get this from storm?
-    # SSH tunnel can take a while to close. Check multiples
-    # if necessary.
-    local_ports = range(8081, 8090)
+    # TODO: Get remote_ui_port from storm?
+    remote_ui_port = 8081
+    # SSH tunnel can take a while to close. Check multiples if necessary.
+    local_ports = list(range(8081, 8090))
     shuffle(local_ports)
     for local_port in local_ports:
         try:
@@ -439,14 +444,15 @@ def _get_ui_jsons(env_name, api_paths):
                             local_port=local_port,
                             remote_port=remote_ui_port):
                 for api_path in api_paths:
-                    r = requests.get('http://127.0.0.1:%s%s' % (local_port, api_path))
+                    r = requests.get('http://127.0.0.1:%s%s' % (local_port,
+                                                                api_path))
                     data[api_path] = r.json()
             return data
         except Exception as e:
-            if "already in use" in e.message:
+            if "already in use" in str(e):
                 continue
             raise
-    raise Exception("Cannot find local port for SSH tunnel to Storm Head.")
+    raise RuntimeError("Cannot find local port for SSH tunnel to Storm Head.")
 
 
 def _get_ui_json(env_name, api_path):
