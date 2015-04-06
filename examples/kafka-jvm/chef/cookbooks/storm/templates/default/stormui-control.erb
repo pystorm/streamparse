@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# Setup basic path information.
+LOG_OUT="<%=File.join(@log_dir,"ui.out")%>"
+LOG_ERR="<%=File.join(@log_dir,"ui.err")%>"
+HOME_DIR="<%=@install_dir%>"
+JAVA_HOME="<%=@java_home%>"
+
+CMD="$HOME_DIR/bin/storm ui"
+
+# Find the sub-shell's Java process PID.
+UI_PID_JAVA=`$JAVA_HOME/bin/jps -l |grep "backtype.storm.ui.core" |awk '{print $1}'`
+
+# Check what the caller wants.
+case "$1" in
+    start)
+        if [ "" = "$UI_PID_JAVA" ]; then
+            echo $CMD
+            # Storm processes look for a conf/ directory relative
+            # the processes start directory.
+            cd $HOME_DIR
+            # For compatibility with runit we cannot backgroud 
+            # ourselves with a '&' at the end, though we do
+            # need to exec.
+            exec $CMD >$LOG_OUT 2>$LOG_ERR
+        else 
+            echo "Service already running"
+            exit 1
+        fi
+        ;;
+    stop)
+        if [ "" = "$UI_PID_JAVA" ]; then
+            echo "Service not running, nothing to stop"
+            exit 1
+        else
+            kill -9 $UI_PID_JAVA
+            exit 0
+        fi 
+        ;;
+    status)
+        # Status is found via actual running processes, rather than
+        # trusting a PID log file.
+        if [ "" = "$UI_PID_JAVA" ]; then
+            echo "Not running"
+            exit 1
+        elif [ "" != "$UI_PID_JAVA" ]; then
+            echo "Running"
+            exit 0
+        fi
+        ;;
+    *)
+        echo "usage: daemon {start|stop|status}" >&2
+        exit 1
+        ;;
+esac

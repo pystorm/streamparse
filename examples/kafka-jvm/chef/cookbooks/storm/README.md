@@ -1,85 +1,39 @@
-# Storm Chef Cookbook
+Description
+===========
+Installs Twitter's Storm distributed computation platform.  Includes recipes for installing
+both the Nimbus / Web UI component and the Supervisor component.
 
-This cookbook has been forked from [hmalphettes/storm-project-cookbook](https://github.com/hmalphettes/storm-project-cookbook) and a first pass of modifications have been made to support any Storm version
-(0.9.1-incubating by default), added recipe for a single node cluster deployment, a recipe for a UI node
-and added/cleaned some options. I am using this cookbook with Chef Solo and Vagrant.
-Lots of modifications are still required to put this cookbook in better shape.
+Requirements
+============
+* Ubuntu 10.04 / 12.04
+* May function on other distributions, but has not been tested
 
-This cookbook will install the following:
-- Zookeeper, current Ubuntu package
-- Storm 0.9.1-incubating by default but configurable
+* java cookbook
+* runit cookbook
 
-# Requirement
+Attributes
+==========
 
-- Ubuntu Linux
-- Java 1.7 need to be installed. I suggest this [Java cookbook](git://github.com/opscode-cookbooks/java.git)
+Usage
+=====
 
-# Recipes
+This recipe relies on two setup components that need to be noted as they are not used
+in many (or any) community cookbooks.
 
-- storm::singlenode
-- storm::nimbus
-- storm::supervisor
-- storm::ui
-- storm::drpc
+Role Based Cluster Setup:
+This cookbook relies on a cluster identification role to allow more than one storm cluster
+to run in a single Chef environment, while not breaking Chef search.  Create a role with
+a name of your choosing.  The role may be left empty or you may use it to apply the your
+application's topology and all necessary JARs within your topology.  You will need to
+specify the name of this role using the node attribute ['storm']['cluster_role'], which
+is empty by default.  You will need to apply this cluster role to both supervisor and
+the nimbus/UI node in your cluster
 
-The `storm::singlenode` recipe installs nimbus, supervisor, drpc and ui on the same node.
-
-# Default options
-
-```
-default[:storm][:version] = "0.9.1-incubating"
-
-default[:storm][:deploy][:user] = ::File.exists?("/home/vagrant") ? "vagrant" : "ubuntu"
-default[:storm][:deploy][:group] = ::File.exists?("/home/vagrant") ? "vagrant" : "ubuntu"
-
-default[:storm][:nimbus][:host] = "192.168.42.10"
-default[:storm][:supervisor][:hosts] = [ "192.168.42.20" ]
-
-default[:storm][:nimbus][:childopts] = "-Xmx512m -Djava.net.preferIPv4Stack=true"
-
-default[:storm][:supervisor][:childopts] = "-Xmx512m -Djava.net.preferIPv4Stack=true"
-default[:storm][:supervisor][:workerports] = (6700..6706).to_a
-default[:storm][:worker][:childopts] = "-Xmx512m -Djava.net.preferIPv4Stack=true"
-
-default[:storm][:ui][:childopts] = "-Xmx512m -Djava.net.preferIPv4Stack=true"
-```
-
-# Example Vagranfile
-
-Complete [Vagrantfile](https://github.com/colinsurprenant/redstorm/blob/v0.6.5/vagrant/Vagrantfile)
-
-```
-chef.add_recipe "java"
-chef.add_recipe "storm::singlenode"
-
-chef.json = {
-  :java => {
-    :oracle => {
-      "accept_oracle_download_terms" => true
-    },
-    :install_flavor => "openjdk",
-    :jdk_version => "7",
-  },
-
-  :storm => {
-    :deploy => {
-      :user => "storm",
-      :group => "storm",
-    },
-    :nimbus => {
-      :host => "localhost",
-      :childopts => "-Xmx128m",
-    },
-    :supervisor => {
-      :hosts =>  ["localhost"],
-      :childopts => "-Xmx128m",
-    },
-    :worker => {
-      :childopts => "-Xmx128m",
-    },
-    :ui => {
-      :childopts => "-Xmx128m",
-    },
-  },
-}
-```
+Deploy Flag:
+This cookbook uses a deploy flag to prevent the application from deploying unless desired
+and allows for an undeploy recipe to run prior to the deploy.  The deploy recipe will also
+cleanup the state of storm and is sufficient to wipe clean any topology deploy, although
+it does not stop the actual topology (that's in the works).  Once you've applied the
+supervisor or nimbus recipes to a node you need to have "deploy_build=true" set in your
+shell.  "sudo deploy_build=true chef-client" can be used to set the environment variable
+and run Chef in a single command.

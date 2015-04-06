@@ -1,0 +1,4 @@
+#!/bin/sh
+ulimit -n 20480
+exec 2>&1
+exec chpst -u <%=@options[:user]%> <%=@options[:install_dir]%>/bin/nimbus-control start

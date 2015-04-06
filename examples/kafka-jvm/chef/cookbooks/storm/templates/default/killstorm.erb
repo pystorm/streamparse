@@ -1,0 +1,39 @@
+#!/bin/sh
+
+SUPERVISOR=$(ls /etc/sv |grep "supervisor")
+STORMUI=$(ls /etc/sv |grep "stormui")
+NIMBUS=$(ls /etc/sv |grep "nimbus")
+
+LOG_DIR=<%=@log_dir%>
+MNT_DIR=/mnt/storm
+
+if [ "" != "$SUPERVISOR" ]; then
+    sv stop supervisor
+    echo "Service 'supervisor' stopped, to restart use: sv start supervisor"
+fi
+
+if [ "" != "$STORMUI" ]; then
+    sv stop stormui
+    echo "Service 'stormui' stopped, to restart use: sv start stormui"
+fi
+
+if [ "" != "$NIMBUS" ]; then
+    sv stop nimbus
+    echo "Service 'nimbus' stopped, to restart use: sv start nimbus"
+fi
+
+sleep 2
+killall -u storm
+
+if [ "/" = "$MNT_DIR" -o "" = "$MNT_DIR" ]; then
+    echo "Storm scratch directory set to root, check your script!"
+else
+    rm -rf $MNT_DIR/*
+fi
+
+if [ "/" = "$LOG_DIR" -o "" = "$LOG_DIR" ]; then
+    echo "Storm log directory set to root, check your script!"
+else
+    rm -f $LOG_DIR/*
+fi
+

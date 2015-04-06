@@ -1,20 +1,49 @@
+#
+# Cookbook Name:: storm
+# Recipe:: default
+#
+# Copyright 2012, Webtrends, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 include_recipe "storm"
 
-template "Storm conf file" do
-  path "/home/#{node[:storm][:deploy][:user]}/apache-storm-#{node[:storm][:version]}/conf/storm.yaml"
-  source "nimbus.yaml.erb"
-  owner node[:storm][:deploy][:user]
-  group node[:storm][:deploy][:group]
-  mode 0644
+java_home = node['java']['java_home']
+
+%w{nimbus stormui}.each do |daemon|
+  # control file
+  template "#{node['storm']['install_dir']}/bin/#{daemon}-control" do
+    source  "#{daemon}-control.erb"
+    owner "root"
+    group "root"
+    mode  00755
+    variables({
+      :install_dir => node['storm']['install_dir'],
+      :log_dir => node['storm']['log_dir'],
+      :java_home => java_home
+    })
+  end
+
+  # runit service
+  runit_service daemon do
+    options({
+      :install_dir => node['storm']['install_dir'],
+      :log_dir => node['storm']['log_dir'],
+      :user => "storm"
+    })
+  end
 end
 
-bash "Start nimbus" do
-  user node[:storm][:deploy][:user]
-  cwd "/home/#{node[:storm][:deploy][:user]}"
-  code <<-EOH
-  pid=$(pgrep -f backtype.storm.daemon.nimbus)
-  if [ -z $pid ]; then
-    nohup apache-storm-#{node[:storm][:version]}/bin/storm nimbus >>nimbus.log 2>&1 &
-  fi
-  EOH
-end
+service "nimbus"
+
+service "stormui"

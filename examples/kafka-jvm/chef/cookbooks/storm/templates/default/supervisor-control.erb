@@ -1,0 +1,70 @@
+#!/bin/sh
+
+# Setup basic path information.
+LOG_OUT="<%=File.join(@log_dir,"supervisor.out")%>"
+LOG_ERR="<%=File.join(@log_dir,"supervisor.err")%>"
+HOME_DIR="<%=@install_dir%>"
+JAVA_HOME="<%=@java_home%>"
+
+CMD="$HOME_DIR/bin/storm supervisor"
+
+# Find top parent PID.
+SUPERVISOR_PID=`$JAVA_HOME/bin/jps -l |grep "backtype.storm.daemon.supervisor" |awk '{print $1}'`
+
+# Find all workers.
+SUPERVISOR_PID_WORKERS=`$JAVA_HOME/bin/jps -l |grep "backtype.storm.daemon.worker" |awk '{print $1}'`
+
+# Check what the caller wants.
+case "$1" in
+    start)
+        if [ "" = "$SUPERVISOR_PID" ]; then
+            echo $CMD
+            # Storm processes look for a conf/ directory relative
+            # the processes start directory.
+            cd $HOME_DIR
+            # For compatibility with runit we cannot backgroud 
+            # ourselves with a '&' at the end, though we do
+            # need to exec.
+            exec $CMD >$LOG_OUT 2>$LOG_ERR
+        else 
+            echo "Service already running"
+            exit 1
+        fi
+        ;;
+    stop)
+        if [ "" = "$SUPERVISOR_PID" -a "" = "$SUPERVISOR_PID_WORKERS" ]; then
+            echo "Service not running, nothing to stop"
+            exit 1
+        fi
+    
+        if [ "" != "$SUPERVISOR_PID" ]; then
+            kill -9 $SUPERVISOR_PID
+        fi
+        
+        if [ "" != "$SUPERVISOR_PID_WORKERS" ]; then
+            for WORKER in "$SUPERVISOR_PID_WORKERS"; do
+                kill -9 $WORKER
+            done
+        fi
+        
+        exit 0
+        ;;
+    status)
+        # Status is found via actual running processes, rather than
+        # trusting the PID log file.
+        if [ "" = "$SUPERVISOR_PID" -a "" = "$SUPERVISOR_PID_WORKERS" ]; then
+            echo "Not running"
+            exit 1
+        elif [ "" != "$SUPERVISOR_PID" -a "" != "$SUPERVISOR_PID_WORKERS" ]; then
+            echo "Running"
+            exit 0
+        else
+            echo "Broken, some but not all processes are running"
+            exit 2
+        fi
+        ;;
+    *)
+        echo "usage: daemon {start|stop|status}" >&2
+        exit 1
+        ;;
+esac

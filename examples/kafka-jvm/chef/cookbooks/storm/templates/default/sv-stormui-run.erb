@@ -1,0 +1,4 @@
+#!/bin/sh
+exec 2>&1
+ulimit -n 1024
+exec chpst -u <%=@options[:user]%> <%=@options[:install_dir]%>/bin/stormui-control start
