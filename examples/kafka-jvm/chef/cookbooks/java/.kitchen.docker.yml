@@ -1,0 +1,15 @@
+---
+driver:
+  name: docker
+  socket: tcp://192.168.59.103:2375
+
+platforms:
+- name: ubuntu
+  run_list:
+  - recipe[apt]
+- name: centos
+  driver_config:
+    image: centos
+    platform: rhel
+  run_list:
+  - recipe[yum]

@@ -1,3 +1,4 @@
+name			 "storm"
 maintainer       "Colin Surprenant"
 maintainer_email "colin.surprenant@gmail.com"
 license          "MIT License"

@@ -18,27 +18,18 @@
 
 # Install
 default[:kafka][:version] = "0.7.1"
-default[:kafka][:scala_version] = "2.9.2"
 default[:kafka][:download_url] = nil
 default[:kafka][:checksum] = "ee845b947b00d6d83f51a93e6ff748bb03e5945e4f3f12a77534f55ab90cb2a8"
-
-default[:zookeeper][:client_port] = 2181
 
 default[:kafka][:install_dir] = "/opt/kafka"
 default[:kafka][:data_dir] = "/var/kafka"
 default[:kafka][:log_dir] = "/var/log/kafka"
 default[:kafka][:chroot_suffix] = "brokers"
 
-# Automatic topic creation
-default[:kafka][:auto_create_topics] = true
-default[:kafka][:default_auto_topic_replication] = 1
-
 default[:kafka][:num_partitions] = 1
 default[:kafka][:broker_id] = nil
 default[:kafka][:broker_host_name] = nil
 default[:kafka][:port] = 9092
-default[:kafka][:advertised_host_name] = "127.0.0.1"
-default[:kafka][:advertised_port] = default[:kafka][:port]
 default[:kafka][:threads] = nil
 default[:kafka][:log_flush_interval] = 10000
 default[:kafka][:log_flush_time_interval] = 1000

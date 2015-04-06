@@ -2,6 +2,37 @@ Java Cookbook CHANGELOG
 =======================
 This file is used to list changes made in each version of the Java cookbook.
 
+v1.30 - 2/3/2015
+-------
+- Update to latest JDKs for 6 and 7. JDK7 will be EOL April 2015
+- Fix up Travis support.
+- Add ability to install JCE policy files for oracle JDK #228
+- Change connect timeout to 30 seconds
+
+v1.29.0 - 11/14/2014
+-------
+### Bug
+- **[#216](https://github.com/agileorbit-cookbooks/java/pull/216)** - Ensure dirs, links, and jinfo files are owned correctly
+- **[#217](https://github.com/agileorbit-cookbooks/java/pull/217)** - Update to Oracle JDK 8u25
+- **[#214](https://github.com/agileorbit-cookbooks/java/pull/214)** - Update to Oracle JDK 7u71-b14
+
+### Improvement
+- Adding a connect_timeout option for downloading java.
+
+### Misc
+- Switched to chef-zero provisioner in test suites.
+- Adding ISSUES.md for guidance on creating new issues for the Java cookbook.
+- Fix IBM unit tests.
+
+v1.28.0 - 9/6/2014
+-------
+### Improvement
+- Allow setting of group to extracted java files.
+
+### Bug
+- Add -no-same-owner parameter to tar extract to avoid issues when the chef cache dir is on an NFS mounted drive.
+- In the ark provider, it doesn't compare the MD5 sum with the right value which causes Java cookbook always download tarball from oracle server
+
 v1.27.0 - 8/22/2014
 -------
 - Update Oracle JDK8 to version 8u20

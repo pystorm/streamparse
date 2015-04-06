@@ -65,3 +65,5 @@ end
 if node['java']['set_default'] and platform_family?('debian')
   include_recipe 'java::default_java_symlink'
 end
+
+include_recipe 'java::oracle_jce' if node['java']['oracle']['jce']['enabled']

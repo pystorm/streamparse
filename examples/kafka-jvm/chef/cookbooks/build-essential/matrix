@@ -1,0 +1,10 @@
+  matrix:
+  - KITCHEN_INSTANCE='default-centos-58
+  - KITCHEN_INSTANCE='default-centos-64
+  - KITCHEN_INSTANCE='default-amazon-201309
+  - KITCHEN_INSTANCE='default-fedora-19
+  - KITCHEN_INSTANCE='default-debian-70
+  - KITCHEN_INSTANCE='default-ubuntu-1004
+  - KITCHEN_INSTANCE='default-ubuntu-1204
+  - KITCHEN_INSTANCE='default-ubuntu-1310
+  - KITCHEN_INSTANCE='default-smartos-1330

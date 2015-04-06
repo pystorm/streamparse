@@ -2,7 +2,7 @@
 # Cookbook Name:: build-essential
 # Recipe:: default
 #
-# Copyright 2008-2009, Opscode, Inc.
+# Copyright 2008-2009, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,12 @@
 #
 
 begin
-  include_recipe "build-essential::#{node['platform_family']}"
+  include_recipe "build-essential::_#{node['platform_family']}"
 rescue Chef::Exceptions::RecipeNotFound
-  Chef::Log.warn "A build-essential recipe does not exist for the platform_family: #{node['platform_family']}"
+  Chef::Log.warn <<-EOH
+A build-essential recipe does not exist for '#{node['platform_family']}'. This
+means the build-essential cookbook does not have support for the
+#{node['platform_family']} family. If you are not compiling gems with native
+extensions or building packages from source, this will likely not affect you.
+EOH
 end

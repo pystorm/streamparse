@@ -12,5 +12,5 @@ default[:storm][:worker][:childopts] = "-Xmx512m -Djava.net.preferIPv4Stack=true
 
 default[:storm][:ui][:childopts] = "-Xmx512m -Djava.net.preferIPv4Stack=true"
 
-default[:storm][:version] = "0.9.2-incubating"
+default[:storm][:version] = "0.9.4"
 

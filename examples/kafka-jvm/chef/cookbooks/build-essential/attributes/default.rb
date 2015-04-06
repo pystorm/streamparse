@@ -2,7 +2,7 @@
 # Cookbook Name:: build-essential
 # Attributes:: default
 #
-# Copyright 2008-2012, Opscode, Inc.
+# Copyright 2008-2012, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,18 +17,4 @@
 # limitations under the License.
 #
 
-default['build_essential']['compiletime'] = false
-
-case node['platform_family']
-when 'mac_os_x'
-  case
-  when Chef::VersionConstraint.new('~> 10.7.0').include?(node['platform_version']),
-    Chef::VersionConstraint.new('~> 10.8.0').include?(node['platform_version']),
-    Chef::VersionConstraint.new('~> 10.9.0').include?(node['platform_version'])
-    default['build_essential']['osx']['gcc_installer_url'] = 'https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.7-v2.pkg'
-    default['build_essential']['osx']['gcc_installer_checksum'] = 'df36aa87606feb99d0db9ac9a492819e'
-  when Chef::VersionConstraint.new('~> 10.6.0').include?(node['platform_version'])
-    default['build_essential']['osx']['gcc_installer_url'] = 'https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.6.pkg'
-    default['build_essential']['osx']['gcc_installer_checksum'] = 'd1db5bab6a3f6b9f3b5577a130baeefa'
-  end
-end
+default['build-essential']['compile_time'] = false
