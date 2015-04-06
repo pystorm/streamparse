@@ -42,7 +42,7 @@ Vagrant.configure("2") do |config|
 
       :python => {
         "min_version" => "2.7.5",
-        "install_method" => "source"
+        # "install_method" => "source"
       },
 
       :zookeeper => {
@@ -52,6 +52,7 @@ Vagrant.configure("2") do |config|
       :kafka => {
         :version => "0.8.1.1",
         :download_url => "http://mirror.its.dal.ca/apache/kafka",
+        :checksum => "123c72a6d7562db836c71362ae9c6bc21e9549cf20c97cccf9acef0a83118f74",
         :advertised_host_name => "streamparse-box",
       },
 
