@@ -1,0 +1,10 @@
+.vagrant
+.kitchen
+.ruby-*.kitchen/
+.kitchen.local.yml
+.bundle
+Berksfile.lock
+Gemfile.lock
+vendor
+VERSION
+metadata.json

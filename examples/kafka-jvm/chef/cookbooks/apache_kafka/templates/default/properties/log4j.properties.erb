@@ -1,0 +1,8 @@
+# This file is managed by Chef
+# Changes will be overwritten
+
+kafka.logs.dir=<%= @log_dir %>
+
+<%- @entries.each do |k, v| %>
+<%= k %>=<%= v %>
+<%- end %>

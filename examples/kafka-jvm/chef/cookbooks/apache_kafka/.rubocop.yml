@@ -1,0 +1,11 @@
+StringLiterals:
+  EnforcedStyle: double_quotes
+HashSyntax:
+  EnforcedStyle: hash_rockets
+LineLength:
+  Enabled: false
+PercentLiteralDelimiters:
+  PreferredDelimiters:
+    '%w': '{}'
+RescueModifier:
+  Enabled: false
