@@ -29,7 +29,7 @@ Vagrant.configure("2") do |config|
     chef.add_recipe "supervisor"
     chef.add_recipe "storm::singlenode"
     chef.add_recipe "streamparse"
-    chef.add_recipe "kafka"
+    chef.add_recipe "apache_kafka"
 
     chef.json = {
       :java => {
@@ -47,10 +47,6 @@ Vagrant.configure("2") do |config|
 
       :zookeeper => {
         :client_port => "2181"
-      },
-
-      :kafka => {
-        :broker_host_name => "streamparse-box",
       },
 
       :storm => {
