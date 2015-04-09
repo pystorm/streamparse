@@ -60,6 +60,10 @@ class ShellComponentTestCaseMixin(object):
         self.assertTrue(os.path.exists(here(pid)))
         self.assertTrue(os.path.isfile(here(pid)))
 
+        res = self.shell_proc.read_message()
+        # logging is not configured msg
+        self.assertEqual(res["command"], "log")
+
     @classmethod
     def tearDownClass(cls):
         os.remove(here(str(cls.proc.pid)))
@@ -113,8 +117,7 @@ class ShellProcess(object):
             elif action.get("command") == "emit":
                 stream = action.get("stream") or self.DEFAULT_STREAM_ID
                 task = action.get("task")
-                need_task_ids = action.get("need_task_ids")
+                need_task_ids = action.get("need_task_ids") or True
                 if task is None:
-                    if need_task_ids is None and need_task_ids == True:
+                    if need_task_ids:
                         self.write_message([1, 2])  # made up task IDs
-

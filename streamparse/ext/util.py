@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import re
 import sys
 from glob import glob
 
@@ -47,7 +48,7 @@ def get_topology_definition(topology_name=None):
                 "explicitly specify the topology by name using the -n or "
                 "--name flags.".format(specs_dir=topology_path))
         topology_file = topology_files[0]
-        topology_name = topology_file.rstrip(".clj").lstrip(topology_path)
+        topology_name = re.sub(r'(^{}|\.clj$)'.format(topology_path), '', topology_file)
     else:
         topology_file = "{}.clj".format(os.path.join(topology_path, topology_name))
         if not os.path.exists(topology_file):
@@ -95,3 +96,9 @@ def get_nimbus_for_env_config(env_config):
         port = 6627
 
     return (host, port)
+
+
+def is_ssh_for_nimbus(env_config):
+    """Check if we need to use SSH access to Nimbus or not.
+    """
+    return env_config.get('use_ssh_for_nimbus', True)

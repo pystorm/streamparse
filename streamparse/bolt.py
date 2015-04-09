@@ -8,12 +8,16 @@ import sys
 import threading
 import time
 import warnings
+import logging
 
 from six import iteritems, reraise, PY3
 
 from .base import Component
-from .ipc import (read_handshake, read_tuple, send_message, json, _stdout,
-                  Tuple)
+from .ipc import (read_handshake, read_tuple, read_task_ids, send_message,
+                  json, Tuple)
+
+
+log = logging.getLogger('streamparse.bolt')
 
 
 class Bolt(Component):
@@ -84,7 +88,8 @@ class Bolt(Component):
         """
         raise NotImplementedError()
 
-    def emit(self, tup, stream=None, anchors=None, direct_task=None):
+    def emit(self, tup, stream=None, anchors=None, direct_task=None,
+             need_task_ids=None):
         """Emit a new tuple to a stream.
 
         :param tup: the Tuple payload to send to Storm, should contain only
@@ -101,6 +106,15 @@ class Bolt(Component):
         :type anchors: list
         :param direct_task: the task to send the tuple to.
         :type direct_task: int
+        :param need_task_ids: indicate whether or not you'd like the task IDs
+                              the tuple was emitted (default:
+                              ``True``).
+        :type need_task_ids: bool
+
+        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+                  when specifying direct_task, this will be equal to
+                  ``[direct_task]``. If you specify ``need_task_ids=False``,
+                  this function will return ``None``.
         """
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead.'
@@ -117,12 +131,24 @@ class Bolt(Component):
         if direct_task is not None:
             msg['task'] = direct_task
 
+        if need_task_ids is None:
+            need_task_ids = True
+        elif need_task_ids is False:
+            # only need to send on False, Storm's default is True
+            msg['need_task_ids'] = need_task_ids
+
         send_message(msg)
 
-    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None):
-        """A more efficient way to send many tuples.
+        if need_task_ids == True:
+            downstream_task_ids = [direct_task] if direct_task is not None \
+                                  else read_task_ids()
+            return downstream_task_ids
+        else:
+            return None
 
-        Dumps out all tuples to STDOUT instead of writing one at a time.
+    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None,
+                  need_task_ids=None):
+        """Emit multiple tuples.
 
         :param tuples: a ``list`` containing ``list`` s of tuple payload data
                        to send to Storm. All tuples should contain only
@@ -139,33 +165,22 @@ class Bolt(Component):
         :type anchors: list
         :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
+        :param need_task_ids: indicate whether or not you'd like the task IDs
+                              the tuple was emitted (default:
+                              ``True``).
+        :type need_task_ids: bool
         """
         if not isinstance(tuples, list):
             raise TypeError('tuples should be a list of lists, received {!r}'
                             'instead.'.format(type(tuples)))
 
-        msg = {'command': 'emit'}
-
-        if anchors is None:
-            anchors = self._current_tups if self.auto_anchor else []
-        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
-
-        if stream is not None:
-            msg['stream'] = stream
-        if direct_task is not None:
-            msg['task'] = direct_task
-
-        lines = []
+        all_task_ids = []
         for tup in tuples:
-            msg['tuple'] = tup
-            lines.append(json.dumps(msg))
-        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
-        if PY3:
-            _stdout.flush()
-            _stdout.buffer.write(wrapped_msg)
-        else:
-            _stdout.write(wrapped_msg)
-        _stdout.flush()
+            all_task_ids.append(self.emit(tup, stream=stream, anchors=anchors,
+                                          direct_task=direct_task,
+                                          need_task_ids=need_task_ids))
+
+        return all_task_ids
 
     def ack(self, tup):
         """Indicate that processing of a tuple has succeeded.
@@ -191,11 +206,15 @@ class Bolt(Component):
         Separated out so it can be properly unit tested.
         """
         self._current_tups = [read_tuple()]
-        self.process(self._current_tups[0])
-        if self.auto_ack:
-            self.ack(self._current_tups[0])
-        # reset so that we don't accidentally fail the wrong tuples
-        # if a successive call to read_tuple fails
+        tup = self._current_tups[0]
+        if tup.task == -1 and tup.stream == '__heartbeat':
+            send_message({'command': 'sync'})
+        else:
+            self.process(tup)
+            if self.auto_ack:
+                 self.ack(tup)
+            # reset so that we don't accidentally fail the wrong tuples
+            # if a successive call to read_tuple fails
         self._current_tups = []
 
     def run(self):
@@ -208,15 +227,23 @@ class Bolt(Component):
         Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
+        self._setup_component(storm_conf, context)
+
         try:
             self.initialize(storm_conf, context)
             while True:
                 self._run()
         except Exception as e:
-            if self.auto_fail and self._current_tups:
-                for tup in self._current_tups:
+            log_msg = "Exception in {}.run()".format(self.__class__.__name__)
+
+            if len(self._current_tups) == 1:
+                tup = self._current_tups[0]
+                log_msg = "{} while processing {!r}".format(log_msg, tup)
+                self.raise_exception(e, tup)
+                if self.auto_fail:
                     self.fail(tup)
-            self.raise_exception(e, self._current_tups[0])
+
+            log.error(log_msg, exc_info=True)
             sys.exit(1)
 
 
@@ -284,10 +311,12 @@ class BatchingBolt(Bolt):
         self.exc_info = None
         signal.signal(signal.SIGINT, self._handle_worker_exception)
 
+        iname = self.__class__.__name__
+        threading.current_thread().name = '{}:main-thread'.format(iname)
         self._batches = defaultdict(list)
-        self._should_stop = threading.Event()
-        self._batcher = threading.Thread(target=self._batch_entry)
         self._batch_lock = threading.Lock()
+        self._batcher = threading.Thread(target=self._batch_entry)
+        self._batcher.name = '{}:_batcher-thread'.format(iname)
         self._batcher.daemon = True
         self._batcher.start()
 
@@ -314,15 +343,40 @@ class BatchingBolt(Bolt):
         """
         raise NotImplementedError()
 
+    def emit(self, tup, **kwargs):
+        """Modified emit that will not return task IDs after emitting.
+
+        See :class:`streamparse.ipc.Bolt` for more information.
+
+        :returns: ``None``.
+        """
+        kwargs['need_task_ids'] = False
+        return super(BatchingBolt, self).emit(tup, **kwargs)
+
+    def emit_many(self, tups, **kwargs):
+        """Modified emit_many that will not return task IDs after emitting.
+
+        See :class:`streamparse.ipc.Bolt` for more information.
+
+        :returns: ``None``.
+        """
+        kwargs['need_task_ids'] = False
+        return super(BatchingBolt, self).emit_many(tups, **kwargs)
+
     def _run(self):
         """The inside of ``run``'s infinite loop.
 
         Separated out so it can be properly unit tested.
         """
-        tup = read_tuple()
-        group_key = self.group_key(tup)
-        with self._batch_lock:
-            self._batches[group_key].append(tup)
+        try:
+            tup = read_tuple()
+            group_key = self.group_key(tup)
+            with self._batch_lock:
+                self._batches[group_key].append(tup)
+        except Exception as e:
+            log.error("Exception in %s.run() while adding %r to batch",
+                      self.__class__.__name__, tup, exc_info=True)
+            self.raise_exception(e)
 
     def run(self):
         """Modified and simplified run loop which runs in the main thread since
@@ -330,6 +384,9 @@ class BatchingBolt(Bolt):
         in the _batcher thread.
         """
         storm_conf, context = read_handshake()
+        self._setup_component(storm_conf, context)
+
+        tup = None
         self.initialize(storm_conf, context)
         while True:
             self._run()
@@ -357,10 +414,16 @@ class BatchingBolt(Bolt):
             while True:
                 self._batch_entry_run()
         except Exception as e:
+            log_msg = ("Exception in {}.run() while processing tuple batch "
+                       "{!r}.".format(self.__class__.__name__,
+                                      self._current_tups))
+            log.error(log_msg, exc_info=True)
             self.raise_exception(e, self._current_tups)
+
             if self.auto_fail and self._current_tups:
                 for tup in self._current_tups:
                     self.fail(tup)
+
             self.exc_info = sys.exc_info()
             os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
 
@@ -373,23 +436,10 @@ class BatchingBolt(Bolt):
         reraise(*self.exc_info)
 
 
-# http://stackoverflow.com/questions/9008444/how-to-warn-about-class-name-deprecation
-class DeprecationHelper(object):
+class BasicBolt(Bolt):
 
-    def __init__(self, new_target, name):
-        self._new_target = new_target
-        self._name = name
-
-    def _warn(self):
-        warnings.warn("{} is deprecated and "
+    def __init__(self):
+        super(BasicBolt, self).__init__()
+        warnings.warn("BasicBolt is deprecated and "
                       "will be removed in a future streamparse release. "
-                      "Please use Bolt or BatchingBolt."
-                      .format(self._name), DeprecationWarning)
-
-    def __call__(self, *args, **kwargs):
-        self._warn()
-        return self._new_target(*args, **kwargs)
-
-
-BasicBolt = DeprecationHelper(Bolt, "BasicBolt")
-BasicBatchingBolt = DeprecationHelper(BatchingBolt, "BasicBatchingBolt")
+                      "Please use Bolt.", DeprecationWarning)

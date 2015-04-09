@@ -28,7 +28,7 @@ You should get output similar to this::
     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
 
 If ``lein`` isn't installed,
-`follow these directions <leiningen.org/#install>`_.
+`follow these directions <http://leiningen.org/#install>`_.
 
 Once that's all set, you install streamparse using ``pip``::
 
@@ -421,7 +421,13 @@ in our ``config.json`` file:
                     "storm2.my-cluster.com",
                     "storm3.my-cluster.com"
                 ],
-                "log_path": "",
+                "log": {
+                    "path": "/var/log/storm/streamparse",
+                    "max_bytes": 100000,
+                    "backup_count": 10,
+                    "level": "info"
+                },
+                "use_ssh_for_nimbus": true,
                 "virtualenv_root": "/data/virtualenvs/"
             }
         }
@@ -453,3 +459,49 @@ these explicitly. streamparse will now:
 1. Package up a JAR containing all your Python source files
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
+
+Disabling Virtualenv Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you do not have ssh access to all of the servers in your Storm cluster, but
+you know they have all of the requirements for your Python code installed, you
+can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
+
+
+Local Clusters
+^^^^^^^^^^^^^^
+
+Streamparse assumes that your Storm cluster is not on your local machine. If it
+is, such as the case with VMs or Docker images, change ``"use_ssh_for_nimbus"``
+in ``config.json`` to ``false``.
+
+Logging
+^^^^^^^
+
+The Storm supervisor needs to have access to the ``log.path`` directory for
+logging to work (in the example above, ``/var/log/storm/streamparse``). If you
+have properly configured the ``log.path`` option in your config, streamparse
+will automatically set up a log files on each Storm worker in this path using
+the following filename convention::
+
+    streamparse_<topology_name>_<component_name>_<task_id>_<process_id>.log
+
+Where:
+
+* ``topology_name``: is the ``topology.name`` variable set in Storm
+* ``component_name``: is the name of the currently executing component as defined in your topology definition file (.clj file)
+* ``task_id``: is the task ID running this component in the topology
+* ``process_id``: is the process ID of the Python process
+
+streamparse uses Python's ``logging.handlers.RotatingFileHandler`` and by
+default will only save 10 1 MB log files (10 MB in total), but this can be
+tuned with the ``log.max_bytes`` and ``log.backup_count`` variables.
+
+The default logging level is set to ``INFO``, but if you can tune this with the
+``log.level`` setting which can be one of critical, error, warning, info or
+debug.  **Note** that if you perform ``sparse run`` or ``sparse submit`` with
+the ``--debug`` set, this will override your ``log.level`` setting and set the
+log level to debug.
+
+When running your topology locally via ``sparse run``, your log path will be
+automatically set to ``/path/to/your/streamparse/project/logs``.

@@ -20,28 +20,62 @@ from fabric.contrib.files import exists
 from .util import get_env_config, die
 
 
-__all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs"]
+__all__ = ["activate_env", "create_or_update_virtualenvs", "tail_logs",
+           "remove_logs"]
+
+
+@parallel
+def _remove_logs(topology_name):
+    print("Removing all \"{}\" topology Python logs on {!r}"
+          .format(topology_name, env.storm_workers))
+    log_path = "{}/".format(env.log_path) if not env.log_path.endswith("/") \
+               else env.log_path
+    find_cmd = ("find {log_path}/ -name \"streamparse_{topo_name}*\""
+                .format(log_path=log_path, topo_name=topology_name))
+    rm_cmd = "{} | xargs rm".format(find_cmd)
+    run(rm_cmd, warn_only=True)
 
 
 @task
-def _tail_logs(pattern=None):
+def remove_logs(topology_name):
+    """Remove all Python logs on Storm workers in the log.path directory."""
+    execute(_remove_logs, topology_name, hosts=env.storm_workers)
+
+
+def _get_file_names_command(path, patterns):
+    """Given a list of bash `find` patterns, return a string for the
+    bash command that will find those streamparse log files
+    """
+    patterns = "' -o -name '".join(patterns)
+    return ("cd {path} && "
+            "find . -maxdepth 1 -name '{patterns}' ") \
+            .format(path=path, patterns=patterns)
+
+
+@task
+def _tail_logs(topology_name=None, pattern=None):
     # list log files found
-    ls_cmd = "cd {log_path} && ls".format(log_path=env.log_path)
+    log_name_patterns = ["worker*",
+                         "supervisor*",
+                         "access*",
+                         "metrics*",
+                         "streamparse_{topo_name}*".format(topo_name=topology_name),
+                         ]
+    ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
-        ls_cmd += " | egrep '{pattern}'".format(
-            pattern=pattern)
-    run(ls_cmd)
-    # tail -f all of them
+        ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
     tail_pipe = " | xargs tail -f"
     run(ls_cmd + tail_pipe)
 
+
 @task
-def tail_logs(pattern=None):
+def tail_logs(topology_name=None, pattern=None):
     """Follow (tail -f) the log files on remote Storm workers.
 
     Will use the `log_path` and `workers` properties from config.json.
     """
-    execute(_tail_logs, pattern, hosts=env.storm_workers)
+    execute(_tail_logs, topology_name, pattern, hosts=env.storm_workers)
+
 
 @task
 def activate_env(env_name=None):
@@ -58,8 +92,10 @@ def activate_env(env_name=None):
     # env.storm_nimbus = [env_config["nimbus"].split(":")[0]]
     env.storm_workers = env_config["workers"]
     env.user = env_config["user"]
-    env.log_path = env_config["log_path"]
-    env.virtualenv_root = env_config["virtualenv_root"]
+    env.log_path = env_config.get("log_path") or \
+                   env_config.get("log", {}).get("path")
+    env.virtualenv_root = env_config.get("virtualenv_root") or \
+                          env_config.get("virtualenv_path")
     env.disable_known_hosts = True
     env.forward_agent = True
 

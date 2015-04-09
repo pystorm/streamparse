@@ -1,0 +1,32 @@
+{
+  "name": "zookeeper",
+  "version": "2.5.1",
+  "description": "Installs/Configures zookeeper",
+  "long_description": "",
+  "maintainer": "Simple Finance Technology Corp.",
+  "maintainer_email": "ops@simple.com",
+  "license": "Apache v2.0",
+  "platforms": {
+  },
+  "dependencies": {
+    "build-essential": ">= 2.0.2",
+    "java": ">= 0.0.0",
+    "runit": ">= 0.0.0"
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+  }
+}

@@ -1,0 +1,25 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_solo
+
+platforms:
+  - name: ubuntu_14.04
+    driver_config:
+      box: 'ubuntu/trusty64'
+      box_url: 'http://files.vagrantup.com/trusty64.box'
+      customize:
+        memory: 2048
+        cpus: 2
+suites:
+  - name: default
+    run_list:
+      - recipe[apt]
+      - recipe[zookeeper]
+      - recipe[zookeeper::service]
+      - recipe[apache_kafka]
+    attributes:
+      zookeeper:
+        service_style: "upstart"

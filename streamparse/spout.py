@@ -4,10 +4,16 @@ Base Spout classes.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
+
 from six import PY3
 
 from .base import Component
-from .ipc import read_handshake, read_command, send_message, json, _stdout
+from .ipc import (read_handshake, read_command, read_task_ids, send_message,
+                  json)
+
+
+log = logging.getLogger('streamparse.spout')
 
 
 class Spout(Component):
@@ -63,7 +69,8 @@ class Spout(Component):
         """
         raise NotImplementedError()
 
-    def emit(self, tup, tup_id=None, stream=None, direct_task=None):
+    def emit(self, tup, tup_id=None, stream=None, direct_task=None,
+             need_task_ids=None):
         """Emit a spout tuple message.
 
         :param tup: the tuple to send to Storm.  Should contain only
@@ -78,6 +85,15 @@ class Spout(Component):
         :param direct_task: the task to send the tuple to if performing a
                             direct emit.
         :type direct_task: int
+        :param need_task_ids: indicate whether or not you'd like the task IDs
+                              the tuple was emitted (default:
+                              ``True``).
+        :type need_task_ids: bool
+
+        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+                  when specifying direct_task, this will be equal to
+                  ``[direct_task]``. If you specify ``need_task_ids=False``,
+                  this function will return ``None``.
         """
         if not isinstance(tup, list):
             raise TypeError('All tuples must be lists, received {!r} instead'
@@ -91,48 +107,56 @@ class Spout(Component):
         if direct_task is not None:
             msg['task'] = direct_task
 
+        if need_task_ids is None:
+            need_task_ids = True
+        elif need_task_ids is False:
+            # only need to send on False, Storm's default is True
+            msg['need_task_ids'] = need_task_ids
+
         send_message(msg)
 
-    def emit_many(self, tuples, tup_id=None, stream=None, direct_task=None):
-        """A more efficient way to send many tuples.
+        if need_task_ids == True:
+            downstream_task_ids = [direct_task] if direct_task is not None \
+                                  else read_task_ids()
+            return downstream_task_ids
+        else:
+            return None
 
-        Dumps out all tuples to STDOUT instead of writing one at a time.
+    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None,
+                  need_task_ids=None):
+        """Emit multiple tuples.
 
-        :param tuples: a two-dimensional ``list`` representing the tuples to
-                       send to Storm.  Tuples should contain only
+        :param tuples: a ``list`` containing ``list`` s of tuple payload data
+                       to send to Storm. All tuples should contain only
                        JSON-serializable data.
         :type tuples: list
-        :param tup_id: the id for the tuple.  Leave this blank for unreliable
-                       emits.
-        :type tup_id: str
-        :param stream: ID of the stream these tuples should be emitted to.
-                       Leave empty to emit to the default stream.
+        :param stream: the ID of the steram to emit these tuples to. Specify
+                       ``None`` to emit to default stream.
         :type stream: str
-        :param direct_task: the task to send the tuple to if
-                            performing a direct emit.
+        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``auto_anchor`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).
+        :type anchors: list
+        :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
+        :param need_task_ids: indicate whether or not you'd like the task IDs
+                              the tuple was emitted (default:
+                              ``True``).
+        :type need_task_ids: bool
         """
-        msg = {
-            'command': 'emit',
-        }
-        if tup_id is not None:
-            msg['id'] = tup_id
-        if stream is not None:
-            msg['stream'] = stream
-        if direct_task is not None:
-            msg['task'] = direct_task
+        if not isinstance(tuples, list):
+            raise TypeError('tuples should be a list of lists, received {!r}'
+                            'instead.'.format(type(tuples)))
 
-        lines = []
+        all_task_ids = []
         for tup in tuples:
-            msg['tuple'] = tup
-            lines.append(json.dumps(msg))
-        wrapped_msg = "{}\nend\n".format("\nend\n".join(lines)).encode('utf-8')
-        if PY3:
-            _stdout.flush()
-            _stdout.buffer.write(wrapped_msg)
-        else:
-            _stdout.write(wrapped_msg)
-        _stdout.flush()
+            all_task_ids.append(self.emit(tup, stream=stream, anchors=anchors,
+                                          direct_task=direct_task,
+                                          need_task_ids=need_task_ids))
+
+        return all_task_ids
 
     def run(self):
         """Main run loop for all spouts.
@@ -144,6 +168,8 @@ class Spout(Component):
         Subclasses should **not** override this method.
         """
         storm_conf, context = read_handshake()
+        self._setup_component(storm_conf, context)
+
         try:
             self.initialize(storm_conf, context)
             while True:
@@ -156,4 +182,6 @@ class Spout(Component):
                     self.fail(cmd['id'])
                 send_message({'command': 'sync'})
         except Exception as e:
+            log.error('Error in %s.run()', self.__class__.__name__,
+                      exc_info=True)
             self.raise_exception(e)

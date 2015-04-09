@@ -1,0 +1,16 @@
+.vagrant
+Berksfile.lock
+Gemfile.lock
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+.bundle
+.cache
+.kitchen
+.rspec
+bin
+.kitchen.local.yml
+.coverage

@@ -74,13 +74,16 @@ class BatchingBoltExceptionTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
         self.shell_proc.write_message(msg)
         time.sleep(1.5)  # wait for batch to complete
-        res = self.shell_proc.read_message()
 
-        self.assertEqual(res["command"], "log")
-        self.assertIn("Exception", res["msg"])
+        for i in range(2):
+            # we'll get an error message from the _batcher thread and then
+            # the main thread
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], "error")
+            self.assertIn("Exception", res["msg"])
 
-        res = self.shell_proc.read_message()
-        self.assertEqual(res["command"], "sync")
+            res = self.shell_proc.read_message()
+            self.assertEqual(res["command"], "sync")
 
         # Ensure bolt exited
         self.assertRaises(Exception, self.shell_proc.read_message)
@@ -97,13 +100,9 @@ class BatchingBoltAutoAckTest(ShellComponentTestCaseMixin, unittest.TestCase):
         time.sleep(1.5)  # wait for batch to complete
 
         expected_commands = ["emit", "ack", "ack", "emit", "ack", "ack"]
-
-        results = []
-        for i in range(len(expected_commands)):
-            results.append(self.shell_proc.read_message())
-
-        for actual, expected in zip(results, expected_commands):
-            self.assertEqual(actual["command"], expected)
+        for cmd in expected_commands:
+            msg = self.shell_proc.read_message()
+            self.assertEqual(msg["command"], cmd)
 
 
 class BatchingBoltAutoAnchorTest(ShellComponentTestCaseMixin, unittest.TestCase):
@@ -139,7 +138,7 @@ class BatchingBoltAutoFailTest(ShellComponentTestCaseMixin, unittest.TestCase):
 
         # log the exception and sync up, then fail all tuples in the current
         # batch
-        expected_commands = ["log", "sync", "fail", "fail"]
+        expected_commands = ["error", "sync", "fail", "fail"]
         for i in range(len(expected_commands)):
             res = self.shell_proc.read_message()
             self.assertEqual(res["command"], expected_commands[i])

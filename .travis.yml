@@ -1,12 +1,15 @@
 language: python
-
+sudo: false
 python:
   - "2.7"
   - "3.3"
+  - "3.4"
+  - "pypy"
 
 install:
   - "python setup.py --version"
-  - "pip install -r requirements.txt"
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then pip install contextlib2; fi
+  - "travis_retry pip install -r requirements.txt"
+  - echo ${TRAVIS_PYTHON_VERSION}
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} != "3" ]; then travis_retry pip install contextlib2; fi
 
 script: nosetests

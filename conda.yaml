@@ -1,0 +1,50 @@
+package:
+  name: streamparse
+  version: "{{ environ.get('GIT_DESCRIBE_TAG', '').replace('v', '') }}"
+
+source:
+  git_url: ./
+
+build:
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  script:
+    - cd $RECIPE_DIR
+    - $PYTHON setup.py install
+  entry_points:
+    - sparse = streamparse.cmdln:main
+    - streamparse = streamparse.cmdln:main
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - invoke
+    - fabric
+    - docopt
+    - jinja2
+    - six
+    - leiningen
+
+  run:
+    - python
+    - invoke
+    - fabric
+    - docopt
+    - jinja2
+    - six
+    - leiningen
+
+test:
+  imports:
+    - streamparse
+    - streamparse.bootstrap
+    - streamparse.ext
+
+  commands:
+    - sparse --help
+    - streamparse --help
+
+about:
+  home: https://github.com/Parsely/streamparse
+  license: Apache License 2.0
+  summary: 'streamparse lets you run Python code against real-time streams of data. Integrates with Apache Storm.'

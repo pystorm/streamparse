@@ -1,7 +1,6 @@
 """
 Utilities for interprocess communication between Python and Storm.
 """
-
 from __future__ import absolute_import, print_function, unicode_literals
 
 try:
@@ -9,32 +8,58 @@ try:
 except ImportError:
     import json
 import logging
+import logging.handlers
 import os
 import sys
 from collections import deque
+from threading import RLock
 
 from six import PY3
 
 
-config = context = None
-storm_log = logging.getLogger('streamparse')
-
-_MAX_MESSAGE_SIZE = 16777216
-_MAX_BLANK_MSGS = 500
-_MAX_LINES = 100
-# queue up commands we read while trying to read task IDs
+# Module globals
+_PYTHON_LOG_LEVELS = {
+    'critical': logging.CRITICAL,
+    'error': logging.ERROR,
+    'warning': logging.WARNING,
+    'info': logging.INFO,
+    'debug': logging.DEBUG
+}
+_log = logging.getLogger('streamparse.ipc')
+# pending commands/tuples we read while trying to read task IDs
 _pending_commands = deque()
-# queue up task IDs we read while trying to read commands/tuples
+# pending task IDs we read while trying to read commands/tuples
 _pending_task_ids = deque()
 # we'll redirect stdout, but we'll save original for communication to Storm
 _stdout = sys.stdout
 _stderr = sys.stderr
 # this way we don't have to mock sys.stdin for testing, which lets us use pdb
 _stdin = sys.stdin
+_pid = os.getpid()
+_debug = False
+_topology_name = _component_name = _task_id = _conf = _context = None
+_reader_lock = RLock()
+_writer_lock = RLock()
 
+# Setup stdin line reader and stdout
+if PY3:
+    # Ensure we don't fall back on the platform-dependent encoding and always
+    # use UTF-8 https://docs.python.org/3.4/library/sys.html#sys.stdin
+    import io
+    _readline = io.TextIOWrapper(_stdin, encoding='utf-8').readline
+else:
+    def _readline():
+        line = _stdin.readline()
+        return line.decode('utf-8')
 
-class StormIPCException(Exception):
-    pass
+_stdout = sys.stdout
+# Travis CI has stdout set to an io.StringIO object instead of an
+# io.BufferedWriter object which is what's actually used when streamparse is
+# running
+if hasattr(sys.stdout, 'buffer'):
+    _stdout = sys.stdout.buffer
+else:
+    _stdout = sys.stdout
 
 
 class LogStream(object):
@@ -45,16 +70,24 @@ class LogStream(object):
         self.logger = logger
 
     def write(self, message):
-        for line in message.split('\n'):
-            try:
-                self.logger.info(line)
-            except:
-                # There's been an issue somewhere in the logging sub-system
-                # so we'll put stderr and stdout back to their originals and
-                # raise the exception which will cause Storm to choke
-                sys.stdout = _stdout
-                sys.stderr = _stderr
-                raise
+        if message.strip() == "":
+            return  # skip blank lines
+
+        try:
+            self.logger.info(message)
+        except:
+            # There's been an issue somewhere in the logging sub-system
+            # so we'll put stderr and stdout back to their originals and
+            # raise the exception which will cause Storm to choke
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            raise
+        
+    def flush(self):
+        """No-op method to prevent crashes when someone does 
+        sys.stdout.flush.
+        """
+        pass
 
 
 class Tuple(object):
@@ -90,8 +123,8 @@ class Tuple(object):
 
 # Message recieving
 
-def read_message_lines():
-    lines = blank_lines = 0
+def read_message():
+    """Read a message from Storm, reconstruct newlines appropriately.
 
     while True:
         line = _stdin.readline()[0:-1]  # ignore new line
@@ -100,37 +133,49 @@ def read_message_lines():
         lines += 1
         message_size = len(line)
 
-        # If message size exceeds MAX_MESSAGE_SIZE, we assume that the
-        # Storm worker has died, and we would be reading an infinite
-        # series of blank lines. Throw an error to halt processing,
-        # otherwise the task will use 100% CPU and will quickly consume
-        # a huge amount of RAM.
-        if message_size >= _MAX_MESSAGE_SIZE:
-            raise StormIPCException(('Message {} exceeds '
-                                     '{:,}'.format(line, _MAX_MESSAGE_SIZE)))
+    '<command or task_id form prior emit>\nend\n'
 
-        # If Storm starts to send us a series of blank lines, after awhile we
-        # have to assume that the pipe to the Storm supervisor is broken, this
-        # is one of the more annoying parts of Petrel and we should probably
-        # tune _MAX_BLANK_MSGS
-        if line == '':
-            blank_lines += 1
-            if blank_lines >= _MAX_BLANK_MSGS:
-                raise StormIPCException(('{:,} blank lines received, assuming '
-                                         'pipe to Storm supervisor is '
-                                         'broken'.format(blank_lines)))
+    Command example, an incoming tuple to a bolt:
+    '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\nend\n'
 
-        if lines >= _MAX_LINES:
-            raise StormIPCException(('Message exceeds {:,} lines, assuming '
-                                     'this is an error.'.format(lines)))
+    Command example for a Spout to emit it's next tuple:
+    '{"command": "next"}\nend\n'
 
-        yield line
+    Example, the task IDs a prior emit was sent to:
+    '[12, 22, 24]\nend\n'
 
+    The edge case of where we read '' from _readline indicating EOF, usually
+    means that communication with the supervisor has been severed.
+    """
+    msg = ""
+    num_blank_lines = 0
+    while True:
+        # readline will return trailing \n so that output is unambigious, we
+        # should only have line == '' if we're at EOF
+        with _reader_lock:
+            line = _readline()
 
-def read_message():
-    """Read a message from Storm, reconstruct newlines appropriately."""
-    message = ''.join('{}\n'.format(line) for line in read_message_lines())
-    return json.loads(message)
+        if line == 'end\n':
+            break
+        elif line == '':
+            _log.error("Received EOF while trying to read stdin from Storm, "
+                       "pipe appears to be broken, exiting.")
+            sys.exit(1)
+        elif line == '\n':
+            num_blank_lines += 1
+            if num_blank_lines % 1000 == 0:
+                _log.warn("While trying to read a command or pending task ID, "
+                          "Storm has instead sent {:,} '\\n' messages."
+                          .format(num_blank_lines))
+            continue
+
+        msg = '{}{}\n'.format(msg, line[0:-1])
+
+    try:
+        return json.loads(msg)
+    except Exception:
+        _log.error("JSON decode error for message: %r", msg, exc_info=True)
+        raise
 
 
 def read_task_ids():
@@ -163,31 +208,74 @@ def read_tuple():
 
 def read_handshake():
     """Read and process an initial handshake message from Storm."""
+    global _topology_name, _component_name, _task_id, _conf, _context, _debug
+
+    msg = read_message()
+    pid_dir, _conf, _context = msg['pidDir'], msg['conf'], msg['context']
+
+    # Write a blank PID file out to the pidDir
+    open('{}/{}'.format(pid_dir, str(_pid)), 'w').close()
+    send_message({'pid': _pid})
+
+    # Set up globals
+    _topology_name = _conf.get('topology.name', '')
+    _task_id = _context.get('taskid', '')
+    _component_name = _context.get('task->component', {}).get(str(_task_id), '')
+    _debug = _conf.get('topology.debug', False)
+
+    # Set up logging
+    log_path = _conf.get('streamparse.log.path')
+    if log_path:
+        root_log = logging.getLogger()
+        max_bytes = _conf.get('streamparse.log.max_bytes', 1000000)  # 1 MB
+        backup_count = _conf.get('streamparse.log.backup_count', 10)
+        log_file = ('{log_path}/streamparse_{topology_name}_{component_name}_'
+                    '{task_id}_{pid}.log'
+                    .format(log_path=log_path, topology_name=_topology_name,
+                            component_name=_component_name, task_id=_task_id,
+                            pid=_pid))
+        handler = logging.handlers.RotatingFileHandler(log_file,
+                                                       maxBytes=max_bytes,
+                                                       backupCount=backup_count)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        root_log.addHandler(handler)
+        log_level = _conf.get('streamparse.log.level', 'info')
+        log_level = _PYTHON_LOG_LEVELS.get(log_level, logging.INFO)
+        if _debug:
+            # potentially override logging that was provided if topology.debug
+            # was set to true
+            log_level = logging.DEBUG
+        root_log.setLevel(log_level)
+    else:
+        send_message({
+            'command': 'log',
+            'msg': ('WARNING: streamparse logging is not configured. Please '
+                    'set streamparse.log.path in your config.json.')})
+
     # Redirect stdout and stderr to ensure that print statements/functions
-    # won't crash the Storm Java worker
+    # won't disrupt the multilang protocol
     sys.stdout = LogStream(logging.getLogger('streamparse.stdout'))
     sys.stderr = LogStream(logging.getLogger('streamparse.stderr'))
 
-    msg = read_message()
-    storm_log.info('Received initial handshake from Storm: %r', msg)
-    # Write a blank PID file out to the pidDir
-    pid_dir = msg['pidDir']
-    pid = os.getpid()
-    open('{}/{}'.format(pid_dir, str(pid)), 'w').close()
-    send_message({'pid': pid})
-    storm_log.info('Process ID sent to Storm')
+    _log.info('Received initial handshake message from Storm\n%r', msg)
+    _log.info('Process ID (%d) sent to Storm', _pid)
 
-    return msg['conf'], msg['context']
+    return _conf, _context
 
 
 # Message sending
 
 def send_message(message):
-    """Send a message to Storm via stdout"""
+    """Send a message to Storm via stdout."""
+    if not isinstance(message, dict):
+        _log.error("%s.%d attempted to send a non dict message to Storm: %r",
+                   _component_name, _pid, message)
+        return
+
     wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
-    if PY3:
-        _stdout.buffer.flush()
-        _stdout.buffer.write(wrapped_msg)
-    else:
+
+    with _writer_lock:
+        _stdout.flush()
         _stdout.write(wrapped_msg)
-    _stdout.flush()
+        _stdout.flush()

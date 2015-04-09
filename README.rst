@@ -1,5 +1,4 @@
-streamparse
-===========
+|logo|
 
 |Build Status|
 
@@ -33,6 +32,7 @@ Alphabetical, by last name:
 -  Dan Blanchard (`@dsblanch <https://twitter.com/dsblanch>`__)
 -  Keith Bourgoin (`@kbourgoin <https://twitter.com/kbourgoin>`__)
 -  Jeffrey Godwyll (`@rey12rey <https://twitter.com/rey12rey>`__)
+-  Tim Hopper (`@tdhopper <https://twitter.com/tdhopper>`__)
 -  Andrew Montalenti (`@amontalenti <https://twitter.com/amontalenti>`__)
 -  Rohit Sankaran (`@roadhead <https://twitter.com/roadhead>`__)
 -  Mike Sukmanowsky (`@msukmanowsky <https://twitter.com/msukmanowsky>`__)
@@ -42,6 +42,7 @@ Roadmap
 
 See the `Roadmap <https://github.com/Parsely/streamparse/wiki/Roadmap>`__.
 
+.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/streamparse-logo.png
 .. |Build Status| image:: https://travis-ci.org/Parsely/streamparse.svg?branch=master
    :target: https://travis-ci.org/Parsely/streamparse
 .. |Demo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif

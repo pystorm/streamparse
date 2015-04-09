@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# /etc/rc.d/init.d/supervisor
+#
+# Manages the supervisor daemon
+#
+# chkconfig: 2345 90 10
+# description: Supervisor is a process control utility
+# processname: supervisord
+# config: /etc/supervisord.conf
+# pidfile: /var/run/supervisord.pid
+
+source /etc/rc.d/init.d/functions
+
+start() {
+    echo -n "Starting supervisor: "
+    # status() returns 0 if and only if the service is properly started.
+    status supervisord > /dev/null && echo "already running" && return 0
+    daemon "<%= @supervisord %> -c <%= node['supervisor']['conffile'] %> <%= @node['supervisor']['daemon_options'] %>"
+    RETVAL=$?
+    echo
+    [ $RETVAL -ne 0 ] && return $RETVAL
+    # We name the lock file supervisord because that is what status() looks for.
+    touch /var/lock/subsys/supervisord
+}
+
+stop() {
+    echo -n "Shutting down supervisor: "
+    status supervisord > /dev/null
+    # status() returns 3 if and only if the service is properly stopped.
+    [ $? -eq 3 ] && echo "already stopped" && return 0
+    killproc supervisord
+    RETVAL=$?
+    echo
+    [ $RETVAL -ne 0 ] && return $RETVAL
+    rm -f /var/lock/subsys/supervisord
+}
+
+case "$1" in
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    status)
+        status supervisord
+    ;;
+    restart)
+        # Exit with an error if the shutdown was not successful.
+        stop || exit 1
+        start
+    ;;
+    *)
+        echo "Usage: <servicename> {start|stop|status|restart}"
+        exit 3
+    ;;
+esac

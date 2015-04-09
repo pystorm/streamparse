@@ -1,0 +1,10 @@
+# This file is managed by Chef
+# Changes will be overwritten
+
+broker.id=<%= @broker_id %>
+port=<%= @port %>
+zookeeper.connect=<%= @zookeeper_connect %>
+
+<%- @entries.each do |k, v| %>
+<%= k %>=<%= v %>
+<%- end %>
