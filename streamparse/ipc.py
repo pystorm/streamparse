@@ -42,11 +42,11 @@ _reader_lock = RLock()
 _writer_lock = RLock()
 
 # Setup stdin line reader and stdout
-if PY3:
+if hasattr(_stdin, 'buffer'):
     # Ensure we don't fall back on the platform-dependent encoding and always
     # use UTF-8 https://docs.python.org/3.4/library/sys.html#sys.stdin
     import io
-    _readline = io.TextIOWrapper(_stdin, encoding='utf-8').readline
+    _readline = io.TextIOWrapper(_stdin.buffer, encoding='utf-8').readline
 else:
     def _readline():
         line = _stdin.readline()
@@ -56,10 +56,8 @@ _stdout = sys.stdout
 # Travis CI has stdout set to an io.StringIO object instead of an
 # io.BufferedWriter object which is what's actually used when streamparse is
 # running
-if hasattr(sys.stdout, 'buffer'):
-    _stdout = sys.stdout.buffer
-else:
-    _stdout = sys.stdout
+if hasattr(_stdout, 'buffer'):
+    _stdout = _stdout.buffer
 
 
 class LogStream(object):
@@ -82,9 +80,9 @@ class LogStream(object):
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             raise
-        
+
     def flush(self):
-        """No-op method to prevent crashes when someone does 
+        """No-op method to prevent crashes when someone does
         sys.stdout.flush.
         """
         pass
