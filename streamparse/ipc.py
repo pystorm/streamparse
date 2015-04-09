@@ -124,12 +124,7 @@ class Tuple(object):
 def read_message():
     """Read a message from Storm, reconstruct newlines appropriately.
 
-    while True:
-        line = _stdin.readline()[0:-1]  # ignore new line
-        if line == 'end':
-            break
-        lines += 1
-        message_size = len(line)
+    All of Storm's messages (for either Bolts or Spouts) should be of the form:
 
     '<command or task_id form prior emit>\nend\n'
 
