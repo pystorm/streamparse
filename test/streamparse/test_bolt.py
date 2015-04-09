@@ -6,6 +6,7 @@ import time
 import unittest
 
 from mock import patch
+from six.moves import range
 
 from streamparse import bolt, ipc
 
@@ -20,25 +21,25 @@ class BoltTests(unittest.TestCase):
         # A basic emit
         self.bolt.emit([1, 2, 3])
         send_message_mock.assert_called_with(
-            {u'command': u'emit', u'anchors': [], u'tuple': [1, 2, 3]}
+            {'command': 'emit', 'anchors': [], 'tuple': [1, 2, 3]}
         )
 
         # Emit with stream and anchors
         self.bolt.emit([1, 2, 3], stream='foo', anchors=[4, 5])
         send_message_mock.assert_called_with(
-            {u'command': u'emit',
-             u'stream': 'foo',
-             u'anchors': [4, 5],
-             u'tuple': [1, 2, 3]}
+            {'command': 'emit',
+             'stream': 'foo',
+             'anchors': [4, 5],
+             'tuple': [1, 2, 3]}
         )
 
         # Emit as a direct task
         self.bolt.emit([1, 2, 3], direct_task='other_bolt')
         send_message_mock.assert_called_with(
-            {u'command': u'emit',
-             u'anchors': [],
-             u'tuple': [1, 2, 3],
-             u'task': 'other_bolt'}
+            {'command': 'emit',
+             'anchors': [],
+             'tuple': [1, 2, 3],
+             'task': 'other_bolt'}
         )
 
     @patch('streamparse.bolt.send_message')
@@ -113,21 +114,21 @@ class BoltTests(unittest.TestCase):
         # Test auto-anchor on (the default)
         self.bolt.emit([1, 2, 3])
         send_message_mock.assert_called_with(
-            {u'command': u'emit', u'anchors': [14], u'tuple': [1, 2, 3]}
+            {'command': 'emit', 'anchors': [14], 'tuple': [1, 2, 3]}
         )
 
         # Test auto-anchor off
         self.bolt.auto_anchor = False
         self.bolt.emit([1, 2, 3])
         send_message_mock.assert_called_with(
-            {u'command': u'emit', u'anchors': [], u'tuple': [1, 2, 3]}
+            {'command': 'emit', 'anchors': [], 'tuple': [1, 2, 3]}
         )
 
         # Test overriding auto-anchor
         self.bolt.auto_anchor = True
         self.bolt.emit([1, 2, 3], anchors=[42])
         send_message_mock.assert_called_with(
-            {u'command': u'emit', u'anchors': [42], u'tuple': [1, 2, 3]}
+            {'command': 'emit', 'anchors': [42], 'tuple': [1, 2, 3]}
         )
 
     @patch('sys.exit', new=lambda r: r)
@@ -184,7 +185,7 @@ class BatchingBoltTests(unittest.TestCase):
     @patch.object(bolt.BatchingBolt, 'process_batch')
     def test_batching(self, process_batch_mock):
         # Add a bunch of tuples
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
 
         # Wait a bit, and see if process_batch was called
@@ -197,7 +198,7 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.group_key = lambda t: sum(t.values) % 2
 
         # Add a bunch of tuples
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
 
         # Wait a bit, and see if process_batch was called correctly
@@ -209,7 +210,7 @@ class BatchingBoltTests(unittest.TestCase):
 
     def _test_exception_handling(self):
         # Make sure the exception gets from the worker thread to the main
-        for i in xrange(1):
+        for i in range(1):
             self.bolt._run()
         self.assertRaises(NotImplementedError, lambda: time.sleep(0.1))
 
@@ -217,7 +218,7 @@ class BatchingBoltTests(unittest.TestCase):
     @patch.object(bolt.BatchingBolt, 'process_batch', new=lambda *args: None)
     def test_auto_ack(self, ack_mock):
         # Test auto-ack on (the default)
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
         time.sleep(0.1)
         ack_mock.assert_has_calls([
@@ -229,7 +230,7 @@ class BatchingBoltTests(unittest.TestCase):
 
         # Test auto-ack off
         self.bolt.auto_ack = False
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
         time.sleep(0.1)
         self.assertFalse(ack_mock.called)
@@ -237,7 +238,7 @@ class BatchingBoltTests(unittest.TestCase):
     @patch.object(bolt.BatchingBolt, 'fail')
     def test_auto_fail(self, fail_mock):
         # Test auto-fail on (the default)
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
         try: time.sleep(0.1)
         except NotImplementedError: pass
@@ -251,7 +252,7 @@ class BatchingBoltTests(unittest.TestCase):
 
         # Test auto-fail off
         self.bolt.auto_fail = False
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
         try: time.sleep(0.1)
         except NotImplementedError: pass
@@ -277,7 +278,7 @@ class BatchingBoltTests(unittest.TestCase):
                 raise Exception('borkt')
         process_batch_mock.side_effect = work_once
         # Run the batches
-        for i in xrange(3):
+        for __ in range(3):
             self.bolt._run()
         try:
             time.sleep(0.1)
