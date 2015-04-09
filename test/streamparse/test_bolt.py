@@ -1,11 +1,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
-import mock
 import time
 import unittest
+try:
+    from unittest import mock
+    from unittest.mock import patch
+except ImportError:
+    import mock
+    from mock import patch
 
-from mock import patch
 from six.moves import range
 
 from streamparse import bolt, ipc
@@ -175,7 +179,7 @@ class BatchingBoltTests(unittest.TestCase):
         ]
         self._orig_read_tuple = bolt.read_tuple
         tups_cycle = itertools.cycle(self.tups)
-        bolt.read_tuple = lambda: tups_cycle.next()
+        bolt.read_tuple = lambda: next(tups_cycle)
 
     def tearDown(self):
         # undo the mocking

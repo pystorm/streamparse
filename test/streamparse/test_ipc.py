@@ -2,11 +2,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
 import json
-import mock
-import sys
 import unittest
+try:
+    from unittest import mock
+    from unittest.mock import patch
+except ImportError:
+    import mock
+    from mock import patch
 
-from mock import patch
 from six import PY3
 
 from streamparse import ipc
