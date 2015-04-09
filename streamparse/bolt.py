@@ -309,7 +309,7 @@ class BatchingBolt(Bolt):
     def __init__(self):
         super(BatchingBolt, self).__init__()
         self.exc_info = None
-        signal.signal(signal.SIGINT, self._handle_worker_exception)
+        signal.signal(signal.SIGUSR1, self._handle_worker_exception)
 
         iname = self.__class__.__name__
         threading.current_thread().name = '{}:main-thread'.format(iname)
@@ -368,6 +368,7 @@ class BatchingBolt(Bolt):
 
         Separated out so it can be properly unit tested.
         """
+        tup = None
         try:
             tup = read_tuple()
             group_key = self.group_key(tup)
@@ -425,12 +426,12 @@ class BatchingBolt(Bolt):
                     self.fail(tup)
 
             self.exc_info = sys.exc_info()
-            os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
+            os.kill(os.getpid(), signal.SIGUSR1)  # interrupt stdin waiting
 
     def _handle_worker_exception(self, signum, frame):
         """Handle an exception raised in the worker thread.
 
-        Exceptions in the _batcher thread will send a SIGINT to the main
+        Exceptions in the _batcher thread will send a SIGUSR1 to the main
         thread which we catch here, and then raise in the main thread.
         """
         reraise(*self.exc_info)
