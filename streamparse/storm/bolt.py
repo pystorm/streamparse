@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict
+import logging
 import os
 import signal
 import sys
@@ -12,12 +13,10 @@ import logging
 
 from six import iteritems, reraise, PY3
 
-from .base import Component
-from .ipc import (read_handshake, read_tuple, read_task_ids, send_message,
-                  json, Tuple)
+from .component import Component, Tuple
 
 
-log = logging.getLogger('streamparse.bolt')
+log = logging.getLogger(__name__)
 
 
 class Bolt(Component):
@@ -137,11 +136,11 @@ class Bolt(Component):
             # only need to send on False, Storm's default is True
             msg['need_task_ids'] = need_task_ids
 
-        send_message(msg)
+        self.send_message(msg)
 
         if need_task_ids == True:
             downstream_task_ids = [direct_task] if direct_task is not None \
-                                  else read_task_ids()
+                                  else self.read_task_ids()
             return downstream_task_ids
         else:
             return None
@@ -189,7 +188,7 @@ class Bolt(Component):
         :type tup: str or Tuple
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
-        send_message({'command': 'ack', 'id': tup_id})
+        self.send_message({'command': 'ack', 'id': tup_id})
 
     def fail(self, tup):
         """Indicate that processing of a tuple has failed.
@@ -198,17 +197,17 @@ class Bolt(Component):
         :type tup: str or Tuple
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
-        send_message({'command': 'fail', 'id': tup_id})
+        self.send_message({'command': 'fail', 'id': tup_id})
 
     def _run(self):
         """The inside of ``run``'s infinite loop.
 
         Separated out so it can be properly unit tested.
         """
-        self._current_tups = [read_tuple()]
+        self._current_tups = [self.read_tuple()]
         tup = self._current_tups[0]
         if tup.task == -1 and tup.stream == '__heartbeat':
-            send_message({'command': 'sync'})
+            self.send_message({'command': 'sync'})
         else:
             self.process(tup)
             if self.auto_ack:
@@ -226,7 +225,7 @@ class Bolt(Component):
 
         Subclasses should **not** override this method.
         """
-        storm_conf, context = read_handshake()
+        storm_conf, context = self.read_handshake()
         self._setup_component(storm_conf, context)
 
         try:
@@ -370,13 +369,13 @@ class BatchingBolt(Bolt):
         """
         tup = None
         try:
-            tup = read_tuple()
+            tup = self.read_tuple()
             group_key = self.group_key(tup)
             with self._batch_lock:
                 self._batches[group_key].append(tup)
         except Exception as e:
             log.error("Exception in %s.run() while adding %r to batch",
-                      self.__class__.__name__, tup, exc_info=True)
+                              self.__class__.__name__, tup, exc_info=True)
             self.raise_exception(e)
 
     def run(self):
@@ -384,7 +383,7 @@ class BatchingBolt(Bolt):
         we only need to add tuples to the proper batch for later processing
         in the _batcher thread.
         """
-        storm_conf, context = read_handshake()
+        storm_conf, context = self.read_handshake()
         self._setup_component(storm_conf, context)
 
         tup = None

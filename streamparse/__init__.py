@@ -6,14 +6,12 @@ This package makes it easier to work with Storm and Python.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import streamparse.base
-import streamparse.bolt
+import streamparse.storm
 import streamparse.cmdln
 import streamparse.contextmanagers
 import streamparse.debug
 import streamparse.decorators
-import streamparse.ipc
-import streamparse.spout
+from streamparse.storm import bolt, component, spout
 from streamparse.version import __version__, VERSION
 
 
