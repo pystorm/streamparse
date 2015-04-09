@@ -16,6 +16,7 @@ Integrates with Apache Storm.
    :maxdepth: 1
 
    quickstart
+   topologies
    api
    develop
    faq
