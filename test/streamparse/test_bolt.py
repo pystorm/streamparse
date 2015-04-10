@@ -34,7 +34,7 @@ class BoltTests(unittest.TestCase):
         self.tup = Tuple(self.tup_dict['id'], self.tup_dict['comp'],
                          self.tup_dict['stream'], self.tup_dict['task'],
                          self.tup_dict['tuple'],)
-        self.bolt = Bolt(input_stream=itertools.cycle(tup_json.splitlines(keepends=True)),
+        self.bolt = Bolt(input_stream=itertools.cycle(tup_json.splitlines(True)),
                          output_stream=BytesIO())
         self.bolt.initialize({}, {})
 
