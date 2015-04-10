@@ -189,7 +189,7 @@ class BatchingBoltTests(unittest.TestCase):
             self.bolt._run()
 
         # Wait a bit, and see if process_batch was called
-        time.sleep(0.1)
+        time.sleep(0.2)
         process_batch_mock.assert_called_with(None, self.tups[:3])
 
     @patch.object(BatchingBolt, 'process_batch')
@@ -202,18 +202,18 @@ class BatchingBoltTests(unittest.TestCase):
             self.bolt._run()
 
         # Wait a bit, and see if process_batch was called correctly
-        time.sleep(0.1)
-        process_batch_mock.assert_has_calls([
-            mock.call(0, [self.tups[0], self.tups[2]]),
-            mock.call(1, [self.tups[1]]),
-        ], any_order=True)
+        time.sleep(0.2)
+        process_batch_mock.assert_has_calls([mock.call(0, [self.tups[0],
+                                                           self.tups[2]]),
+                                             mock.call(1, [self.tups[1]])],
+                                            any_order=True)
 
     def _test_exception_handling(self):
         # TODO: Make this a real test (and remove leading underscore)
         # Make sure the exception gets from the worker thread to the main
         for i in range(1):
             self.bolt._run()
-        self.assertRaises(NotImplementedError, lambda: time.sleep(0.1))
+        self.assertRaises(NotImplementedError, lambda: time.sleep(0.2))
 
     @patch.object(BatchingBolt, 'ack')
     @patch.object(BatchingBolt, 'process_batch', new=lambda *args: None)
@@ -221,7 +221,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Test auto-ack on (the default)
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.1)
+        time.sleep(0.2)
         ack_mock.assert_has_calls([mock.call(self.tups[0]),
                                    mock.call(self.tups[1]),
                                    mock.call(self.tups[2])], any_order=True)
@@ -231,7 +231,7 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.auto_ack = False
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.1)
+        time.sleep(0.2)
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
         self.assertListEqual(ack_mock.call_args_list, [])
@@ -244,7 +244,7 @@ class BatchingBoltTests(unittest.TestCase):
         # This seemingly insane exception handling is to catch an exception in
         # a child thread which will only be active once the main thread sleeps
         try:
-            time.sleep(0.1)
+            time.sleep(0.2)
         except NotImplementedError:
             pass
         # All waiting tuples should have failed at this point
@@ -258,7 +258,7 @@ class BatchingBoltTests(unittest.TestCase):
         for __ in range(3):
             self.bolt._run()
         try:
-            time.sleep(0.1)
+            time.sleep(0.2)
         except NotImplementedError:
             pass
         # Assert that this wasn't called, and print out what it was called with
@@ -282,7 +282,7 @@ class BatchingBoltTests(unittest.TestCase):
         for __ in range(3):
             self.bolt._run()
         try:
-            time.sleep(0.1)
+            time.sleep(0.2)
         except Exception:
             pass
         # Only some tuples should have failed at this point. The key is that
