@@ -5,7 +5,7 @@ import io
 import logging
 import os
 import sys
-from collections import deque
+from collections import deque, namedtuple
 from threading import RLock
 from traceback import format_exc
 
@@ -98,35 +98,20 @@ class LogStream(object):
         pass
 
 
-class Tuple(object):
-    """Storm's primitive data type passed around via streams.
+Tuple = namedtuple('Tuple', 'id component stream task values')
+"""Storm's primitive data type passed around via streams.
 
-    :ivar id: the ID of the tuple.
-    :type id: str
-    :ivar component: component that the tuple was generated from.
-    :type component: str
-    :ivar stream: the stream that the tuple was emitted into.
-    :type stream: str
-    :ivar task: the task the tuple was generated from.
-    :type task: int
-    :ivar values: the payload of the tuple where data is stored.
-    :type values: list
-    """
-
-    __slots__ = ['id', 'component', 'stream', 'task', 'values']
-
-    def __init__(self, id, component, stream, task, values):
-        self.id = id
-        self.component = component
-        self.stream = stream
-        self.task = task
-        self.values = values
-
-    def __repr__(self):
-        return ('Tuple(id={!r}, component={!r}, stream={!r}, task={!r}, '
-                'values={!r})'
-                .format(self.id, self.component, self.stream, self.task,
-                        self.values))
+:ivar id: the ID of the tuple.
+:type id: str
+:ivar component: component that the tuple was generated from.
+:type component: str
+:ivar stream: the stream that the tuple was emitted into.
+:type stream: str
+:ivar task: the task the tuple was generated from.
+:type task: int
+:ivar values: the payload of the tuple where data is stored.
+:type values: list
+"""
 
 
 class Component(object):
@@ -141,9 +126,8 @@ class Component(object):
             input_stream = io.TextIOWrapper(input_stream.buffer,
                                             encoding='utf-8')
         self.input_stream = input_stream
-        # Travis CI has stdout set to an io.StringIO object instead of an
-        # io.BufferedWriter object which is what's actually used when
-        # streamparse is running
+        # Python 2 stdout does not have buffer, and neither would a StringIO
+        # object like nose replaces sys.stdout with
         if hasattr(output_stream, 'buffer'):
             output_stream = output_stream.buffer
         self.output_stream = output_stream

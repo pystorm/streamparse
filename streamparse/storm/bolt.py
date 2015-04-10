@@ -8,10 +8,8 @@ import signal
 import sys
 import threading
 import time
-import warnings
-import logging
 
-from six import iteritems, reraise, PY3
+from six import iteritems, itervalues, reraise, PY3
 
 from .component import Component, Tuple
 
@@ -305,8 +303,8 @@ class BatchingBolt(Bolt):
     Note: Can be fractional to specify greater precision (e.g. 2.5).
     """
 
-    def __init__(self):
-        super(BatchingBolt, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(BatchingBolt, self).__init__(*args, **kwargs)
         self.exc_info = None
         signal.signal(signal.SIGUSR1, self._handle_worker_exception)
 
@@ -375,7 +373,7 @@ class BatchingBolt(Bolt):
                 self._batches[group_key].append(tup)
         except Exception as e:
             log.error("Exception in %s.run() while adding %r to batch",
-                              self.__class__.__name__, tup, exc_info=True)
+                      self.__class__.__name__, tup, exc_info=True)
             self.raise_exception(e)
 
     def run(self):
@@ -406,6 +404,9 @@ class BatchingBolt(Bolt):
                 if self.auto_ack:
                     for tup in batch:
                         self.ack(tup)
+                # Set current batch to [] so that we know it was acked if a
+                # later batch raises an exception
+                self._batches[key] = []
             self._batches = defaultdict(list)
 
     def _batch_entry(self):
@@ -420,9 +421,11 @@ class BatchingBolt(Bolt):
             log.error(log_msg, exc_info=True)
             self.raise_exception(e, self._current_tups)
 
-            if self.auto_fail and self._current_tups:
-                for tup in self._current_tups:
-                    self.fail(tup)
+            if self.auto_fail:
+                with self._batch_lock:
+                    for batch in itervalues(self._batches):
+                        for tup in batch:
+                            self.fail(tup)
 
             self.exc_info = sys.exc_info()
             os.kill(os.getpid(), signal.SIGUSR1)  # interrupt stdin waiting
@@ -434,12 +437,3 @@ class BatchingBolt(Bolt):
         thread which we catch here, and then raise in the main thread.
         """
         reraise(*self.exc_info)
-
-
-class BasicBolt(Bolt):
-
-    def __init__(self):
-        super(BasicBolt, self).__init__()
-        warnings.warn("BasicBolt is deprecated and "
-                      "will be removed in a future streamparse release. "
-                      "Please use Bolt.", DeprecationWarning)
