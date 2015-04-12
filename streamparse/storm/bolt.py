@@ -321,7 +321,7 @@ class BatchingBolt(Bolt):
         """Return the group key used to group tuples within a batch.
 
         By default, returns None, which put all tuples in a single
-        batch, effectively just time-based batching. Override this create
+        batch, effectively just time-based batching. Override this to create
         multiple batches based on a key.
 
         :param tup: the tuple used to extract a group key
@@ -422,13 +422,15 @@ class BatchingBolt(Bolt):
             self.raise_exception(e, self._current_tups)
 
             if self.auto_fail:
+                self.failed = []
                 with self._batch_lock:
                     for batch in itervalues(self._batches):
                         for tup in batch:
                             self.fail(tup)
+                            self.failed.append(tup)
 
             self.exc_info = sys.exc_info()
-            os.kill(os.getpid(), signal.SIGUSR1)  # interrupt stdin waiting
+            os.kill(self.pid, signal.SIGUSR1)  # interrupt stdin waiting
 
     def _handle_worker_exception(self, signum, frame):
         """Handle an exception raised in the worker thread.
