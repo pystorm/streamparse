@@ -244,8 +244,8 @@ class BatchingBoltTests(unittest.TestCase):
         # otherwise.
         self.assertListEqual(ack_mock.call_args_list, [])
 
-    @patch.object(BatchingBolt, 'fail', autospec=True)
     @patch.object(BatchingBolt, '_handle_worker_exception')
+    @patch.object(BatchingBolt, 'fail', autospec=True)
     def test_auto_fail(self, fail_mock, worker_exception_mock):
         # Need to re-register signal handler with mocked version, because
         # mock gets created after handler was originally registered.
@@ -253,7 +253,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Test auto-fail on (the default)
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.5)
+        time.sleep(0.2)
 
         # All waiting tuples should have failed at this point
         fail_mock.assert_has_calls([mock.call(self.bolt, self.tups[0]),
@@ -262,7 +262,7 @@ class BatchingBoltTests(unittest.TestCase):
                                    any_order=True)
         # I would expect this to only be called once, but for some reason it is
         # called three times...
-        self.assertEqual(worker_exception_mock.call_count, 3)
+        self.assertEqual(worker_exception_mock.call_count, 1)
         fail_mock.reset_mock()
         worker_exception_mock.reset_mock()
 
@@ -270,15 +270,15 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.auto_fail = False
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.5)
+        time.sleep(0.2)
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
         self.assertListEqual(fail_mock.call_args_list, [])
         self.assertListEqual(worker_exception_mock.call_args_list, [])
 
+    @patch.object(BatchingBolt, '_handle_worker_exception')
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     @patch.object(BatchingBolt, 'fail', autospec=True)
-    @patch.object(BatchingBolt, '_handle_worker_exception')
     def test_auto_fail_partial(self, fail_mock, process_batch_mock,
                                worker_exception_mock):
         # Need to re-register signal handler with mocked version, because
@@ -298,7 +298,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Run the batches
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.5)
+        time.sleep(0.2)
         # Only some tuples should have failed at this point. The key is that
         # all un-acked tuples should be failed, even for batches we haven't
         # started processing yet. Therefore

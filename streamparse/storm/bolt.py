@@ -422,12 +422,10 @@ class BatchingBolt(Bolt):
             self.raise_exception(e, self._current_tups)
 
             if self.auto_fail:
-                self.failed = []
                 with self._batch_lock:
                     for batch in itervalues(self._batches):
                         for tup in batch:
                             self.fail(tup)
-                            self.failed.append(tup)
 
             self.exc_info = sys.exc_info()
             os.kill(self.pid, signal.SIGUSR1)  # interrupt stdin waiting
