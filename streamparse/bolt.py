@@ -94,7 +94,7 @@ class Bolt(Component):
 
         :param tup: the Tuple payload to send to Storm, should contain only
                     JSON-serializable data.
-        :type tup: list
+        :type tup: list or tuple
         :param stream: the ID of the stream to emit this tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
@@ -116,9 +116,9 @@ class Bolt(Component):
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
         """
-        if not isinstance(tup, list):
-            raise TypeError('All tuples must be lists, received {!r} instead.'
-                            .format(type(tup)))
+        if not isinstance(tup, (list, tuple)):
+            raise TypeError('All tuples must be either lists or tuples, '
+                            'received {!r} instead.'.format(type(tup)))
 
         msg = {'command': 'emit', 'tuple': tup}
 
@@ -137,6 +137,7 @@ class Bolt(Component):
             # only need to send on False, Storm's default is True
             msg['need_task_ids'] = need_task_ids
 
+        # Message encoding will convert both list and tuple to a JSON array.
         send_message(msg)
 
         if need_task_ids == True:
@@ -150,8 +151,8 @@ class Bolt(Component):
                   need_task_ids=None):
         """Emit multiple tuples.
 
-        :param tuples: a ``list`` containing ``list`` s of tuple payload data
-                       to send to Storm. All tuples should contain only
+        :param tuples: a ``list`` of multiple tuple payloads to send to
+                       Storm. All tuples should contain only
                        JSON-serializable data.
         :type tuples: list
         :param stream: the ID of the steram to emit these tuples to. Specify
@@ -170,9 +171,9 @@ class Bolt(Component):
                               ``True``).
         :type need_task_ids: bool
         """
-        if not isinstance(tuples, list):
-            raise TypeError('tuples should be a list of lists, received {!r}'
-                            'instead.'.format(type(tuples)))
+        if not isinstance(tuples, (list, tuple)):
+            raise TypeError('tuples should be a list of lists/tuples, '
+                            'received {!r} instead.'.format(type(tuples)))
 
         all_task_ids = []
         for tup in tuples:
