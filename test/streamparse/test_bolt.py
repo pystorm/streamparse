@@ -244,7 +244,7 @@ class BatchingBoltTests(unittest.TestCase):
         # otherwise.
         self.assertListEqual(ack_mock.call_args_list, [])
 
-    @patch.object(BatchingBolt, '_handle_worker_exception')
+    @patch.object(BatchingBolt, '_handle_worker_exception', autospec=True)
     @patch.object(BatchingBolt, 'fail', autospec=True)
     def test_auto_fail(self, fail_mock, worker_exception_mock):
         # Need to re-register signal handler with mocked version, because
@@ -276,7 +276,7 @@ class BatchingBoltTests(unittest.TestCase):
         self.assertListEqual(fail_mock.call_args_list, [])
         self.assertListEqual(worker_exception_mock.call_args_list, [])
 
-    @patch.object(BatchingBolt, '_handle_worker_exception')
+    @patch.object(BatchingBolt, '_handle_worker_exception', autospec=True)
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     @patch.object(BatchingBolt, 'fail', autospec=True)
     def test_auto_fail_partial(self, fail_mock, process_batch_mock,
