@@ -195,7 +195,7 @@ class BatchingBoltTests(unittest.TestCase):
             self.bolt._run()
 
         # Wait a bit, and see if process_batch was called
-        time.sleep(0.2)
+        time.sleep(0.5)
         process_batch_mock.assert_called_with(self.bolt, None, self.tups[:3])
 
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
@@ -208,7 +208,7 @@ class BatchingBoltTests(unittest.TestCase):
             self.bolt._run()
 
         # Wait a bit, and see if process_batch was called correctly
-        time.sleep(0.2)
+        time.sleep(0.5)
         process_batch_mock.assert_has_calls([mock.call(self.bolt, 0,
                                                        [self.tups[0],
                                                         self.tups[2]]),
@@ -220,7 +220,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Make sure the exception gets from the worker thread to the main
         with self.assertRaises(NotImplementedError):
             self.bolt._run()
-            time.sleep(0.2)
+            time.sleep(0.5)
 
     @patch.object(BatchingBolt, 'ack', autospec=True)
     @patch.object(BatchingBolt, 'process_batch', new=lambda *args: None)
@@ -228,7 +228,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Test auto-ack on (the default)
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.2)
+        time.sleep(0.5)
         ack_mock.assert_has_calls([mock.call(self.bolt, self.tups[0]),
                                    mock.call(self.bolt, self.tups[1]),
                                    mock.call(self.bolt, self.tups[2])],
@@ -239,7 +239,7 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.auto_ack = False
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.2)
+        time.sleep(0.5)
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
         self.assertListEqual(ack_mock.call_args_list, [])
@@ -260,8 +260,6 @@ class BatchingBoltTests(unittest.TestCase):
                                     mock.call(self.bolt, self.tups[1]),
                                     mock.call(self.bolt, self.tups[2])],
                                    any_order=True)
-        # I would expect this to only be called once, but for some reason it is
-        # called three times...
         self.assertEqual(worker_exception_mock.call_count, 1)
         fail_mock.reset_mock()
         worker_exception_mock.reset_mock()
@@ -301,7 +299,7 @@ class BatchingBoltTests(unittest.TestCase):
         time.sleep(0.5)
         # Only some tuples should have failed at this point. The key is that
         # all un-acked tuples should be failed, even for batches we haven't
-        # started processing yet. Therefore
+        # started processing yet.
         self.assertEqual(fail_mock.call_count, 2)
         self.assertEqual(worker_exception_mock.call_count, 1)
 
