@@ -253,7 +253,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Test auto-fail on (the default)
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.2)
+        time.sleep(0.5)
 
         # All waiting tuples should have failed at this point
         fail_mock.assert_has_calls([mock.call(self.bolt, self.tups[0]),
@@ -270,7 +270,7 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.auto_fail = False
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.2)
+        time.sleep(0.5)
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
         self.assertListEqual(fail_mock.call_args_list, [])
@@ -298,7 +298,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Run the batches
         for __ in range(3):
             self.bolt._run()
-        time.sleep(0.2)
+        time.sleep(0.5)
         # Only some tuples should have failed at this point. The key is that
         # all un-acked tuples should be failed, even for batches we haven't
         # started processing yet. Therefore
