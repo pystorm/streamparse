@@ -7,9 +7,17 @@ python:
   - "pypy"
 
 install:
-  - "python setup.py --version"
-  - "travis_retry pip install -r requirements.txt"
-  - echo ${TRAVIS_PYTHON_VERSION}
+  - travis_retry pip install -r requirements.txt
+  - travis_retry pip install python-coveralls coverage nose-cov
+  - echo TRAVIS_PYTHON_VERSION=${TRAVIS_PYTHON_VERSION}
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} != "3" ]; then travis_retry pip install contextlib2; fi
+  - python setup.py --version
 
-script: nosetests
+# Run test
+script:
+  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then nosetests -v --with-cov --cov streamparse --cov-config .coveragerc --logging-level=DEBUG; fi
+  - if [ $TRAVIS_PYTHON_VERSION != "3.4" ]; then nosetests -v --logging-level=DEBUG; fi
+
+# Calculate coverage on success
+after_success:
+  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then coveralls --config_file .coveragerc; fi

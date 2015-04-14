@@ -1,0 +1,332 @@
+"""Base primititve classes for working with Storm."""
+from __future__ import absolute_import, print_function, unicode_literals
+
+import io
+import logging
+import os
+import sys
+from collections import deque, namedtuple
+from threading import RLock
+from traceback import format_exc
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
+# Support for Storm Log levels as per STORM-414
+_STORM_LOG_TRACE = 0
+_STORM_LOG_DEBUG = 1
+_STORM_LOG_INFO = 2
+_STORM_LOG_WARN = 3
+_STORM_LOG_ERROR = 4
+_STORM_LOG_LEVELS = {
+    'trace': _STORM_LOG_TRACE,
+    'debug': _STORM_LOG_DEBUG,
+    'info': _STORM_LOG_INFO,
+    'warn': _STORM_LOG_WARN,
+    'warning': _STORM_LOG_WARN,
+    'error': _STORM_LOG_ERROR,
+}
+_PYTHON_LOG_LEVELS = {
+    'critical': logging.CRITICAL,
+    'error': logging.ERROR,
+    'warning': logging.WARNING,
+    'warn': logging.WARNING,
+    'info': logging.INFO,
+    'debug': logging.DEBUG,
+    'trace': logging.DEBUG
+}
+
+
+log = logging.getLogger(__name__)
+
+
+class StormHandler(logging.Handler):
+    """Handler that will send messages back to Storm."""
+
+    def __init__(self, stream=None):
+        """ Initialize handler """
+        if stream is None:
+            stream = sys.stdout
+        super(StormHandler, self).__init__()
+        self._component = Component(output_stream=stream)
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        If a formatter is specified, it is used to format the record.
+        If exception information is present, it is formatted using
+        traceback.print_exception and sent to Storm.
+        """
+        try:
+            msg = self.format(record)
+            level = _STORM_LOG_LEVELS.get(record.levelname.lower(),
+                                          _STORM_LOG_INFO)
+            self._component.send_message({'command': 'log', 'msg': str(msg),
+                                          'level': level})
+        except Exception:
+            self.handleError(record)
+
+
+class LogStream(object):
+    """Object that implements enough of the Python stream API to be used as
+    sys.stdout. Messages are written to the Python logger.
+    """
+    def __init__(self, logger):
+        self.logger = logger
+
+    def write(self, message):
+        if message.strip() == "":
+            return  # skip blank lines
+
+        try:
+            self.logger.info(message)
+        except:
+            # There's been an issue somewhere in the logging sub-system
+            # so we'll put stderr and stdout back to their originals and
+            # raise the exception which will cause Storm to choke
+            sys.stdout = sys.__stdout__
+            raise
+
+    def flush(self):
+        """No-op method to prevent crashes when someone does
+        sys.stdout.flush.
+        """
+        pass
+
+
+Tuple = namedtuple('Tuple', 'id component stream task values')
+"""Storm's primitive data type passed around via streams.
+
+:ivar id: the ID of the tuple.
+:type id: str
+:ivar component: component that the tuple was generated from.
+:type component: str
+:ivar stream: the stream that the tuple was emitted into.
+:type stream: str
+:ivar task: the task the tuple was generated from.
+:type task: int
+:ivar values: the payload of the tuple where data is stored.
+:type values: list
+"""
+
+
+class Component(object):
+    """Base class for Spouts and Bolts which contains class methods for
+    logging messages back to the Storm worker process."""
+
+
+    def __init__(self, input_stream=sys.stdin, output_stream=sys.stdout):
+        # Ensure we don't fall back on the platform-dependent encoding and always
+        # use UTF-8 https://docs.python.org/3.4/library/sys.html#sys.stdin
+        if hasattr(input_stream, 'buffer'):
+            input_stream = io.TextIOWrapper(input_stream.buffer,
+                                            encoding='utf-8')
+        self.input_stream = input_stream
+        # Python 2 stdout does not have buffer, and neither would a StringIO
+        # object like nose replaces sys.stdout with
+        if hasattr(output_stream, 'buffer'):
+            output_stream = output_stream.buffer
+        self.output_stream = output_stream
+        self.topology_name = None
+        self.task_id = None
+        self.component_name = None
+        self.debug = None
+        self.storm_conf = None
+        self.context = None
+        self.pid = os.getpid()
+        self.logger = None
+        # pending commands/tuples we read while trying to read task IDs
+        self._pending_commands = deque()
+        # pending task IDs we read while trying to read commands/tuples
+        self._pending_task_ids = deque()
+        self._reader_lock = RLock()
+        self._writer_lock = RLock()
+
+    def _setup_component(self, storm_conf, context):
+        """Add helpful instance variables to component after initial handshake
+        with Storm.  Also configure logging.
+        """
+        self.topology_name = storm_conf.get('topology.name', '')
+        self.task_id = context.get('taskid', '')
+        self.component_name = context.get('task->component', {})\
+                                      .get(str(self.task_id), '')
+        self.debug = storm_conf.get("topology.debug", False)
+        self.storm_conf = storm_conf
+        self.context = context
+        self.logger = logging.getLogger('.'.join((__name__,
+                                                  self.component_name)))
+
+        # Set up logging
+        log_path = self.storm_conf.get('streamparse.log.path')
+        if log_path:
+            root_log = logging.getLogger()
+            max_bytes = self.storm_conf.get('streamparse.log.max_bytes',
+                                            1000000)  # 1 MB
+            backup_count = self.storm_conf.get('streamparse.log.backup_count',
+                                               10)
+            log_file = ('{log_path}/streamparse_{topology_name}_{component_name}'
+                        '_{task_id}_{pid}.log'
+                        .format(log_path=log_path,
+                                topology_name=self.topology_name,
+                                component_name=self.component_name,
+                                task_id=self.task_id,
+                                pid=self.pid))
+            handler = logging.handlers.RotatingFileHandler(log_file,
+                                                           maxBytes=max_bytes,
+                                                           backupCount=backup_count)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - '
+                                          '%(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            root_log.addHandler(handler)
+            log_level = self.storm_conf.get('streamparse.log.level', 'info')
+            log_level = _PYTHON_LOG_LEVELS.get(log_level, logging.INFO)
+            if self.debug:
+                # potentially override logging that was provided if
+                # topology.debug was set to true
+                log_level = logging.DEBUG
+            root_log.setLevel(log_level)
+        else:
+            self.send_message({'command': 'log',
+                               'msg': ('WARNING: streamparse logging is not '
+                                       'configured. Please set streamparse.log.'
+                                       'path in your config.json.')})
+
+        # Redirect stdout to ensure that print statements/functions
+        # won't disrupt the multilang protocol
+        sys.stdout = LogStream(logging.getLogger('streamparse.stdout'))
+
+    def read_message(self):
+        """Read a message from Storm, reconstruct newlines appropriately.
+
+        All of Storm's messages (for either Bolts or Spouts) should be of the form:
+
+        '<command or task_id form prior emit>\nend\n'
+
+        Command example, an incoming tuple to a bolt:
+        '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\nend\n'
+
+        Command example for a Spout to emit it's next tuple:
+        '{"command": "next"}\nend\n'
+
+        Example, the task IDs a prior emit was sent to:
+        '[12, 22, 24]\nend\n'
+
+        The edge case of where we read '' from _readline indicating EOF, usually
+        means that communication with the supervisor has been severed.
+        """
+        msg = ""
+        num_blank_lines = 0
+        while True:
+            # readline will return trailing \n so that output is unambigious, we
+            # should only have line == '' if we're at EOF
+            with self._reader_lock:
+                # Use next instead of readline to support reading from lists
+                line = next(self.input_stream)
+
+            if line == 'end\n':
+                break
+            elif line == '':
+                log.error("Received EOF while trying to read stdin from Storm, "
+                           "pipe appears to be broken, exiting.")
+                sys.exit(1)
+            elif line == '\n':
+                num_blank_lines += 1
+                if num_blank_lines % 1000 == 0:
+                    log.warn("While trying to read a command or pending task "
+                             "ID, Storm has instead sent %s '\\n' messages.",
+                             num_blank_lines)
+                continue
+
+            msg = '{}{}\n'.format(msg, line[0:-1])
+
+        try:
+            return json.loads(msg)
+        except Exception:
+            log.error("JSON decode error for message: %r", msg, exc_info=True)
+            raise
+
+    def read_task_ids(self):
+        if self._pending_task_ids:
+            return self._pending_task_ids.popleft()
+        else:
+            msg = self.read_message()
+            while not isinstance(msg, list):
+                self._pending_commands.append(msg)
+                msg = self.read_message()
+            return msg
+
+    def read_command(self):
+        if self._pending_commands:
+            return self._pending_commands.popleft()
+        else:
+            msg = self.read_message()
+            while isinstance(msg, list):
+                self._pending_task_ids.append(msg)
+                msg = self.read_message()
+            return msg
+
+    def read_tuple(self):
+        cmd = self.read_command()
+        return Tuple(cmd['id'], cmd['comp'], cmd['stream'], cmd['task'],
+                     cmd['tuple'])
+
+
+    def read_handshake(self):
+        """Read and process an initial handshake message from Storm."""
+        msg = self.read_message()
+        pid_dir, _conf, _context = msg['pidDir'], msg['conf'], msg['context']
+
+        # Write a blank PID file out to the pidDir
+        open('{}/{}'.format(pid_dir, str(self.pid)), 'w').close()
+        self.send_message({'pid': self.pid})
+
+        return _conf, _context
+
+    def send_message(self, message):
+        """Send a message to Storm via stdout."""
+        if not isinstance(message, dict):
+            log.error("%s.%d attempted to send a non dict message to Storm: %r",
+                       self.component_name, self.pid, message)
+            return
+
+        wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
+
+        with self._writer_lock:
+            self.output_stream.flush()
+            self.output_stream.write(wrapped_msg)
+            self.output_stream.flush()
+
+    def raise_exception(self, exception, tup=None):
+        """Report an exception back to Storm via logging.
+
+        :param exception: a Python exception.
+        :param tup: a :class:`Tuple` object.
+        """
+        if tup:
+            message = ('Python {exception_name} raised while processing tuple '
+                       '{tup!r}\n{traceback}')
+        else:
+            message = 'Python {exception_name} raised\n{traceback}'
+        message = message.format(exception_name=exception.__class__.__name__,
+                                 tup=tup,
+                                 traceback=format_exc())
+        self.send_message({'command': 'error', 'msg': str(message)})
+        self.send_message({'command': 'sync'})  # sync up right away
+
+    def log(self, message, level=None):
+        """Log a message to Storm optionally providing a logging level.
+
+        :param message: the log message to send to Storm.
+        :type message: str
+        :param level: the logging level that Storm should use when writing the
+                      ``message``. Can be one of: trace, debug, info, warn, or
+                      error (default: ``info``).
+        :type level: str
+        """
+        level = _STORM_LOG_LEVELS.get(level, _STORM_LOG_INFO)
+        self.send_message({'command': 'log', 'msg': str(message),
+                           'level': level})

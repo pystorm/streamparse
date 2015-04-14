@@ -8,12 +8,10 @@ import logging
 
 from six import PY3
 
-from .base import Component
-from .ipc import (read_handshake, read_command, read_task_ids, send_message,
-                  json)
+from .component import Component, Tuple
 
 
-log = logging.getLogger('streamparse.spout')
+log = logging.getLogger(__name__)
 
 
 class Spout(Component):
@@ -184,5 +182,5 @@ class Spout(Component):
                 send_message({'command': 'sync'})
         except Exception as e:
             log.error('Error in %s.run()', self.__class__.__name__,
-                      exc_info=True)
+                              exc_info=True)
             self.raise_exception(e)
