@@ -405,10 +405,10 @@ class BatchingBolt(Bolt):
                 if self.auto_ack:
                     for tup in batch:
                         self.ack(tup)
-        # Set current batch to [] so that we know it was acked if a
-        # later batch raises an exception
-        self._batches[key] = []
-        self._batches = defaultdict(list)
+                # Set current batch to [] so that we know it was acked if a
+                # later batch raises an exception
+                self._batches[key] = []
+            self._batches = defaultdict(list)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
