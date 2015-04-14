@@ -381,6 +381,43 @@ adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
             self.ack(tup)  # perform acknowledgement manually
 
 
+Handling Tick Tuples
+^^^^^^^^^^^^^^^^^^^^
+
+Ticks tuples are built into Storm to provide some simple forms of
+cron-like behaviour without actually having to use cron. You can
+receive and react to tick tuples as timer events with your python
+bolts using streamparse too.
+
+The first step is to override ``process_tick()`` in your custom
+Bolt class. Once this is overridden, you can set the storm option
+``topology.tick.tuple.freq.secs=<frequency>`` to cause a tick tuple
+to be emitted every ``<frequency>`` seconds.
+
+You can see the full docs for ``process_tick()`` in
+:class:`streamparse.bolt.Bolt`. 
+
+**Example**:
+
+.. code-block:: python
+
+    from streamparse.bolt import Bolt
+
+    class MyBolt(Bolt):
+
+        def process_tick(self, freq):
+            # An action we want to perform at some regular interval...
+            self.flush_old_state()
+
+Then, for example, to cause ``process_tick()`` to be called every
+2 seconds on all of your bolts that override it, you can launch
+your topology under ``sparse run`` by setting the appropriate -o
+option and value as in the following example:
+
+.. code-block:: bash
+
+    $ sparse run -o "topology.tick.tuple.freq.secs=2" ...
+
 Failed Tuples
 ^^^^^^^^^^^^^
 
