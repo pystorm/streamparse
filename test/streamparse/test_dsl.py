@@ -1,49 +1,32 @@
-from streamparse.dsl.topology import Topology, ComponentSpec, Grouping
-
 import logging
+from streamparse.dsl.topology import Topology, Spec, Grouping
+from streamparse.storm.spout import Spout
+from streamparse.storm.bolt import Bolt
 
 log = logging.getLogger(__name__)
 
 
-class MockComponent(object):
-
-    @classmethod
-    def spec(cls,
-             name=None,
-             parallelism=1,
-             source=None,
-             group_on=None):
-        d = {
-            "parallelism": parallelism,
-            "group_on": group_on,
-            "source": source,
-            "class": cls,
-            "streams": cls.streams
-        }
-        if name is not None:
-            d["name"] = name
-        return ComponentSpec(d)
-
-
-class WordSpout(MockComponent):
+class WordSpout(Spout):
     streams = ["word"]
 
 
-class WordCountBolt(MockComponent):
+class WordCountBolt(Bolt):
     streams = ["word", "count"]
 
 
 class WordCount(Topology):
-    word_spout = WordSpout.spec(
+    word_spout = Spec(
+        WordSpout,
         parallelism=2)
-    word_count_bolt = WordCountBolt.spec(
+    word_count_bolt = Spec(
+        WordCountBolt,
         source="word_spout",
         group_on=Grouping.fields("word"),
         parallelism=8)
 
 
 def test_wordcount_topology():
-    assert len(WordCount.field_list) == 2
-    for component in WordCount.field_list:
-        if component["class"] == WordCountBolt:
-            assert component["group_on"] == ["word"]
+    assert len(WordCount.specs) == 2
+    for component in WordCount.specs:
+        if component.cls == WordCountBolt:
+            assert component.group_on == ["word"]
