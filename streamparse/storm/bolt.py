@@ -85,6 +85,24 @@ class Bolt(Component):
         """
         raise NotImplementedError()
 
+    def process_tick(self, freq):
+        """Process special 'tick tuples' which allow time-based
+        behaviour to be included in bolts.
+
+        Default behaviour is to ignore time ticks.  This should be
+        overridden by subclasses who wish to react to timer events
+        via tick tuples.
+
+        Tick tuples will be sent to all bolts in a toplogy when the
+        storm configuration option 'topology.tick.tuple.freq.secs'
+        is set to an integer value, the number of seconds.
+
+        :param freq: the tick frequency, in seconds, as set in the
+        storm configuration topology.tick.tuple.freq.secs
+        :type freq: int
+        """
+        pass
+
     def emit(self, tup, stream=None, anchors=None, direct_task=None,
              need_task_ids=None):
         """Emit a new tuple to a stream.
@@ -207,6 +225,9 @@ class Bolt(Component):
         tup = self._current_tups[0]
         if tup.task == -1 and tup.stream == '__heartbeat':
             self.send_message({'command': 'sync'})
+        if tup.component == '__system' and tup.stream == '__tick':
+            frequency = tup.values[0]
+            self.process_tick(frequency)
         else:
             self.process(tup)
             if self.auto_ack:
