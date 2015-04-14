@@ -15,8 +15,9 @@ install:
 
 # Run test
 script:
-  - nosetests -v --with-cov --cov streamparse --cov-config .coveragerc --logging-level=DEBUG
+  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then nosetests -v --with-cov --cov streamparse --cov-config .coveragerc --logging-level=DEBUG; fi
+  - if [ $TRAVIS_PYTHON_VERSION != "3.4" ]; then nosetests -v --logging-level=DEBUG; fi
 
 # Calculate coverage on success
 after_success:
-  - coveralls --config_file .coveragerc
+  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then coveralls --config_file .coveragerc; fi
