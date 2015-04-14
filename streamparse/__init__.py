@@ -6,14 +6,22 @@ This package makes it easier to work with Storm and Python.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import streamparse.storm
-import streamparse.cmdln
-import streamparse.contextmanagers
-import streamparse.debug
-import streamparse.decorators
-from streamparse.storm import bolt, component, spout
-from streamparse.version import __version__, VERSION
+from . import storm, cmdln, contextmanagers, debug, decorators
+from .storm import bolt, component, spout
+from .version import __version__, VERSION
 
+__all__ = [
+    'storm',
+    'cmdln',
+    'contextmanagers',
+    'debug',
+    'decorators',
+    'bolt',
+    'component',
+    'spout',
+    '__version__',
+    'VERSION',
+]
 
 __license__ = """
 Copyright 2014 Parsely, Inc.

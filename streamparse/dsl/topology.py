@@ -1,8 +1,8 @@
 """
 Topology base class
 """
-from streamparse.storm.spout import Spout
-from streamparse.storm.bolt import Bolt
+from ..storm.spout import Spout
+from ..storm.bolt import Bolt
 
 
 class Spec(object):
