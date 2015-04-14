@@ -97,6 +97,7 @@ class BoltTests(unittest.TestCase):
         process_mock.assert_called_with(self.bolt, self.tup)
         self.assertListEqual(self.bolt._current_tups, [])
 
+
     @patch.object(Bolt, 'process', autospec=True)
     @patch.object(Bolt, 'ack', autospec=True)
     def test_auto_ack(self, ack_mock, process_mock):
