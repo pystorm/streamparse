@@ -20,3 +20,14 @@ class FieldListMeta(type):
 
 class Topology(object):
     __metaclass__ = FieldListMeta
+
+
+class Grouping(object):
+    SHUFFLE = ":shuffle"
+    GLOBAL = ":global"
+    DIRECT = ":direct"
+    ALL = ":all"
+
+    @classmethod
+    def fields(cls, *fieldlist):
+        return list(fieldlist)
