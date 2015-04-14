@@ -369,9 +369,9 @@ class BatchingBolt(Bolt):
         tup = None
         try:
             tup = self.read_tuple()
-                group_key = self.group_key(tup)
-                with self._batch_lock:
-                    self._batches[group_key].append(tup)
+            group_key = self.group_key(tup)
+            with self._batch_lock:
+                self._batches[group_key].append(tup)
         except Exception as e:
             log.error("Exception in %s.run() while adding %r to batch",
                       self.__class__.__name__, tup, exc_info=True)
@@ -387,7 +387,7 @@ class BatchingBolt(Bolt):
 
         tup = None
         self.initialize(storm_conf, context)
-            while True:
+        while True:
             self._run()
 
     def _batch_entry_run(self):
@@ -395,20 +395,20 @@ class BatchingBolt(Bolt):
 
         Separated out so it can be properly unit tested.
         """
-                time.sleep(self.secs_between_batches)
-                with self._batch_lock:
-                    if not self._batches:
+        time.sleep(self.secs_between_batches)
+        with self._batch_lock:
+            if not self._batches:
                 return # no tuples to save
-                    for key, batch in iteritems(self._batches):
-                        self._current_tups = batch
-                        self.process_batch(key, batch)
-                        if self.auto_ack:
-                            for tup in batch:
-                                self.ack(tup)
-                # Set current batch to [] so that we know it was acked if a
-                # later batch raises an exception
-                self._batches[key] = []
-                    self._batches = defaultdict(list)
+            for key, batch in iteritems(self._batches):
+                self._current_tups = batch
+                self.process_batch(key, batch)
+                if self.auto_ack:
+                    for tup in batch:
+                        self.ack(tup)
+        # Set current batch to [] so that we know it was acked if a
+        # later batch raises an exception
+        self._batches[key] = []
+        self._batches = defaultdict(list)
 
     def _batch_entry(self):
         """Entry point for the batcher thread."""
@@ -426,7 +426,7 @@ class BatchingBolt(Bolt):
                 with self._batch_lock:
                     for batch in itervalues(self._batches):
                         for tup in batch:
-                    self.fail(tup)
+                            self.fail(tup)
 
             self.exc_info = sys.exc_info()
             os.kill(self.pid, signal.SIGUSR1)  # interrupt stdin waiting
