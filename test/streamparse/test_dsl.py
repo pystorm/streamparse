@@ -1,6 +1,5 @@
 from streamparse.dsl.topology import Topology, ComponentSpec
 
-
 class MockComponent(object):
 
     @classmethod
