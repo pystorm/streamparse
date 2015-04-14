@@ -2,22 +2,19 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict
+import logging
 import os
 import signal
 import sys
 import threading
 import time
-import warnings
-import logging
 
-from six import iteritems, reraise, PY3
+from six import iteritems, itervalues, reraise, PY3
 
-from .base import Component
-from .ipc import (read_handshake, read_tuple, read_task_ids, send_message,
-                  json, Tuple)
+from .component import Component, Tuple
 
 
-log = logging.getLogger('streamparse.bolt')
+log = logging.getLogger(__name__)
 
 
 class Bolt(Component):
@@ -94,7 +91,7 @@ class Bolt(Component):
 
         :param tup: the Tuple payload to send to Storm, should contain only
                     JSON-serializable data.
-        :type tup: list
+        :type tup: list or tuple
         :param stream: the ID of the stream to emit this tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
@@ -116,9 +113,9 @@ class Bolt(Component):
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
         """
-        if not isinstance(tup, list):
-            raise TypeError('All tuples must be lists, received {!r} instead.'
-                            .format(type(tup)))
+        if not isinstance(tup, (list, tuple)):
+            raise TypeError('All tuples must be either lists or tuples, '
+                            'received {!r} instead.'.format(type(tup)))
 
         msg = {'command': 'emit', 'tuple': tup}
 
@@ -137,11 +134,12 @@ class Bolt(Component):
             # only need to send on False, Storm's default is True
             msg['need_task_ids'] = need_task_ids
 
-        send_message(msg)
+        # Message encoding will convert both list and tuple to a JSON array.
+        self.send_message(msg)
 
         if need_task_ids == True:
             downstream_task_ids = [direct_task] if direct_task is not None \
-                                  else read_task_ids()
+                                  else self.read_task_ids()
             return downstream_task_ids
         else:
             return None
@@ -150,8 +148,8 @@ class Bolt(Component):
                   need_task_ids=None):
         """Emit multiple tuples.
 
-        :param tuples: a ``list`` containing ``list`` s of tuple payload data
-                       to send to Storm. All tuples should contain only
+        :param tuples: a ``list`` of multiple tuple payloads to send to
+                       Storm. All tuples should contain only
                        JSON-serializable data.
         :type tuples: list
         :param stream: the ID of the steram to emit these tuples to. Specify
@@ -170,9 +168,9 @@ class Bolt(Component):
                               ``True``).
         :type need_task_ids: bool
         """
-        if not isinstance(tuples, list):
-            raise TypeError('tuples should be a list of lists, received {!r}'
-                            'instead.'.format(type(tuples)))
+        if not isinstance(tuples, (list, tuple)):
+            raise TypeError('tuples should be a list of lists/tuples, '
+                            'received {!r} instead.'.format(type(tuples)))
 
         all_task_ids = []
         for tup in tuples:
@@ -189,7 +187,7 @@ class Bolt(Component):
         :type tup: str or Tuple
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
-        send_message({'command': 'ack', 'id': tup_id})
+        self.send_message({'command': 'ack', 'id': tup_id})
 
     def fail(self, tup):
         """Indicate that processing of a tuple has failed.
@@ -198,7 +196,24 @@ class Bolt(Component):
         :type tup: str or Tuple
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
-        send_message({'command': 'fail', 'id': tup_id})
+        self.send_message({'command': 'fail', 'id': tup_id})
+
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        self._current_tups = [self.read_tuple()]
+        tup = self._current_tups[0]
+        if tup.task == -1 and tup.stream == '__heartbeat':
+            self.send_message({'command': 'sync'})
+        else:
+            self.process(tup)
+            if self.auto_ack:
+                 self.ack(tup)
+            # reset so that we don't accidentally fail the wrong tuples
+            # if a successive call to read_tuple fails
+        self._current_tups = []
 
     def run(self):
         """Main run loop for all bolts.
@@ -209,23 +224,13 @@ class Bolt(Component):
 
         Subclasses should **not** override this method.
         """
-        storm_conf, context = read_handshake()
+        storm_conf, context = self.read_handshake()
         self._setup_component(storm_conf, context)
 
         try:
             self.initialize(storm_conf, context)
             while True:
-                self._current_tups = [read_tuple()]
-                tup = self._current_tups[0]
-                if tup.task == -1 and tup.stream == '__heartbeat':
-                    send_message({'command': 'sync'})
-                else:
-                    self.process(tup)
-                    if self.auto_ack:
-                        self.ack(tup)
-                # reset so that we don't accidentally fail the wrong tuples
-                # if a successive call to read_tuple fails
-                self._current_tups = []
+                self._run()
         except Exception as e:
             log_msg = "Exception in {}.run()".format(self.__class__.__name__)
 
@@ -299,10 +304,10 @@ class BatchingBolt(Bolt):
     Note: Can be fractional to specify greater precision (e.g. 2.5).
     """
 
-    def __init__(self):
-        super(BatchingBolt, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(BatchingBolt, self).__init__(*args, **kwargs)
         self.exc_info = None
-        signal.signal(signal.SIGINT, self._handle_worker_exception)
+        signal.signal(signal.SIGUSR1, self._handle_worker_exception)
 
         iname = self.__class__.__name__
         threading.current_thread().name = '{}:main-thread'.format(iname)
@@ -317,7 +322,7 @@ class BatchingBolt(Bolt):
         """Return the group key used to group tuples within a batch.
 
         By default, returns None, which put all tuples in a single
-        batch, effectively just time-based batching. Override this create
+        batch, effectively just time-based batching. Override this to create
         multiple batches based on a key.
 
         :param tup: the tuple used to extract a group key
@@ -356,46 +361,60 @@ class BatchingBolt(Bolt):
         kwargs['need_task_ids'] = False
         return super(BatchingBolt, self).emit_many(tups, **kwargs)
 
-    def run(self):
-        """Modified and simplified run loop which runs in the main thread since
-        we only need to add tuples to the proper batch for later processing
-        in the _batcher thread.
-        """
-        storm_conf, context = read_handshake()
-        self._setup_component(storm_conf, context)
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
 
+        Separated out so it can be properly unit tested.
+        """
         tup = None
         try:
-            self.initialize(storm_conf, context)
-            while True:
-                tup = read_tuple()
-                group_key = self.group_key(tup)
-                with self._batch_lock:
-                    self._batches[group_key].append(tup)
+            tup = self.read_tuple()
+            group_key = self.group_key(tup)
+            with self._batch_lock:
+                self._batches[group_key].append(tup)
         except Exception as e:
             log.error("Exception in %s.run() while adding %r to batch",
                       self.__class__.__name__, tup, exc_info=True)
             self.raise_exception(e)
 
+    def run(self):
+        """Modified and simplified run loop which runs in the main thread since
+        we only need to add tuples to the proper batch for later processing
+        in the _batcher thread.
+        """
+        storm_conf, context = self.read_handshake()
+        self._setup_component(storm_conf, context)
+
+        tup = None
+        self.initialize(storm_conf, context)
+        while True:
+            self._run()
+
+    def _batch_entry_run(self):
+        """The inside of ``_batch_entry``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        time.sleep(self.secs_between_batches)
+        with self._batch_lock:
+            if not self._batches:
+                return # no tuples to save
+            for key, batch in iteritems(self._batches):
+                self._current_tups = batch
+                self.process_batch(key, batch)
+                if self.auto_ack:
+                    for tup in batch:
+                        self.ack(tup)
+                # Set current batch to [] so that we know it was acked if a
+                # later batch raises an exception
+                self._batches[key] = []
+            self._batches = defaultdict(list)
+
     def _batch_entry(self):
         """Entry point for the batcher thread."""
         try:
             while True:
-                time.sleep(self.secs_between_batches)
-                with self._batch_lock:
-                    if not self._batches:
-                        # No tuples to save
-                        continue
-
-                    for key, batch in iteritems(self._batches):
-                        self._current_tups = batch
-                        self.process_batch(key, batch)
-                        if self.auto_ack:
-                            for tup in batch:
-                                self.ack(tup)
-
-                    self._batches = defaultdict(list)
-
+                self._batch_entry_run()
         except Exception as e:
             log_msg = ("Exception in {}.run() while processing tuple batch "
                        "{!r}.".format(self.__class__.__name__,
@@ -403,26 +422,19 @@ class BatchingBolt(Bolt):
             log.error(log_msg, exc_info=True)
             self.raise_exception(e, self._current_tups)
 
-            if self.auto_fail and self._current_tups:
-                for tup in self._current_tups:
-                    self.fail(tup)
+            if self.auto_fail:
+                with self._batch_lock:
+                    for batch in itervalues(self._batches):
+                        for tup in batch:
+                            self.fail(tup)
 
             self.exc_info = sys.exc_info()
-            os.kill(os.getpid(), signal.SIGINT)  # interrupt stdin waiting
+            os.kill(self.pid, signal.SIGUSR1)  # interrupt stdin waiting
 
     def _handle_worker_exception(self, signum, frame):
         """Handle an exception raised in the worker thread.
 
-        Exceptions in the _batcher thread will send a SIGINT to the main
+        Exceptions in the _batcher thread will send a SIGUSR1 to the main
         thread which we catch here, and then raise in the main thread.
         """
         reraise(*self.exc_info)
-
-
-class BasicBolt(Bolt):
-
-    def __init__(self):
-        super(BasicBolt, self).__init__()
-        warnings.warn("BasicBolt is deprecated and "
-                      "will be removed in a future streamparse release. "
-                      "Please use Bolt.", DeprecationWarning)

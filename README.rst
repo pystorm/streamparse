@@ -36,6 +36,7 @@ Alphabetical, by last name:
 -  Andrew Montalenti (`@amontalenti <https://twitter.com/amontalenti>`__)
 -  Rohit Sankaran (`@roadhead <https://twitter.com/roadhead>`__)
 -  Mike Sukmanowsky (`@msukmanowsky <https://twitter.com/msukmanowsky>`__)
+-  Curtis Vogt (`@omus <https://github.com/omus>`__)
 
 Roadmap
 -------
