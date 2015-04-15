@@ -10,6 +10,7 @@ import threading
 import time
 
 from six import iteritems, itervalues, string_types, reraise, PY3
+from six.moves import range
 
 from .component import Component, Specification, Tuple
 from ..dsl.topology import Grouping, TopologyError
@@ -53,7 +54,7 @@ class BoltSpecification(Specification):
                                topology.
         :type specifications: dict
         """
-        for i in xrange(len(self.sources)):
+        for i in range(len(self.sources)):
             source = self.sources[i]
 
             # Resolve sources that are not a specification object.

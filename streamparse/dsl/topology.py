@@ -1,6 +1,8 @@
 """
 Topology base class
 """
+from six import add_metaclass, iteritems
+
 from ..storm.component import Specification
 
 
@@ -30,7 +32,7 @@ class Grouping(object):
 class TopologyType(type):
     def __new__(meta, classname, bases, class_dict):
         specs = {}
-        for name, spec in class_dict.iteritems():
+        for name, spec in iteritems(class_dict):
             if isinstance(spec, Specification):
 
                 # Use the variable name as the specification name.
@@ -46,12 +48,13 @@ class TopologyType(type):
         class_dict["specs"] = specs.values()
 
         # Resolve dependencies in specifications.
-        for name, spec in specs.iteritems():
+        for name, spec in iteritems(specs):
             spec.resolve_dependencies(specs)
 
         return type.__new__(meta, classname, bases, class_dict)
 
 
+@add_metaclass(TopologyType)
 class Topology(object):
     __metaclass__ = TopologyType
 
