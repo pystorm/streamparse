@@ -8,10 +8,17 @@ import logging
 
 from six import PY3
 
-from .component import Component, Tuple
-
+from .component import Component, Specification, Tuple
 
 log = logging.getLogger(__name__)
+
+
+class SpoutSpecification(Specification):
+    def __init__(self, component_cls, **kwargs):
+        if not issubclass(component_cls, Spout):
+            raise TypeError("Invalid spout: {}".format(component_cls))
+
+        return super(SpoutSpecification, self).__init__(component_cls, **kwargs)
 
 
 class Spout(Component):
@@ -20,6 +27,10 @@ class Spout(Component):
     For more information on spouts, consult Storm's
     `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
     """
+
+    @classmethod
+    def spec(cls, **kwargs):
+        return SpoutSpecification(cls, **kwargs)
 
     def initialize(self, storm_conf, context):
         """Called immediately after the initial handshake with Storm and before

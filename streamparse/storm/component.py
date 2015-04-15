@@ -114,6 +114,29 @@ Tuple = namedtuple('Tuple', 'id component stream task values')
 """
 
 
+class Specification(object):
+    def __init__(self, component_cls, name=None, parallelism=1):
+        if not issubclass(component_cls, Component):
+            raise TypeError("Invalid component: {}".format(component_cls))
+
+        if not isinstance(parallelism, int) or parallelism < 1:
+            raise ValueError("Parallelism must be a integer greater than 0")
+
+        self.component_cls = component_cls
+        self.name = name
+        self.parallelism = parallelism
+
+    def resolve_dependencies(self, specifications):
+        """Allows specification subclasses to resolve an dependencies
+        that they may have on other specifications.
+
+        :param specifications: all of the specification objects for this
+                               topology.
+        :type specifications: dict
+        """
+        pass
+
+
 class Component(object):
     """Base class for Spouts and Bolts which contains class methods for
     logging messages back to the Storm worker process."""
@@ -145,6 +168,10 @@ class Component(object):
         self._pending_task_ids = deque()
         self._reader_lock = RLock()
         self._writer_lock = RLock()
+
+    @classmethod
+    def spec(cls, **kwargs):
+        raise NotImplementedError
 
     def _setup_component(self, storm_conf, context):
         """Add helpful instance variables to component after initial handshake
