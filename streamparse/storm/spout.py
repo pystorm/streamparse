@@ -6,9 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from six import PY3
-
-from .component import Component, Tuple
+from .component import Component
 
 
 log = logging.getLogger(__name__)
@@ -26,7 +24,7 @@ class Spout(Component):
         the main run loop. A good place to initialize connections to data
         sources.
 
-        :param storm_conf: the Storm configuration for this Bolt.  This is the
+        :param storm_conf: the Storm configuration for this Spout.  This is the
                            configuration provided to the topology, merged in
                            with cluster configuration on the worker node.
         :type storm_conf: dict
