@@ -285,7 +285,7 @@ Let's create a spout that emits sentences until the end of time:
 
     import itertools
 
-    from streamparse.spout import Spout
+    from streamparse.storm import Spout
 
 
     class SentenceSpout(Spout):
@@ -322,7 +322,7 @@ Now let's create a bolt that takes in sentences, and spits out words:
 
     import re
 
-    from streamparse.bolt import Bolt
+    from streamparse.storm import Bolt
 
     class SentenceSplitterBolt(Bolt):
 
@@ -361,13 +361,13 @@ Bolt Configuration Options
 You can disable the automatic acknowleding, anchoring or failing of tuples by
 adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
 ``auto_fail``.  All three options are documented in
-:class:`streamparse.bolt.Bolt`.
+:class:`streamparse.storm.Bolt`.
 
 **Example**:
 
 .. code-block:: python
 
-    from streamparse.bolt import Bolt
+    from streamparse.storm import Bolt
 
     class MyBolt(Bolt):
 
@@ -395,13 +395,13 @@ Bolt class. Once this is overridden, you can set the storm option
 to be emitted every ``<frequency>`` seconds.
 
 You can see the full docs for ``process_tick()`` in
-:class:`streamparse.bolt.Bolt`. 
+:class:`streamparse.storm.Bolt`.
 
 **Example**:
 
 .. code-block:: python
 
-    from streamparse.bolt import Bolt
+    from streamparse.storm import Bolt
 
     class MyBolt(Bolt):
 

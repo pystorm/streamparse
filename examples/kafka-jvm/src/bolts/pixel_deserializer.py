@@ -1,7 +1,7 @@
 import logging
 
 import simplejson as json
-from streamparse.bolt import Bolt
+from streamparse.storm import Bolt
 
 
 class PixelDeserializerBolt(Bolt):

@@ -41,7 +41,7 @@ class Bolt(Component):
 
     .. code-block:: python
 
-        from streamparse.bolt import Bolt
+        from streamparse.storm import Bolt
 
         class SentenceSplitterBolt(Bolt):
 
@@ -307,7 +307,7 @@ class BatchingBolt(Bolt):
 
     .. code-block:: python
 
-        from streamparse.bolt import BatchingBolt
+        from streamparse.storm import BatchingBolt
 
         class WordCounterBolt(BatchingBolt):
 
