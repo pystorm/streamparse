@@ -1,6 +1,6 @@
 import re
 
-from streamparse.bolt import BasicBolt
+from streamparse.storm import BasicBolt
 
 
 class AdderBolt(BasicBolt):

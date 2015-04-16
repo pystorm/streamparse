@@ -1,7 +1,7 @@
 import datetime as dt
 from collections import Counter
 
-from streamparse.bolt import BatchingBolt
+from streamparse.storm import BatchingBolt
 
 
 class PixelCounterBolt(BatchingBolt):

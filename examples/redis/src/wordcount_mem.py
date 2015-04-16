@@ -1,8 +1,8 @@
 from itertools import cycle
 from collections import Counter
 
-from streamparse.spout import Spout
-from streamparse.bolt import Bolt
+from streamparse.storm import Spout
+from streamparse.storm import Bolt
 
 
 class WordSpout(Spout):
