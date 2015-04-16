@@ -166,7 +166,7 @@ class Spout(Component):
 
         Subclasses should **not** override this method.
         """
-        storm_conf, context = read_handshake()
+        storm_conf, context = self.read_handshake()
         self._setup_component(storm_conf, context)
 
         try:
