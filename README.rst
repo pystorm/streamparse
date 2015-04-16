@@ -29,6 +29,7 @@ Contributors
 
 Alphabetical, by last name:
 
+-  Chris Abiad (`@cabiad <https://github.com/cabiad>`__)
 -  Dan Blanchard (`@dsblanch <https://twitter.com/dsblanch>`__)
 -  Keith Bourgoin (`@kbourgoin <https://twitter.com/kbourgoin>`__)
 -  Jeffrey Godwyll (`@rey12rey <https://twitter.com/rey12rey>`__)

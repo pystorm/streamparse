@@ -1,12 +1,14 @@
+"""
+Tests for Bolt and BatchingBolt classes
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
 import json
 import logging
-import signal
 import time
 import unittest
-from functools import partial
 from io import BytesIO
 
 try:
@@ -96,6 +98,7 @@ class BoltTests(unittest.TestCase):
         self.bolt._run()
         process_mock.assert_called_with(self.bolt, self.tup)
         self.assertListEqual(self.bolt._current_tups, [])
+
 
     @patch.object(Bolt, 'process', autospec=True)
     @patch.object(Bolt, 'ack', autospec=True)
