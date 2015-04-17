@@ -54,8 +54,7 @@ class BoltSpecification(Specification):
                                topology.
         :type specifications: dict
         """
-        for i in range(len(self.sources)):
-            source = self.sources[i]
+        for i, source in enumerate(self.sources):
 
             # Resolve sources that are not a specification object.
             if not isinstance(source, Specification):
