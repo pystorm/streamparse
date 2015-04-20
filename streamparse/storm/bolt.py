@@ -83,7 +83,7 @@ class Bolt(Component):
         of the tuple can be accessed by calling ``tup.values``.
 
         :param tup: the tuple to be processed.
-        :type tup: ``streamparse.storm.component.Tuple``
+        :type tup: :class:`streamparse.storm.component.Tuple`
         """
         raise NotImplementedError()
 
@@ -101,7 +101,7 @@ class Bolt(Component):
 
         :param freq: the tick frequency, in seconds, as set in the
                      storm configuration `topology.tick.tuple.freq.secs`
-        :type freq: ``int``
+        :type freq: int
         """
         pass
 
@@ -111,21 +111,21 @@ class Bolt(Component):
 
         :param tup: the Tuple payload to send to Storm, should contain only
                     JSON-serializable data.
-        :type tup: ``list`` or :class:`streamparse.storm.component.Tuple`
+        :type tup: :class:`list` or :class:`streamparse.storm.component.Tuple`
         :param stream: the ID of the stream to emit this tuple to. Specify
                        ``None`` to emit to default stream.
-        :type stream: ``str``
+        :type stream: str
         :param anchors: IDs the tuples (or :class:`streamparse.storm.component.Tuple`
                         instances) which the emitted tuples should be anchored
                         to. If ``auto_anchor`` is set to ``True`` and
                         you have not specified ``anchors``, ``anchors`` will be
                         set to the incoming/most recent tuple ID(s).
-        :type anchors: ``list``
+        :type anchors: list
         :param direct_task: the task to send the tuple to.
-        :type direct_task: ``int``
+        :type direct_task: int
         :param need_task_ids: indicate whether or not you'd like the task IDs
                               the tuple was emitted (default: ``True``).
-        :type need_task_ids: ``bool``
+        :type need_task_ids: bool
 
         :returns: a ``list`` of task IDs that the tuple was sent to. Note that
                   when specifying direct_task, this will be equal to
@@ -201,7 +201,7 @@ class Bolt(Component):
         """Indicate that processing of a tuple has succeeded.
 
         :param tup: the tuple to acknowledge.
-        :type tup: str or Tuple
+        :type tup: :class:`str` or :class:`streamparse.storm.component.Tuple`
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
         self.send_message({'command': 'ack', 'id': tup_id})
@@ -209,8 +209,8 @@ class Bolt(Component):
     def fail(self, tup):
         """Indicate that processing of a tuple has failed.
 
-        :param tup: the tuple to fail (``id`` if ``str``).
-        :type tup: str or Tuple
+        :param tup: the tuple to fail (its ``id`` if ``str``).
+        :type tup: :class:`str` or :class:`streamparse.storm.component.Tuple`
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
         self.send_message({'command': 'fail', 'id': tup_id})
@@ -349,7 +349,7 @@ class BatchingBolt(Bolt):
         multiple batches based on a key.
 
         :param tup: the tuple used to extract a group key
-        :type tup: Tuple
+        :type tup: :class:`streamparse.storm.component.Tuple`
         :returns: Any ``hashable`` value.
         """
         return None

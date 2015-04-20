@@ -28,6 +28,7 @@ _STORM_LOG_LEVELS = {
     'warn': _STORM_LOG_WARN,
     'warning': _STORM_LOG_WARN,
     'error': _STORM_LOG_ERROR,
+    'critical': _STORM_LOG_ERROR
 }
 _PYTHON_LOG_LEVELS = {
     'critical': logging.CRITICAL,
