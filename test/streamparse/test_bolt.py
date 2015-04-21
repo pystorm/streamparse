@@ -165,9 +165,27 @@ class BoltTests(unittest.TestCase):
         # otherwise.
         self.assertListEqual(fail_mock.call_args_list, [])
 
+    @patch.object(Bolt, 'read_tuple', autospec=True)
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_heartbeat_response(self, send_message_mock, read_tuple_mock):
+        # Make sure we send sync for heartbeats
+        read_tuple_mock.return_value = Tuple(id='foo', task=-1,
+                                             stream='__heartbeat', values=[],
+                                             component='__system')
+        self.bolt._run()
+        send_message_mock.assert_called_with(self.bolt, {'command': 'sync'})
 
-@patch.object(Bolt, 'send_message', new=lambda *a: None)
-@patch.object(Component, 'send_message', new=lambda *a: None)
+    @patch.object(Bolt, 'read_tuple', autospec=True)
+    @patch.object(Bolt, 'process_tick', autospec=True)
+    def test_process_tick(self, process_tick_mock, read_tuple_mock):
+        # Make sure we send sync for heartbeats
+        read_tuple_mock.return_value = Tuple(id='foo', task=-1,
+                                             component='__system',
+                                             stream='__tick', values=[50])
+        self.bolt._run()
+        process_tick_mock.assert_called_with(self.bolt, 50)
+
+
 class BatchingBoltTests(unittest.TestCase):
 
     def setUp(self):
@@ -175,21 +193,35 @@ class BatchingBoltTests(unittest.TestCase):
         self._orig_secs = BatchingBolt.secs_between_batches
 
         BatchingBolt.secs_between_batches = 0.05
-        self.bolt = BatchingBolt(output_stream=BytesIO())
-        self.bolt.initialize({}, {})
 
-        # Mock read_tuple and manually since it all needs to be mocked
-        self.tups = [Tuple(14, 'some_spout', 'default', 'some_bolt', [1, 2, 3]),
-                     Tuple(15, 'some_spout', 'default', 'some_bolt', [4, 5, 6]),
-                     Tuple(16, 'some_spout', 'default', 'some_bolt', [7, 8, 9])]
-        self._orig_read_tuple = self.bolt.read_tuple
-        tups_cycle = itertools.cycle(self.tups)
-        self.bolt.read_tuple = lambda: next(tups_cycle)
+        self.tup_dicts = [{'id': 14,
+                           'comp': 'some_spout',
+                           'stream': 'default',
+                           'task': 'some_bolt',
+                           'tuple': [1, 2, 3]},
+                          {'id': 15,
+                           'comp': 'some_spout',
+                           'stream': 'default',
+                           'task': 'some_bolt',
+                           'tuple': [4, 5, 6]},
+                          {'id': 16,
+                           'comp': 'some_spout',
+                           'stream': 'default',
+                           'task': 'some_bolt',
+                           'tuple': [7, 8, 9]}]
+        tups_json = '\nend\n'.join([json.dumps(tup_dict) for tup_dict in
+                                    self.tup_dicts] + [''])
+        self.tups = [Tuple(tup_dict['id'], tup_dict['comp'], tup_dict['stream'],
+                           tup_dict['task'], tup_dict['tuple']) for tup_dict in
+                     self.tup_dicts]
+        self.bolt = BatchingBolt(
+            input_stream=itertools.cycle(tups_json.splitlines(True)),
+            output_stream=BytesIO())
+        self.bolt.initialize({}, {})
 
     def tearDown(self):
         # undo the mocking
         BatchingBolt.secs_between_batches = self._orig_secs
-        self.bolt.read_tuple = self._orig_read_tuple
 
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     def test_batching(self, process_batch_mock):
@@ -305,6 +337,27 @@ class BatchingBoltTests(unittest.TestCase):
         # started processing yet.
         self.assertEqual(fail_mock.call_count, 2)
         self.assertEqual(worker_exception_mock.call_count, 1)
+
+    @patch.object(BatchingBolt, 'read_tuple', autospec=True)
+    @patch.object(BatchingBolt, 'send_message', autospec=True)
+    def test_heartbeat_response(self, send_message_mock, read_tuple_mock):
+        # Make sure we send sync for heartbeats
+        read_tuple_mock.return_value = Tuple(id='foo', task=-1,
+                                             stream='__heartbeat', values=[],
+                                             component='__system')
+        self.bolt._run()
+        send_message_mock.assert_called_with(self.bolt, {'command': 'sync'})
+
+    @patch.object(BatchingBolt, 'read_tuple', autospec=True)
+    @patch.object(BatchingBolt, 'process_tick', autospec=True)
+    def test_process_tick(self, process_tick_mock, read_tuple_mock):
+        # Make sure we send sync for heartbeats
+        read_tuple_mock.return_value = Tuple(id='foo', task=-1,
+                                             component='__system',
+                                             stream='__tick', values=[50])
+        self.bolt._run()
+        process_tick_mock.assert_called_with(self.bolt, 50)
+
 
 
 if __name__ == '__main__':

@@ -224,7 +224,7 @@ class Bolt(Component):
         tup = self._current_tups[0]
         if tup.task == -1 and tup.stream == '__heartbeat':
             self.send_message({'command': 'sync'})
-        if tup.component == '__system' and tup.stream == '__tick':
+        elif tup.component == '__system' and tup.stream == '__tick':
             frequency = tup.values[0]
             self.process_tick(frequency)
         else:
@@ -392,9 +392,15 @@ class BatchingBolt(Bolt):
         tup = None
         try:
             tup = self.read_tuple()
-            group_key = self.group_key(tup)
-            with self._batch_lock:
-                self._batches[group_key].append(tup)
+            if tup.task == -1 and tup.stream == '__heartbeat':
+                self.send_message({'command': 'sync'})
+            elif tup.component == '__system' and tup.stream == '__tick':
+                frequency = tup.values[0]
+                self.process_tick(frequency)
+            else:
+                group_key = self.group_key(tup)
+                with self._batch_lock:
+                    self._batches[group_key].append(tup)
         except Exception as e:
             log.error("Exception in %s.run() while adding %r to batch",
                       self.__class__.__name__, tup, exc_info=True)
