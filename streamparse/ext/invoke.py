@@ -399,12 +399,15 @@ def display_worker_uptime(env_name):
             comp_detail = _get_ui_json(env_name,
                                        component.format(topology=topology,
                                                         component=comp))
-            worker_stats += [(worker['host'], worker['id'], worker['uptime'])
-                             for worker in comp_detail['executorStats']]
-    worker_stats = sorted(list(set(worker_stats)))
+            worker_stats += [(worker['host'], comp_detail['id'], worker['id'],
+                              worker['uptime'], worker['workerLogLink']) for
+                             worker in comp_detail['executorStats']]
+    worker_stats = sorted(set(worker_stats))
 
     print("# Worker Stats")
-    table = PrettyTable(["Host", "Worker ID", "Uptime"])
+    table = PrettyTable(["Host", "Component", "Worker ID", "Uptime", "Log URL"])
+    table.align = 'l'
+    table.align['Uptime'] = 'r'
     for row in worker_stats:
         table.add_row(row)
     print(table)
