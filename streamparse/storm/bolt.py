@@ -151,15 +151,18 @@ class Bolt(Component):
             # only need to send on False, Storm's default is True
             msg['need_task_ids'] = need_task_ids
 
-        # Message encoding will convert both list and tuple to a JSON array.
-        self.send_message(msg)
+        # Use both locks so we ensure send_message and read_task_ids are for
+        # same emit
+        with self._reader_lock, self._writer_lock:
+            # Message encoding will convert both list and tuple to a JSON array.
+            self.send_message(msg)
 
-        if need_task_ids is True:
-            downstream_task_ids = [direct_task] if direct_task is not None \
-                                  else self.read_task_ids()
-            return downstream_task_ids
-        else:
-            return None
+            if need_task_ids is True:
+                downstream_task_ids = [direct_task] if direct_task is not None \
+                                      else self.read_task_ids()
+                return downstream_task_ids
+            else:
+                return None
 
     def emit_many(self, tuples, stream=None, anchors=None, direct_task=None,
                   need_task_ids=None):
