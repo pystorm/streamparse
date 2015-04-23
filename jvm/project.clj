@@ -1,4 +1,4 @@
-(defproject com.parsely/streamparse "0.0.5"
+(defproject com.parsely/streamparse "0.0.4-SNAPSHOT"
   :description "Command line utilities for the Python streamparse library needed for JVM/Thrift interop with Storm clusters."
   :url "https://github.com/Parsely/streamparse"
   :mailing-list {:name "streamparse"
