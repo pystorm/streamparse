@@ -12,13 +12,9 @@
   :min-lein-version "2.0.0"
   :dependencies [
                  [org.clojure/clojure  "1.5.1"]
+                 [org.clojure/data.json "0.2.6"]
+                 [org.apache.storm/storm-core "0.9.4"]
                  ]
-  :profiles {:dev
-              {:dependencies [
-                              [org.apache.storm/storm-core "0.9.4"]
-                              [org.clojure/data.json "0.2.6"]
-                              ]
-               }}
   :source-paths ["src"]
   :test-paths ["test"]
   :resource-paths ["resources"]
