@@ -7,6 +7,7 @@ General Questions
 * `Is streamparse compatible with Python 3?`_
 * `How can I contribute to streamparse?`_
 * `How do I trigger some code before or after I submit my topology?`_
+* `Why does streamparse run for only a few seconds and then exit?`_
 
 Is streamparse compatible with Python 3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,6 +70,11 @@ is successfully submitted to prod.
         if env_name == "prod":
             write_to_irc("Deployed {} to {}".format(topo_name, env_name))
 
+Why does streamparse run for only a few seconds and then exit?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, `sparse run` only runs for 5 seconds. You can increase this by using the `-t` argument
+(e.g. `-t 60` for 60 seconds), or just set `-t -1` to run indefinitely.
 
 Errors While Running streamparse
 --------------------------------
