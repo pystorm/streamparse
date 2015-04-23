@@ -1,4 +1,4 @@
-(defproject com.parsely/streamparse "0.0.4-SNAPSHOT"
+(defproject com.parsely/streamparse "0.0.5"
   :description "Command line utilities for the Python streamparse library needed for JVM/Thrift interop with Storm clusters."
   :url "https://github.com/Parsely/streamparse"
   :mailing-list {:name "streamparse"
@@ -15,7 +15,7 @@
                  ]
   :profiles {:dev
               {:dependencies [
-                              [org.apache.storm/storm-core "0.9.2-incubating"]
+                              [org.apache.storm/storm-core "0.9.4"]
                               [org.clojure/data.json "0.2.4"]
                               [org.testng/testng "6.8.5"]
                               [org.easytesting/fest-assert-core "2.0M8"]

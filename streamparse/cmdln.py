@@ -68,7 +68,8 @@ def main():
         -w --workers <workers>      Set number of Storm workers. Takes
                                     precedence over --par if both set.
         -t --time <time>            Time (in seconds) to keep local cluster
-                                    running [default: 5].
+                                    running.  If time <= 0, run indefinitely.
+                                    [default: 0].
         --pattern <regex>           Apply pattern to files for "tail"
                                     subcommand.
         --flip                      Flip the visualization to be horizontal.
