@@ -186,7 +186,7 @@ def jar_for_deploy():
 
 
 @task(pre=["prepare_topology"])
-def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None,
+def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
                        debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
     prepare_topology()

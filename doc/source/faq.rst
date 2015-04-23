@@ -111,8 +111,8 @@ Storm version running on your cluster, then try resubmitting your topology.
     :target-path "_build"
     :min-lein-version "2.0.0"
     :jvm-opts ["-client"]
-    :dependencies  [[org.apache.storm/storm-core "0.9.1-incubating"] ;; this should match your Storm cluster
-                    [com.parsely/streamparse "0.0.3-SNAPSHOT"]]
+    :dependencies  [[org.apache.storm/storm-core "0.9.4"] ;; this should match your Storm cluster
+                    [com.parsely/streamparse "0.0.4-SNAPSHOT"]]
     :jar-exclusions     [#"log4j\.properties" #"backtype" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
     :uberjar-exclusions [#"log4j\.properties" #"backtype" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
   )
