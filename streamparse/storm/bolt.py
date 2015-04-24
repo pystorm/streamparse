@@ -243,6 +243,23 @@ class Bolt(Component):
             # if a successive call to read_tuple fails
         self._current_tups = []
 
+    def _handle_run_exception(self, exc):
+        """Process an exception encountered while running the ``run()`` loop.
+
+        Mostly here to cut down on duplicate code for BatchingBolt.
+        """
+        log_msg = "Exception in {}.run()".format(self.__class__.__name__)
+        log.error(log_msg, exc_info=True)
+
+        if len(self._current_tups) == 1:
+            tup = self._current_tups[0]
+            log_msg = "{} while processing {!r}".format(log_msg, tup)
+            self.raise_exception(exc, tup)
+            if self.auto_fail:
+                self.fail(tup)
+
+        sys.exit(1)
+
     def run(self):
         """Main run loop for all bolts.
 
@@ -260,18 +277,7 @@ class Bolt(Component):
             while True:
                 self._run()
         except Exception as e:
-            log_msg = "Exception in {}.run()".format(self.__class__.__name__)
-
-            if len(self._current_tups) == 1:
-                tup = self._current_tups[0]
-                log_msg = "{} while processing {!r}".format(log_msg, tup)
-                self.raise_exception(e, tup)
-                if self.auto_fail:
-                    self.fail(tup)
-
-            log.error(log_msg, exc_info=True)
-            sys.exit(1)
-
+            self._handle_run_exception(e)
 
 class BatchingBolt(Bolt):
     """A bolt which batches tuples for processing.
@@ -289,6 +295,11 @@ class BatchingBolt(Bolt):
     be optionally implemented so that tuples are grouped before
     ``process_batch`` is even called.
 
+    You must also set the `topology.tick.tuple.freq.secs` to how frequently you
+    would like ticks to be sent.  If you want ``ticks_between_batches`` to work
+    the same way ``secs_between_batches`` worked in older versions of
+    streamparse, just set `topology.tick.tuple.freq.secs` to 1.
+
 
     :ivar auto_anchor: A ``bool`` indicating whether or not the bolt should
                        automatically anchor emits to the incoming tuple ID.
@@ -302,14 +313,9 @@ class BatchingBolt(Bolt):
     :ivar auto_fail: A ``bool`` indicating whether or not the bolt should
                      automatically fail tuples when an exception occurs when the
                      ``process_batch()`` method is called. Default is ``True``.
-    :ivar secs_between_batches: The time (in seconds) between calls to
-                                ``process_batch()``. Note that if there are no
-                                tuples in any batch, the BatchingBolt will
-                                continue to sleep.
+    :ivar ticks_between_batches: The number of tick tuples to wait before
+                                 processing a batch.
 
-                                .. note::
-                                  Can be fractional to specify greater
-                                  precision (e.g. 2.5).
 
     **Example**:
 
@@ -319,7 +325,7 @@ class BatchingBolt(Bolt):
 
         class WordCounterBolt(BatchingBolt):
 
-            secs_between_batches = 5
+            ticks_between_batches = 5
 
             def group_key(self, tup):
                 word = tup.values[0]
@@ -333,21 +339,12 @@ class BatchingBolt(Bolt):
     auto_anchor = True
     auto_ack = True
     auto_fail = True
-    secs_between_batches = 2
+    ticks_between_batches = 1
 
     def __init__(self, *args, **kwargs):
         super(BatchingBolt, self).__init__(*args, **kwargs)
-        self.exc_info = None
-        signal.signal(signal.SIGUSR1, self._handle_worker_exception)
-
-        iname = self.__class__.__name__
-        threading.current_thread().name = '{}:main-thread'.format(iname)
         self._batches = defaultdict(list)
-        self._batch_lock = threading.Lock()
-        self._batcher = threading.Thread(target=self._batch_entry)
-        self._batcher.name = '{}:_batcher-thread'.format(iname)
-        self._batcher.daemon = True
-        self._batcher.start()
+        self._tick_counter = 0
 
     def group_key(self, tup):
         """Return the group key used to group tuples within a batch.
@@ -392,48 +389,14 @@ class BatchingBolt(Bolt):
         kwargs['need_task_ids'] = False
         return super(BatchingBolt, self).emit_many(tups, **kwargs)
 
-    def _run(self):
-        """The inside of ``run``'s infinite loop.
+    def process_tick(self, freq):
+        """Increment tick counter and call ``process_batch`` if enough ticks
+        have been received.
 
-        Separated out so it can be properly unit tested.
+        See :class:`streamparse.storm.component.Bolt` for more information.
         """
-        tup = None
-        try:
-            tup = self.read_tuple()
-            if tup.task == -1 and tup.stream == '__heartbeat':
-                self.send_message({'command': 'sync'})
-            elif tup.component == '__system' and tup.stream == '__tick':
-                frequency = tup.values[0]
-                self.process_tick(frequency)
-            else:
-                group_key = self.group_key(tup)
-                with self._batch_lock:
-                    self._batches[group_key].append(tup)
-        except Exception as e:
-            log.error("Exception in %s.run() while adding %r to batch",
-                      self.__class__.__name__, tup, exc_info=True)
-            self.raise_exception(e)
-
-    def run(self):
-        """Modified and simplified run loop which runs in the main thread since
-        we only need to add tuples to the proper batch for later processing
-        in the _batcher thread.
-        """
-        storm_conf, context = self.read_handshake()
-        self._setup_component(storm_conf, context)
-
-        tup = None
-        self.initialize(storm_conf, context)
-        while True:
-            self._run()
-
-    def _batch_entry_run(self):
-        """The inside of ``_batch_entry``'s infinite loop.
-
-        Separated out so it can be properly unit tested.
-        """
-        time.sleep(self.secs_between_batches)
-        with self._batch_lock:
+        self._tick_counter += 1
+        if self._tick_counter > self.ticks_between_batches:
             if not self._batches:
                 return # no tuples to save
             for key, batch in iteritems(self._batches):
@@ -446,32 +409,27 @@ class BatchingBolt(Bolt):
                 # later batch raises an exception
                 self._batches[key] = []
             self._batches = defaultdict(list)
+            self._tick_counter = 0
 
-    def _batch_entry(self):
-        """Entry point for the batcher thread."""
-        try:
-            while True:
-                self._batch_entry_run()
-        except Exception as e:
-            log_msg = ("Exception in {}.run() while processing tuple batch "
-                       "{!r}.".format(self.__class__.__name__,
-                                      self._current_tups))
-            log.error(log_msg, exc_info=True)
-            self.raise_exception(e, self._current_tups)
+    def process(self, tup):
+        """Group non-tick tuples into batches."""
+        # Append latest tuple to batches
+        group_key = self.group_key(tup)
+        self._batches[group_key].append(tup)
 
-            if self.auto_fail:
-                with self._batch_lock:
-                    for batch in itervalues(self._batches):
-                        for tup in batch:
-                            self.fail(tup)
+    def _handle_run_exception(self, exc):
+        """Process an exception encountered while running the ``run()`` loop.
 
-            self.exc_info = sys.exc_info()
-            os.kill(self.pid, signal.SIGUSR1)  # interrupt stdin waiting
-
-    def _handle_worker_exception(self, signum, frame):
-        """Handle an exception raised in the worker thread.
-
-        Exceptions in the _batcher thread will send a SIGUSR1 to the main
-        thread which we catch here, and then raise in the main thread.
+        Mostly here to cut down on duplicate code for BatchingBolt.
         """
-        reraise(*self.exc_info)
+        log_msg = ("Exception in {}.run() while processing tuple batch "
+                   "{!r}.".format(self.__class__.__name__, self._current_tups))
+        log.error(log_msg, exc_info=True)
+        self.raise_exception(exc, self._current_tups)
+
+        if self.auto_fail:
+            for batch in itervalues(self._batches):
+                for tup in batch:
+                    self.fail(tup)
+
+        sys.exit(1)

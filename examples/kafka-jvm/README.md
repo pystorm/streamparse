@@ -106,14 +106,14 @@ Done.
 Test the topology locally with:
 
 ```bash
-sparse run --debug -t 15
+sparse run --debug -t 15 -o 'topology.tick.tuple.freq.secs=1'
 ```
 
 It's helpful just to see the end result of this topology, so you can filter
 the debug output to only those tuples emitted from the final bolt:
 
 ```bash
-sparse run --debug -t 60 | grep "Emitting: pixel-count-bolt default"
+sparse run --debug -t 60 -o 'topology.tick.tuple.freq.secs=1' | grep "Emitting: pixel-count-bolt default"
 ```
 
 If everything worked properly, you should soon see messages like:

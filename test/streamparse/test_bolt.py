@@ -143,7 +143,6 @@ class BoltTests(unittest.TestCase):
 
     @patch('sys.exit', new=lambda r: r)
     @patch.object(Bolt, 'read_handshake', new=lambda x: ({}, {}))
-    @patch.object(Bolt, 'raise_exception', new=lambda *a: None)
     @patch.object(Bolt, 'fail', autospec=True)
     @patch.object(Bolt, '_run', autospec=True)
     def test_auto_fail(self, _run_mock, fail_mock):
@@ -179,7 +178,7 @@ class BoltTests(unittest.TestCase):
     @patch.object(Bolt, 'process_tick', autospec=True)
     def test_process_tick(self, process_tick_mock, read_tuple_mock):
         # Make sure we send sync for heartbeats
-        read_tuple_mock.return_value = Tuple(id='foo', task=-1,
+        read_tuple_mock.return_value = Tuple(id=None, task=-1,
                                              component='__system',
                                              stream='__tick', values=[50])
         self.bolt._run()
@@ -189,11 +188,7 @@ class BoltTests(unittest.TestCase):
 class BatchingBoltTests(unittest.TestCase):
 
     def setUp(self):
-        # mock seconds between batches to speed the tests up
-        self._orig_secs = BatchingBolt.secs_between_batches
-
-        BatchingBolt.secs_between_batches = 0.05
-
+        self.ticks_between_batches = 1
         self.tup_dicts = [{'id': 14,
                            'comp': 'some_spout',
                            'stream': 'default',
@@ -204,34 +199,40 @@ class BatchingBoltTests(unittest.TestCase):
                            'stream': 'default',
                            'task': 'some_bolt',
                            'tuple': [4, 5, 6]},
+                          {'id': None,
+                           'comp': '__system',
+                           'stream': '__tick',
+                           'task': -1,
+                           'tuple': [1]},
                           {'id': 16,
                            'comp': 'some_spout',
                            'stream': 'default',
                            'task': 'some_bolt',
-                           'tuple': [7, 8, 9]}]
+                           'tuple': [7, 8, 9]},
+                          {'id': None,
+                           'comp': '__system',
+                           'stream': '__tick',
+                           'task': -1,
+                           'tuple': [1]}]
         tups_json = '\nend\n'.join([json.dumps(tup_dict) for tup_dict in
                                     self.tup_dicts] + [''])
         self.tups = [Tuple(tup_dict['id'], tup_dict['comp'], tup_dict['stream'],
                            tup_dict['task'], tup_dict['tuple']) for tup_dict in
                      self.tup_dicts]
+        self.nontick_tups = [tup for tup in self.tups if tup.stream != '__tick']
         self.bolt = BatchingBolt(
             input_stream=itertools.cycle(tups_json.splitlines(True)),
             output_stream=BytesIO())
         self.bolt.initialize({}, {})
 
-    def tearDown(self):
-        # undo the mocking
-        BatchingBolt.secs_between_batches = self._orig_secs
-
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     def test_batching(self, process_batch_mock):
         # Add a bunch of tuples
-        for __ in range(3):
+        for __ in self.tups:
             self.bolt._run()
 
-        # Wait a bit, and see if process_batch was called
-        time.sleep(0.5)
-        process_batch_mock.assert_called_with(self.bolt, None, self.tups[:3])
+        process_batch_mock.assert_called_with(self.bolt, None,
+                                              self.nontick_tups)
 
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     def test_group_key(self, process_batch_mock):
@@ -239,81 +240,69 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.group_key = lambda t: sum(t.values) % 2
 
         # Add a bunch of tuples
-        for __ in range(3):
+        for __ in self.tups:
             self.bolt._run()
 
-        # Wait a bit, and see if process_batch was called correctly
-        time.sleep(0.5)
         process_batch_mock.assert_has_calls([mock.call(self.bolt, 0,
-                                                       [self.tups[0],
-                                                        self.tups[2]]),
+                                                       [self.nontick_tups[0],
+                                                        self.nontick_tups[2]]),
                                              mock.call(self.bolt, 1,
-                                                       [self.tups[1]])],
+                                                       [self.nontick_tups[1]])],
                                             any_order=True)
-
-    def test_exception_handling(self):
-        # Make sure the exception gets from the worker thread to the main
-        with self.assertRaises(NotImplementedError):
-            self.bolt._run()
-            time.sleep(0.5)
 
     @patch.object(BatchingBolt, 'ack', autospec=True)
     @patch.object(BatchingBolt, 'process_batch', new=lambda *args: None)
     def test_auto_ack(self, ack_mock):
         # Test auto-ack on (the default)
-        for __ in range(3):
+        for __ in self.tups:
             self.bolt._run()
-        time.sleep(0.5)
-        ack_mock.assert_has_calls([mock.call(self.bolt, self.tups[0]),
-                                   mock.call(self.bolt, self.tups[1]),
-                                   mock.call(self.bolt, self.tups[2])],
+        ack_mock.assert_has_calls([mock.call(self.bolt, self.nontick_tups[0]),
+                                   mock.call(self.bolt, self.nontick_tups[1]),
+                                   mock.call(self.bolt, self.nontick_tups[2])],
                                   any_order=True)
         ack_mock.reset_mock()
 
         # Test auto-ack off
         self.bolt.auto_ack = False
-        for __ in range(3):
+        for __ in self.tups:
             self.bolt._run()
-        time.sleep(0.5)
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
         self.assertListEqual(ack_mock.call_args_list, [])
 
-    @patch.object(BatchingBolt, '_handle_worker_exception', autospec=True)
+    @patch.object(BatchingBolt, 'read_handshake', new=lambda x: ({}, {}))
+    @patch.object(BatchingBolt, 'raise_exception', new=lambda *a: None)
+    @patch('sys.exit', autospec=True)
     @patch.object(BatchingBolt, 'fail', autospec=True)
-    def test_auto_fail(self, fail_mock, worker_exception_mock):
+    def test_auto_fail(self, fail_mock, exit_mock):
         # Need to re-register signal handler with mocked version, because
         # mock gets created after handler was originally registered.
         self.setUp()
         # Test auto-fail on (the default)
-        for __ in range(3):
-            self.bolt._run()
-        time.sleep(0.5)
+        self.bolt.run()
 
         # All waiting tuples should have failed at this point
-        fail_mock.assert_has_calls([mock.call(self.bolt, self.tups[0]),
-                                    mock.call(self.bolt, self.tups[1]),
-                                    mock.call(self.bolt, self.tups[2])],
+        fail_mock.assert_has_calls([mock.call(self.bolt, self.nontick_tups[0]),
+                                    mock.call(self.bolt, self.nontick_tups[1]),
+                                    mock.call(self.bolt, self.nontick_tups[2])],
                                    any_order=True)
-        self.assertEqual(worker_exception_mock.call_count, 1)
+        self.assertEqual(exit_mock.call_count, 1)
+        exit_mock.reset_mock()
         fail_mock.reset_mock()
-        worker_exception_mock.reset_mock()
 
         # Test auto-fail off
         self.bolt.auto_fail = False
-        for __ in range(3):
-            self.bolt._run()
-        time.sleep(0.5)
+        self.bolt.run()
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
+        self.assertEqual(exit_mock.call_count, 1)
         self.assertListEqual(fail_mock.call_args_list, [])
-        self.assertListEqual(worker_exception_mock.call_args_list, [])
 
-    @patch.object(BatchingBolt, '_handle_worker_exception', autospec=True)
+    @patch.object(BatchingBolt, 'read_handshake', new=lambda x: ({}, {}))
+    @patch('sys.exit', autospec=True)
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     @patch.object(BatchingBolt, 'fail', autospec=True)
-    def test_auto_fail_partial(self, fail_mock, process_batch_mock,
-                               worker_exception_mock):
+    def test_auto_fail_partial(self, fail_mock, process_batch_mock, exit_mock):
         # Need to re-register signal handler with mocked version, because
         # mock gets created after handler was originally registered.
         self.setUp()
@@ -329,14 +318,12 @@ class BatchingBoltTests(unittest.TestCase):
                 raise Exception('borkt')
         process_batch_mock.side_effect = work_once
         # Run the batches
-        for __ in range(3):
-            self.bolt._run()
-        time.sleep(0.5)
+        self.bolt.run()
         # Only some tuples should have failed at this point. The key is that
         # all un-acked tuples should be failed, even for batches we haven't
         # started processing yet.
         self.assertEqual(fail_mock.call_count, 2)
-        self.assertEqual(worker_exception_mock.call_count, 1)
+        self.assertEqual(exit_mock.call_count, 1)
 
     @patch.object(BatchingBolt, 'read_tuple', autospec=True)
     @patch.object(BatchingBolt, 'send_message', autospec=True)
@@ -352,7 +339,7 @@ class BatchingBoltTests(unittest.TestCase):
     @patch.object(BatchingBolt, 'process_tick', autospec=True)
     def test_process_tick(self, process_tick_mock, read_tuple_mock):
         # Make sure we send sync for heartbeats
-        read_tuple_mock.return_value = Tuple(id='foo', task=-1,
+        read_tuple_mock.return_value = Tuple(id=None, task=-1,
                                              component='__system',
                                              stream='__tick', values=[50])
         self.bolt._run()
