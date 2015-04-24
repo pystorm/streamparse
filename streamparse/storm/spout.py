@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from .component import Component, Tuple
+from .component import Component
 
 
 log = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class Spout(Component):
         the main run loop. A good place to initialize connections to data
         sources.
 
-        :param storm_conf: the Storm configuration for this Bolt.  This is the
+        :param storm_conf: the Storm configuration for this Spout.  This is the
                            configuration provided to the topology, merged in
                            with cluster configuration on the worker node.
         :type storm_conf: dict
@@ -110,11 +110,11 @@ class Spout(Component):
             msg['need_task_ids'] = need_task_ids
 
         # Message encoding will convert both list and tuple to a JSON array.
-        send_message(msg)
+        self.send_message(msg)
 
         if need_task_ids == True:
             downstream_task_ids = [direct_task] if direct_task is not None \
-                                  else read_task_ids()
+                                  else self.read_task_ids()
             return downstream_task_ids
         else:
             return None
@@ -155,6 +155,22 @@ class Spout(Component):
 
         return all_task_ids
 
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        cmd = self.read_command()
+        if cmd['command'] == 'next':
+            self.next_tuple()
+        elif cmd['command'] == 'ack':
+            self.ack(cmd['id'])
+        elif cmd['command'] == 'fail':
+            self.fail(cmd['id'])
+        else:
+            self.logger.error('Received invalid command from Storm: %r', cmd)
+        self.send_message({'command': 'sync'})
+
     def run(self):
         """Main run loop for all spouts.
 
@@ -164,20 +180,13 @@ class Spout(Component):
 
         Subclasses should **not** override this method.
         """
-        storm_conf, context = read_handshake()
+        storm_conf, context = self.read_handshake()
         self._setup_component(storm_conf, context)
 
         try:
             self.initialize(storm_conf, context)
             while True:
-                cmd = read_command()
-                if cmd['command'] == 'next':
-                    self.next_tuple()
-                if cmd['command'] == 'ack':
-                    self.ack(cmd['id'])
-                if cmd['command'] == 'fail':
-                    self.fail(cmd['id'])
-                send_message({'command': 'sync'})
+                self._run()
         except Exception as e:
             log.error('Error in %s.run()', self.__class__.__name__,
                               exc_info=True)

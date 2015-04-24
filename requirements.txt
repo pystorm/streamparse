@@ -3,3 +3,6 @@ jinja2
 -e git+https://github.com/pashinin/fabric@p33#egg=fabric
 invoke
 six
+requests
+prettytable
+setuptools

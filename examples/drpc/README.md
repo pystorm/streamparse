@@ -9,7 +9,7 @@ In order to have the `sparse` shell command available system-wide.
 
 # Install Leiningen
 
-Follow (these instructions)[http://leiningen.org/] to install Leiningen > 2.0.
+Follow [these instructions](http://leiningen.org/) to install Leiningen > 2.0.
 On OSX you can also use homebrew to install leiningen
 
     brew install leiningen

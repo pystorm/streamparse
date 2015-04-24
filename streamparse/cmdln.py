@@ -1,10 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from docopt import docopt
+from pkg_resources import parse_version
 
 from .bootstrap import quickstart
 from .ext.invoke import (list_topologies, kill_topology, run_local_topology,
-                         submit_topology, tail_topology, visualize_topology)
+                         submit_topology, tail_topology, visualize_topology,
+                         display_stats, display_worker_uptime,
+                         storm_lib_version)
 from .version import __version__ as VERSION
 
 
@@ -34,6 +37,8 @@ def main():
         sparse list [-e <env>] [-v]
         sparse kill [-n <topology>] [-e <env>] [-v] [--wait <seconds>]
         sparse tail [-e <env>] [-n <topology>] [--pattern <regex>]
+        sparse stats [-e <env>] [-n <topology>] [-c <component>|--all]
+        sparse worker-uptime [-e <env>]
         sparse visualize [-n <topology>] [--flip]
         sparse (-h | --help)
         sparse --version
@@ -54,6 +59,8 @@ def main():
                                     have only one topology defined in your
                                     topologies/ directory, streamparse
                                     will use it automatically.
+        -c --component <component>  Topology component (bolt/spout) name as
+                                    specified in Clojure topology specification
         -o --option <option>...     Topology option to use upon submit, e.g.
                                     "-o topology.debug=true" is equivalent to
                                     "--debug". May be repeated for multiple
@@ -68,7 +75,8 @@ def main():
         -w --workers <workers>      Set number of Storm workers. Takes
                                     precedence over --par if both set.
         -t --time <time>            Time (in seconds) to keep local cluster
-                                    running [default: 5].
+                                    running.  If time <= 0, run indefinitely.
+                                    [default: 0].
         --pattern <regex>           Apply pattern to files for "tail"
                                     subcommand.
         --flip                      Flip the visualization to be horizontal.
@@ -109,6 +117,17 @@ def main():
                         wait=args["--wait"])
     elif args["tail"]:
         tail_topology(args["--name"], args["--environment"], args["--pattern"])
+    elif args["stats"] or args["worker-uptime"]:
+        storm_version = storm_lib_version()
+        if storm_version >= parse_version('0.9.2-incubating'):
+            if args["stats"]:
+                display_stats(args["--environment"], args.get("--name"),
+                              args.get("--component"), args.get("--all"))
+            else:
+                display_worker_uptime(args["--environment"])
+        else:
+            print("ERROR: Storm {} does not support this command."
+                  .format(storm_version))
     elif args["visualize"]:
         visualize_topology(args["--name"])
 
