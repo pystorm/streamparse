@@ -33,10 +33,15 @@ Alphabetical, by last name:
 -  Dan Blanchard (`@dsblanch <https://twitter.com/dsblanch>`__)
 -  Keith Bourgoin (`@kbourgoin <https://twitter.com/kbourgoin>`__)
 -  Jeffrey Godwyll (`@rey12rey <https://twitter.com/rey12rey>`__)
+-  Wieland Hoffmann (`@mineo <https://github.com/mineo>`__)
 -  Tim Hopper (`@tdhopper <https://twitter.com/tdhopper>`__)
+-  Omer Katz (`@thedrow <https://github.com/thedrow>`__)
+-  Aiyesha Ma (`@Aiyesha <https://github.com/Aiyesha>`__)
 -  Andrew Montalenti (`@amontalenti <https://twitter.com/amontalenti>`__)
 -  Rohit Sankaran (`@roadhead <https://twitter.com/roadhead>`__)
+-  Viktor Shlapakov (`@vshlapakov <https://github.com/vshlapakov>`__)
 -  Mike Sukmanowsky (`@msukmanowsky <https://twitter.com/msukmanowsky>`__)
+-  Cody Wilbourn (`@codywilbourn <https://github.com/https://github.com/codywilbourn>`__)
 -  Curtis Vogt (`@omus <https://github.com/omus>`__)
 
 Roadmap
