@@ -36,6 +36,8 @@ install_requires = [
     'fabric',
     'docopt',
     'jinja2',
+    'requests',
+    'prettytable',
     'six'
 ]
 
