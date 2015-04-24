@@ -16,11 +16,15 @@ import re
 import shutil
 import sys
 import time
-from io import open
-from tempfile import NamedTemporaryFile
+import requests
+from operator import itemgetter
+from prettytable import PrettyTable
+from random import shuffle
 
 from invoke import run, task
-from six import string_types
+from itertools import chain
+from pkg_resources import parse_version
+from six import iteritems, string_types
 
 from ..contextmanagers import ssh_tunnel
 from .util import (get_env_config, get_topology_definition,
@@ -35,6 +39,24 @@ __all__ = ["list_topologies", "kill_topology", "run_local_topology",
 # TODO: remove boilerplate get_env_config, get_nimbus_for_env_config...
 # from all these with something like
 # @task("setup")
+
+
+def storm_lib_version():
+    """Get the Storm library version being used by Leiningen and Streamparse.
+
+    :returns: The Storm library version specified in project.clj
+    :rtype: pkg_resources.Version
+    """
+    deps_tree = run("lein deps :tree", hide=True).stdout
+    pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
+    versions = set(re.findall(pattern, deps_tree))
+
+    if len(versions) > 1:
+        raise RuntimeError("Multiple Storm Versions Detected.")
+    elif len(versions) == 0:
+        raise RuntimeError("No Storm version specified in project.clj dependencies.")
+    else:
+        return parse_version(versions.pop())
 
 
 def get_user_tasks():
@@ -59,7 +81,7 @@ def is_safe_to_submit(topology_name, host=None, port=None):
                               host=host, port=port)
 
     if result.failed:
-        raise Exception("Error running streamparse.commands.list/-main")
+        raise RuntimeError("Error running streamparse.commands.list/-main")
 
     pattern = re.compile(r"{}\s+\|\s+(ACTIVE|KILLED)\s+\|"
                          .format(topology_name))
@@ -145,14 +167,14 @@ def jar_for_deploy():
     sys.stdout.flush()
     res = run("lein clean", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to run 'lein clean'!\nSTDOUT:\n{}"
-                        "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+        raise RuntimeError("Unable to run 'lein clean'!\nSTDOUT:\n{}"
+                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     print("Creating topology uberjar...")
     sys.stdout.flush()
     res = run("lein uberjar", hide="stdout")
     if not res.ok:
-        raise Exception("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
-                        "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+        raise RuntimeError("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
+                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     # XXX: This will fail if more than one JAR is built
     lines = res.stdout.split()
     lines = [l.strip().lstrip("Created ") for l in lines
@@ -164,7 +186,7 @@ def jar_for_deploy():
 
 
 @task(pre=["prepare_topology"])
-def run_local_topology(name=None, time=5, workers=2, ackers=2, options=None,
+def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
                        debug=False):
     """Run a topology locally using Storm's LocalCluster class."""
     prepare_topology()
@@ -357,6 +379,312 @@ def tail_topology(topology_name=None, env_name=None, pattern=None):
     get_topology_definition(topology_name)
     activate_env(env_name)
     tail_logs(topology_name, pattern)
+
+
+@task
+def display_worker_uptime(env_name):
+    topology_summary = '/api/v1/topology/summary'
+    topology_detail = '/api/v1/topology/{topology}'
+    component = '/api/v1/topology/{topology}/component/{component}'
+    topo_summary_json = _get_ui_json(env_name, topology_summary)
+    topology_ids = [x['id'] for x in topo_summary_json['topologies']]
+    worker_stats = []
+
+    for topology in topology_ids:
+        topology_detail_json = _get_ui_json(env_name,
+                                            topology_detail.format(topology=topology))
+        spouts = [x['spoutId'] for x in topology_detail_json['spouts']]
+        bolts = [x['boltId'] for x in topology_detail_json['bolts']]
+        for comp in spouts + bolts:
+            comp_detail = _get_ui_json(env_name,
+                                       component.format(topology=topology,
+                                                        component=comp))
+            worker_stats += [(worker['host'], worker['id'], worker['uptime'],
+                              worker['workerLogLink']) for worker in
+                             comp_detail['executorStats']]
+    worker_stats = sorted(set(worker_stats))
+
+    print("# Worker Stats")
+    table = PrettyTable(["Host", "Worker ID", "Uptime", "Log URL"])
+    table.align = 'l'
+    table.align['Uptime'] = 'r'
+    for row in worker_stats:
+        table.add_row(row)
+    print(table)
+    print()
+
+
+@task
+def display_stats(env_name, topology_name=None, component_name=None,
+                  all_components=None):
+    env_name = env_name
+    if topology_name and all_components:
+        _print_all_components(env_name, topology_name)
+    elif topology_name and component_name:
+        _print_component_status(env_name, topology_name, component_name)
+    elif topology_name:
+        _print_topology_status(env_name, topology_name)
+    else:
+        _print_cluster_status(env_name)
+
+
+def _get_ui_jsons(env_name, api_paths):
+    """Take env_name as a string and api_paths that should
+    be a list of strings like '/api/v1/topology/summary'
+    """
+    _, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    # TODO: Get remote_ui_port from storm?
+    remote_ui_port = 8080
+    # SSH tunnel can take a while to close. Check multiples if necessary.
+    local_ports = list(range(8081, 8090))
+    shuffle(local_ports)
+    for local_port in local_ports:
+        try:
+            data = {}
+            with ssh_tunnel(env_config["user"],
+                            host,
+                            local_port=local_port,
+                            remote_port=remote_ui_port):
+                for api_path in api_paths:
+                    r = requests.get('http://127.0.0.1:%s%s' % (local_port,
+                                                                api_path))
+                    data[api_path] = r.json()
+            return data
+        except Exception as e:
+            if "already in use" in str(e):
+                continue
+            raise
+    raise RuntimeError("Cannot find local port for SSH tunnel to Storm Head.")
+
+
+def _get_ui_json(env_name, api_path):
+    """Take env_name as a string and api_path that should
+    be a string like '/api/v1/topology/summary'
+    """
+    return _get_ui_jsons(env_name, [api_path])[api_path]
+
+
+def _print_cluster_status(env_name):
+    jsons = _get_ui_jsons(env_name, ["/api/v1/cluster/summary",
+                                     "/api/v1/topology/summary",
+                                     "/api/v1/supervisor/summary"])
+    # Print Cluster Summary
+    ui_cluster_summary = jsons["/api/v1/cluster/summary"]
+    columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
+               'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
+    _print_stats_dict("Cluster summary",
+                      ui_cluster_summary,
+                      columns,
+                      'r'
+                      )
+    # Print Topologies Summary
+    ui_topologies_summary = jsons["/api/v1/topology/summary"]
+    columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
+               'executorsTotal', 'tasksTotal']
+    _print_stats_dict("Topology summary",
+                      ui_topologies_summary['topologies'],
+                      columns,
+                      'r'
+                      )
+    # Print Supervisor Summary
+    ui_supervisor_summary = jsons["/api/v1/supervisor/summary"]
+    columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
+    _print_stats_dict("Supervisor summary",
+                      ui_supervisor_summary['supervisors'],
+                      columns,
+                      'r',
+                      {'host': 'l', 'uptime': 'l'}
+                      )
+
+
+def _get_topology_ui_detail(env_name, topology_name):
+    env_name, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    topology_id = _get_topology_id(env_name, topology_name)
+    detail_url = '/api/v1/topology/%s' % topology_id
+    detail = _get_ui_json(env_name, detail_url)
+    return detail
+
+
+def _print_topology_status(env_name, topology_name):
+    ui_detail = _get_topology_ui_detail(env_name, topology_name)
+    # Print topology summary
+    columns = ['name', 'id', 'status', 'uptime', 'workersTotal', 'executorsTotal', 'tasksTotal']
+    _print_stats_dict("Topology summary",
+                      ui_detail,
+                      columns,
+                      'r'
+                      )
+    # Print topology stats
+    columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
+               'acked', 'failed']
+    _print_stats_dict("Topology stats",
+                      ui_detail['topologyStats'],
+                      columns,
+                      'r'
+                      )
+    # Print spouts
+    if ui_detail.get('spouts'):
+        columns = ['spoutId', 'emitted', 'transferred', 'completeLatency', 'acked', 'failed']
+        _print_stats_dict("Spouts (All time)",
+                          ui_detail['spouts'],
+                          columns,
+                          'r',
+                          {'spoutId': 'l'}
+                          )
+    columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred', 'capacity',
+               'executeLatency', 'executed', 'processLatency', 'acked', 'failed', 'lastError']
+    _print_stats_dict("Bolt (All time)",
+                      ui_detail['bolts'],
+                      columns,
+                      'r',
+                      {'boltId': 'l'}
+                      )
+
+
+def _get_component_ui_detail(env_name, topology_name, component_names):
+    if isinstance(component_names, basestring):
+        component_names = [component_names]
+    env_name, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    topology_id = _get_topology_id(env_name, topology_name)
+    base_url = '/api/v1/topology/%s/component/%s'
+    detail_urls = [base_url % (topology_id, name) for name in component_names]
+    detail = _get_ui_jsons(env_name, detail_urls)
+    if len(detail) == 1:
+        return detail.values()[0]
+    else:
+        return detail
+
+
+def _print_all_components(env_name, topology_name):
+    topology_ui_detail = _get_topology_ui_detail(env_name, topology_name)
+    spouts = map(lambda spout: spout['spoutId'], topology_ui_detail.get('spouts', {}))
+    bolts = map(lambda spout: spout['boltId'], topology_ui_detail.get('bolts', {}))
+    ui_details = _get_component_ui_detail(env_name, topology_name, chain(spouts, bolts))
+    names_and_keys = zip(map(lambda ui_detail: ui_detail['name'], ui_details.values()),
+                         ui_details.keys())
+    for component_name, key in names_and_keys:
+        _print_component_status(env_name, topology_name,
+                                component_name, ui_details[key])
+
+
+def _print_component_status(env_name, topology_name, component_name, ui_detail=None):
+    if not ui_detail:
+        ui_detail = _get_component_ui_detail(env_name, topology_name, component_name)
+    _print_component_summary(ui_detail)
+    if ui_detail.get("componentType") == "spout":
+        _print_spout_stats(ui_detail)
+        _print_spout_output_stats(ui_detail)
+        _print_spout_executors(ui_detail)
+    elif ui_detail.get("componentType") == "bolt":
+        _print_bolt_stats(ui_detail)
+        _print_input_stats(ui_detail)
+        _print_bolt_output_stats(ui_detail)
+
+
+def _print_component_summary(ui_detail):
+    columns = ['id', 'name', 'executors', 'tasks']
+    _print_stats_dict("Component summary",
+                      ui_detail,
+                      columns,
+                      'r'
+                      )
+
+
+def _print_bolt_stats(ui_detail):
+    columns = ['windowPretty', 'emitted', 'transferred',
+               'executeLatency', 'executed', 'processLatency',
+               'acked', 'failed']
+    _print_stats_dict("Bolt stats",
+                      ui_detail['boltStats'],
+                      columns,
+                      'r',
+                      {'windowPretty': 'l'}
+                      )
+
+
+def _print_input_stats(ui_detail):
+    columns = ['component', 'stream', 'executeLatency', 'processLatency',
+               'executed', 'acked', 'failed']
+    if ui_detail['inputStats']:
+        _print_stats_dict("Input stats (All time)",
+                          ui_detail['inputStats'],
+                          columns,
+                          'r',
+                          {'component': 'l'}
+                          )
+
+
+def _print_bolt_output_stats(ui_detail):
+    if ui_detail['outputStats']:
+        columns = ['stream', 'emitted', 'transferred']
+        _print_stats_dict("Output stats (All time)",
+                          ui_detail['outputStats'],
+                          columns,
+                          'r',
+                          {'stream': 'l'}
+                          )
+
+
+def _print_spout_stats(ui_detail):
+    columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
+               'acked', 'failed']
+    data = ui_detail['spoutSummary'][-1].copy()
+    _print_stats_dict("Spout stats",
+                      data,
+                      columns,
+                      'r',
+                      {'windowPretty': 'l'}
+                      )
+
+
+def _print_spout_output_stats(ui_detail):
+    columns = ['stream', 'emitted', 'transferred', 'completeLatency',
+               'acked', 'failed']
+    _print_stats_dict("Output stats (All time)",
+                      ui_detail['outputStats'],
+                      columns,
+                      'r',
+                      {'stream': 'l'}
+                      )
+
+
+def _print_spout_executors(ui_detail):
+    columns = ['id', 'uptime', 'host', 'port', 'emitted',
+               'transferred', 'completeLatency', 'acked', 'failed']
+    _print_stats_dict("Executors (All time)",
+                      ui_detail['executorStats'],
+                      columns,
+                      'r',
+                      {'host': 'l'}
+                      )
+
+
+def _print_stats_dict(header, data, columns, default_alignment, custom_alignment=None):
+    print("# %s" % header)
+    table = PrettyTable(columns)
+    table.align = default_alignment
+    if isinstance(data, list):
+        for row in data:
+            table.add_row([row.get(key, "MISSING") for key in columns])
+    else:
+        table.add_row([data.get(key, "MISSING") for key in columns])
+    if custom_alignment:
+        for column, alignment in iteritems(custom_alignment):
+            table.align[column] = alignment
+    print(table)
+
+
+def _get_topology_id(env_name, topology_name):
+    """Get toplogy ID from summary json provided by UI api
+    """
+    summary_url = '/api/v1/topology/summary'
+    topology_summary = _get_ui_json(env_name, summary_url)
+    for topology in topology_summary["topologies"]:
+        if topology_name == topology["name"]:
+            return topology["id"]
 
 
 @task

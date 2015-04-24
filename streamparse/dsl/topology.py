@@ -1,25 +1,9 @@
 """
 Topology base class
 """
+from six import add_metaclass, iteritems
 
-
-class ComponentSpec(dict):
-    pass
-
-
-class FieldListMeta(type):
-    def __new__(meta, classname, bases, class_dict):
-        field_list = []
-        for name, value in class_dict.iteritems():
-            if isinstance(value, ComponentSpec):
-                value.setdefault("name", name)
-                field_list.append(value)
-        class_dict["field_list"] = field_list
-        return type.__new__(meta, classname, bases, class_dict)
-
-
-class Topology(object):
-    __metaclass__ = FieldListMeta
+from .component import Specification
 
 
 class Grouping(object):
@@ -31,3 +15,49 @@ class Grouping(object):
     @classmethod
     def fields(cls, *fieldlist):
         return list(fieldlist)
+
+    @classmethod
+    def valid(cls, grouping):
+        return (
+            isinstance(grouping, list) or
+            grouping in (
+                Grouping.SHUFFLE,
+                Grouping.GLOBAL,
+                Grouping.DIRECT,
+                Grouping.ALL,
+            )
+        )
+
+
+class TopologyType(type):
+    def __new__(meta, classname, bases, class_dict):
+        specs = {}
+        for name, spec in iteritems(class_dict):
+            if isinstance(spec, Specification):
+
+                # Use the variable name as the specification name.
+                if spec.name is None:
+                    spec.name = name
+
+                if spec.name not in specs:
+                    specs[spec.name] = spec
+                else:
+                    raise TopologyError(
+                        "Duplicate specification name: {}".format(spec.name))
+
+        class_dict["specs"] = specs.values()
+
+        # Resolve dependencies in specifications.
+        for name, spec in iteritems(specs):
+            spec.resolve_dependencies(specs)
+
+        return type.__new__(meta, classname, bases, class_dict)
+
+
+@add_metaclass(TopologyType)
+class Topology(object):
+    __metaclass__ = TopologyType
+
+
+class TopologyError(Exception):
+    pass

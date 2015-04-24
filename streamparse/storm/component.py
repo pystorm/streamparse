@@ -28,6 +28,7 @@ _STORM_LOG_LEVELS = {
     'warn': _STORM_LOG_WARN,
     'warning': _STORM_LOG_WARN,
     'error': _STORM_LOG_ERROR,
+    'critical': _STORM_LOG_ERROR
 }
 _PYTHON_LOG_LEVELS = {
     'critical': logging.CRITICAL,
@@ -116,7 +117,42 @@ Tuple = namedtuple('Tuple', 'id component stream task values')
 
 class Component(object):
     """Base class for Spouts and Bolts which contains class methods for
-    logging messages back to the Storm worker process."""
+    logging messages back to the Storm worker process.
+
+
+    :ivar input_stream: The ``iterable`` to use to retrieve commands from Storm.
+                        Defaults to ``sys.stdin``.
+    :ivar output_stream: The ``file``-like object to send messages to Storm with.
+                         Defaults to ``sys.stdout``.
+    :ivar topology_name: The name of the topology sent by Storm in the initial
+                         handshake.
+    :ivar task_id: The numerical task ID for this component, as sent by Storm in
+                   the initial handshake.
+    :ivar component_name: The name of this component, as sent by Storm in the
+                          initial handshake.
+    :ivar debug: A ``bool`` indicating whether or not Storm is running in debug
+                 mode.  Specified by the `topology.debug` Storm setting.
+    :ivar storm_conf: A ``dict`` containing the configuration values sent by
+                      Storm in the initial handshake with this component.
+    :ivar context: The context of where this component is in the topology.  See
+                   `the Storm Multi-Lang protocol documentation <https://storm.apache.org/documentation/Multilang-protocol.html>`__
+                   for details.
+    :ivar pid: An ``int`` indicating the process ID of this component as
+               retrieved by ``os.getpid()``.
+    :ivar logger: A logger to use with this component.
+
+                  .. note::
+                    Using ``Component.logger`` combined with the
+                    :class:`streamparse.storm.component.StormHandler` handler is
+                    the recommended way for logging messages from your
+                    component. If you use ``Component.log`` instead, the logging
+                    messages will *always* be sent to Storm, even if they are
+                    ``debug`` level messages and you are running in production.
+                    Using :class:`streamparse.storm.component.StormHandler`
+                    ensures that you will instead have your logging messages
+                    filtered on the Python side and only have the messages you
+                    actually want logged serialized and sent to Storm.
+    """
 
 
     def __init__(self, input_stream=sys.stdin, output_stream=sys.stdout):
@@ -202,21 +238,26 @@ class Component(object):
     def read_message(self):
         """Read a message from Storm, reconstruct newlines appropriately.
 
-        All of Storm's messages (for either Bolts or Spouts) should be of the form:
+        All of Storm's messages (for either Bolts or Spouts) should be of the
+        form::
 
-        '<command or task_id form prior emit>\nend\n'
+            '<command or task_id form prior emit>\\nend\\n'
 
-        Command example, an incoming tuple to a bolt:
-        '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\nend\n'
+        Command example, an incoming tuple to a bolt::
 
-        Command example for a Spout to emit it's next tuple:
-        '{"command": "next"}\nend\n'
+            '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\\nend\\n'
 
-        Example, the task IDs a prior emit was sent to:
-        '[12, 22, 24]\nend\n'
+        Command example for a Spout to emit it's next tuple::
 
-        The edge case of where we read '' from _readline indicating EOF, usually
-        means that communication with the supervisor has been severed.
+            '{"command": "next"}\\nend\\n'
+
+        Example, the task IDs a prior emit was sent to::
+
+            '[12, 22, 24]\\nend\\n'
+
+        The edge case of where we read ``''`` from ``input_stream`` indicating
+        EOF, usually means that communication with the supervisor has been
+        severed.
         """
         msg = ""
         num_blank_lines = 0
@@ -326,6 +367,15 @@ class Component(object):
                       ``message``. Can be one of: trace, debug, info, warn, or
                       error (default: ``info``).
         :type level: str
+
+        .. warning::
+
+          This will send your message to Storm regardless of what level you
+          specify.  In almost all cases, you are better of using
+          ``Component.logger`` with a
+          :class:`streamparse.storm.component.StormHandler`, because the
+          filtering will happen on the Python side (instead of on the Java side
+          after taking the time to serialize your message and send it to Storm).
         """
         level = _STORM_LOG_LEVELS.get(level, _STORM_LOG_INFO)
         self.send_message({'command': 'log', 'msg': str(message),

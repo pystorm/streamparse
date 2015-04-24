@@ -94,7 +94,7 @@ class StormPdb(Pdb):
             else:
                 return _sock, this_port
         else:
-            raise Exception(NO_AVAILABLE_PORT.format(self=self))
+            raise IOError(NO_AVAILABLE_PORT.format(self=self))
 
     def say(self, m):
         print(m, file=self.out)
