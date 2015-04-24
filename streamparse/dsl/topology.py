@@ -3,7 +3,7 @@ Topology base class
 """
 from six import add_metaclass, iteritems
 
-from ..storm.component import Specification
+from .component import Specification
 
 
 class Grouping(object):

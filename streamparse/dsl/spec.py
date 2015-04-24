@@ -1,5 +1,7 @@
-from ..storm.spout import Spout, SpoutSpecification
-from ..storm.bolt import Bolt, BoltSpecification
+from .spout import SpoutSpecification
+from .bolt import BoltSpecification
+from ..storm.bolt import Bolt
+from ..storm.spout import Spout
 
 
 def Spec(component_cls, *args, **kwargs):

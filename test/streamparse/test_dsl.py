@@ -17,21 +17,6 @@ class WordCountBolt(Bolt):
 
 
 class TopologyTests(unittest.TestCase):
-    def test_basic(self):
-        class WordCount(Topology):
-            word_spout = WordSpout.spec(
-                parallelism=2,
-            )
-            word_bolt = WordCountBolt.spec(
-                source=word_spout,
-                group_on=Grouping.fields("word"),
-                parallelism=8,
-            )
-
-        self.assertEqual(len(WordCount.specs), 2)
-        self.assertEqual(WordCount.word_bolt.sources[0], WordCount.word_spout)
-        self.assertEqual(WordCount.word_bolt.group_on, ['word'])
-
     def test_basic_spec(self):
         class WordCount(Topology):
             word_spout = Spec(
