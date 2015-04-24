@@ -56,7 +56,7 @@ class TopologyType(type):
 
 @add_metaclass(TopologyType)
 class Topology(object):
-    __metaclass__ = TopologyType
+    pass
 
 
 class TopologyError(Exception):
