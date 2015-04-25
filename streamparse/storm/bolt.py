@@ -2,11 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import os
-import signal
 import sys
-import threading
-import time
 from collections import defaultdict
 
 from six import iteritems, itervalues, string_types, reraise
@@ -390,8 +386,8 @@ class BatchingBolt(Bolt):
         return super(BatchingBolt, self).emit_many(tups, **kwargs)
 
     def process_tick(self, freq):
-        """Increment tick counter and call ``process_batch`` if enough ticks
-        have been received.
+        """Increment tick counter, and call ``process_batch`` for all current
+        batches if tick counter exceeds ``ticks_between_batches``.
 
         See :class:`streamparse.storm.component.Bolt` for more information.
         """

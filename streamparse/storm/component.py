@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 from collections import deque, namedtuple
+from os.path import join
 from threading import RLock
 from traceback import format_exc
 
@@ -315,14 +316,13 @@ class Component(object):
         return Tuple(cmd['id'], cmd['comp'], cmd['stream'], cmd['task'],
                      cmd['tuple'])
 
-
     def read_handshake(self):
         """Read and process an initial handshake message from Storm."""
         msg = self.read_message()
         pid_dir, _conf, _context = msg['pidDir'], msg['conf'], msg['context']
 
         # Write a blank PID file out to the pidDir
-        open('{}/{}'.format(pid_dir, str(self.pid)), 'w').close()
+        open(join(pid_dir, str(self.pid)), 'w').close()
         self.send_message({'pid': self.pid})
 
         return _conf, _context
