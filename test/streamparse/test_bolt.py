@@ -193,7 +193,8 @@ class BoltTests(unittest.TestCase):
                                              component='__system',
                                              stream='__tick', values=[50])
         self.bolt._run()
-        process_tick_mock.assert_called_with(self.bolt, 50)
+        process_tick_mock.assert_called_with(self.bolt,
+                                             read_tuple_mock.return_value)
 
 
 class BatchingBoltTests(unittest.TestCase):
@@ -361,7 +362,8 @@ class BatchingBoltTests(unittest.TestCase):
                                              component='__system',
                                              stream='__tick', values=[50])
         self.bolt._run()
-        process_tick_mock.assert_called_with(self.bolt, 50)
+        process_tick_mock.assert_called_with(self.bolt,
+                                             read_tuple_mock.return_value)
 
 
 
