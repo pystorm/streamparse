@@ -298,7 +298,7 @@ class BatchingBoltTests(unittest.TestCase):
                                     mock.call(self.bolt, self.nontick_tups[1]),
                                     mock.call(self.bolt, self.nontick_tups[2])],
                                    any_order=True)
-        self.assertEqual(worker_exception_mock.call_count, 1)
+        self.assertEqual(exit_mock.call_count, 1)
 
     @patch.object(BatchingBolt, 'read_handshake', new=lambda x: ({}, {}))
     @patch.object(BatchingBolt, 'raise_exception', new=lambda *a: None)
@@ -309,6 +309,7 @@ class BatchingBoltTests(unittest.TestCase):
         # mock gets created after handler was originally registered.
         self.setUp()
         # Test auto-fail off
+        self.bolt.auto_fail = False
         self.bolt.run()
 
         # All waiting tuples should have failed at this point
