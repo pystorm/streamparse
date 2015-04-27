@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 from collections import deque, namedtuple
+from logging.handlers import RotatingFileHandler
 from threading import RLock
 from traceback import format_exc
 
@@ -120,8 +121,8 @@ class Component(object):
     logging messages back to the Storm worker process.
 
 
-    :ivar input_stream: The ``iterable`` to use to retrieve commands from Storm.
-                        Defaults to ``sys.stdin``.
+    :ivar input_stream: The ``file``-like object to use to retrieve commands
+                        from Storm.  Defaults to ``sys.stdin``.
     :ivar output_stream: The ``file``-like object to send messages to Storm with.
                          Defaults to ``sys.stdout``.
     :ivar topology_name: The name of the topology sent by Storm in the initial
@@ -195,7 +196,6 @@ class Component(object):
         self.context = context
         self.logger = logging.getLogger('.'.join((__name__,
                                                   self.component_name)))
-
         # Set up logging
         log_path = self.storm_conf.get('streamparse.log.path')
         if log_path:
@@ -211,9 +211,8 @@ class Component(object):
                                 component_name=self.component_name,
                                 task_id=self.task_id,
                                 pid=self.pid))
-            handler = logging.handlers.RotatingFileHandler(log_file,
-                                                           maxBytes=max_bytes,
-                                                           backupCount=backup_count)
+            handler = RotatingFileHandler(log_file, maxBytes=max_bytes,
+                                          backupCount=backup_count)
             formatter = logging.Formatter('%(asctime)s - %(name)s - '
                                           '%(levelname)s - %(message)s')
             handler.setFormatter(formatter)
@@ -230,7 +229,6 @@ class Component(object):
                                'msg': ('WARNING: streamparse logging is not '
                                        'configured. Please set streamparse.log.'
                                        'path in your config.json.')})
-
         # Redirect stdout to ensure that print statements/functions
         # won't disrupt the multilang protocol
         sys.stdout = LogStream(logging.getLogger('streamparse.stdout'))
@@ -265,9 +263,7 @@ class Component(object):
             # readline will return trailing \n so that output is unambigious, we
             # should only have line == '' if we're at EOF
             with self._reader_lock:
-                # Use next instead of readline to support reading from lists
-                line = next(self.input_stream)
-
+                line = self.input_stream.readline()
             if line == 'end\n':
                 break
             elif line == '':
