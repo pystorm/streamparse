@@ -88,7 +88,7 @@ class Bolt(Component):
         """
         raise NotImplementedError()
 
-    def process_tick(self, freq):
+    def process_tick(self, tup):
         """Process special 'tick tuples' which allow time-based
         behaviour to be included in bolts.
 
@@ -100,9 +100,8 @@ class Bolt(Component):
         storm configuration option 'topology.tick.tuple.freq.secs'
         is set to an integer value, the number of seconds.
 
-        :param freq: the tick frequency, in seconds, as set in the
-                     storm configuration `topology.tick.tuple.freq.secs`
-        :type freq: int
+        :param tup: the tuple to be processed.
+        :type tup: :class:`streamparse.storm.component.Tuple`
         """
         pass
 
@@ -229,8 +228,9 @@ class Bolt(Component):
         if tup.task == -1 and tup.stream == '__heartbeat':
             self.send_message({'command': 'sync'})
         elif tup.component == '__system' and tup.stream == '__tick':
-            frequency = tup.values[0]
-            self.process_tick(frequency)
+            self.process_tick(tup)
+            if self.auto_ack:
+                 self.ack(tup)
         else:
             self.process(tup)
             if self.auto_ack:
@@ -385,7 +385,7 @@ class BatchingBolt(Bolt):
         kwargs['need_task_ids'] = False
         return super(BatchingBolt, self).emit_many(tups, **kwargs)
 
-    def process_tick(self, freq):
+    def process_tick(self, tick_tup):
         """Increment tick counter, and call ``process_batch`` for all current
         batches if tick counter exceeds ``ticks_between_batches``.
 
