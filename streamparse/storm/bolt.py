@@ -393,8 +393,9 @@ class BatchingBolt(Bolt):
         """
         self._tick_counter += 1
         if self._tick_counter > self.ticks_between_batches:
+            # Return if we don't have any batches to process
             if not self._batches:
-                return # no tuples to save
+                return
             for key, batch in iteritems(self._batches):
                 self._current_tups = batch
                 self.process_batch(key, batch)

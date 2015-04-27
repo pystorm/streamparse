@@ -205,13 +205,13 @@ class Component(object):
                                             1000000)  # 1 MB
             backup_count = self.storm_conf.get('streamparse.log.backup_count',
                                                10)
-            log_file = ('{log_path}/streamparse_{topology_name}_{component_name}'
-                        '_{task_id}_{pid}.log'
-                        .format(log_path=log_path,
-                                topology_name=self.topology_name,
-                                component_name=self.component_name,
-                                task_id=self.task_id,
-                                pid=self.pid))
+            log_file = join(log_path,
+                            ('streamparse_{topology_name}_{component_name}'
+                             '_{task_id}_{pid}.log'
+                             .format(topology_name=self.topology_name,
+                                     component_name=self.component_name,
+                                     task_id=self.task_id,
+                                     pid=self.pid)))
             handler = RotatingFileHandler(log_file, maxBytes=max_bytes,
                                           backupCount=backup_count)
             formatter = logging.Formatter('%(asctime)s - %(name)s - '
