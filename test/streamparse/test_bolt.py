@@ -105,6 +105,7 @@ class BoltTests(unittest.TestCase):
         # test auto-ack on (the default)
         self.bolt._run()
         ack_mock.assert_called_with(self.bolt, self.tup)
+        self.assertEqual(ack_mock.call_count, 1)
 
     @patch.object(Bolt, 'process', autospec=True)
     @patch.object(Bolt, 'ack', autospec=True)
@@ -155,6 +156,7 @@ class BoltTests(unittest.TestCase):
         # test auto-fail on (the default)
         self.bolt.run()
         fail_mock.assert_called_with(self.bolt, self.tup)
+        self.assertEqual(fail_mock.call_count, 1)
 
     @patch('sys.exit', new=lambda r: r)
     @patch.object(Bolt, 'read_handshake', new=lambda x: ({}, {}))
@@ -271,6 +273,7 @@ class BatchingBoltTests(unittest.TestCase):
                                    mock.call(self.bolt, self.nontick_tups[1]),
                                    mock.call(self.bolt, self.nontick_tups[2])],
                                   any_order=True)
+        self.assertEqual(ack_mock.call_count, 3)
 
     @patch.object(BatchingBolt, 'ack', autospec=True)
     @patch.object(BatchingBolt, 'process_batch', new=lambda *args: None)
@@ -282,6 +285,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
         self.assertListEqual(ack_mock.call_args_list, [])
+        self.assertEqual(ack_mock.call_count, 0)
 
     @patch.object(BatchingBolt, 'read_handshake', new=lambda x: ({}, {}))
     @patch.object(BatchingBolt, 'raise_exception', new=lambda *a: None)
@@ -299,6 +303,7 @@ class BatchingBoltTests(unittest.TestCase):
                                     mock.call(self.bolt, self.nontick_tups[1]),
                                     mock.call(self.bolt, self.nontick_tups[2])],
                                    any_order=True)
+        self.assertEqual(fail_mock.call_count, 3)
         self.assertEqual(exit_mock.call_count, 1)
 
     @patch.object(BatchingBolt, 'read_handshake', new=lambda x: ({}, {}))

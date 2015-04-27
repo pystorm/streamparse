@@ -235,8 +235,8 @@ class Bolt(Component):
             self.process(tup)
             if self.auto_ack:
                  self.ack(tup)
-            # reset so that we don't accidentally fail the wrong tuples
-            # if a successive call to read_tuple fails
+        # reset so that we don't accidentally fail the wrong tuples
+        # if a successive call to read_tuple fails
         self._current_tups = []
 
     def _handle_run_exception(self, exc):
@@ -392,10 +392,7 @@ class BatchingBolt(Bolt):
         See :class:`streamparse.storm.component.Bolt` for more information.
         """
         self._tick_counter += 1
-        if self._tick_counter > self.ticks_between_batches:
-            # Return if we don't have any batches to process
-            if not self._batches:
-                return
+        if self._tick_counter > self.ticks_between_batches and self._batches:
             for key, batch in iteritems(self._batches):
                 self._current_tups = batch
                 self.process_batch(key, batch)
@@ -413,6 +410,23 @@ class BatchingBolt(Bolt):
         # Append latest tuple to batches
         group_key = self.group_key(tup)
         self._batches[group_key].append(tup)
+
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        self._current_tups = [self.read_tuple()]
+        tup = self._current_tups[0]
+        if tup.task == -1 and tup.stream == '__heartbeat':
+            self.send_message({'command': 'sync'})
+        elif tup.component == '__system' and tup.stream == '__tick':
+            self.process_tick(tup)
+        else:
+            self.process(tup)
+        # reset so that we don't accidentally fail the wrong tuples
+        # if a successive call to read_tuple fails
+        self._current_tups = []
 
     def _handle_run_exception(self, exc):
         """Process an exception encountered while running the ``run()`` loop.
