@@ -35,7 +35,7 @@ class SpoutTests(unittest.TestCase):
         self.tup = Tuple(self.tup_dict['id'], self.tup_dict['comp'],
                          self.tup_dict['stream'], self.tup_dict['task'],
                          self.tup_dict['tuple'],)
-        self.spout = Spout(input_stream=itertools.cycle(["next\nend\n"]),
+        self.spout = Spout(input_stream=BytesIO(),
                            output_stream=BytesIO())
         self.spout.initialize({}, {})
         self.spout.logger = log
