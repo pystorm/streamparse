@@ -1,4 +1,3 @@
-import datetime as dt
 from collections import Counter
 
 from streamparse.bolt import BatchingBolt
