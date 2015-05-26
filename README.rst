@@ -2,14 +2,16 @@
 
 |Build Status|
 
-streamparse lets you run Python code against real-time streams of data. It also
-integrates Python smoothly with Apache Storm.
+Streamparse lets you run Python code against real-time streams of data via
+Apache Storm.  With streamparse you can create Storm bolts and spouts in 
+Python without having to write a single line of Java.  It also provides handy 
+CLI utilities for managing Storm clusters and projects.
 
-It can be viewed as a more robust alternative to Python worker-and-queue
-systems, as might be built atop frameworks like Celery and RQ. It offers a way
-to do "real-time map/reduce style computation" against live streams of data. It
-can also be a powerful way to scale long-running, highly parallel Python
-processes in production.
+The Storm/streamparse combo can be viewed as a more robust alternative to Python 
+worker-and-queue systems, as might be built atop frameworks like Celery and RQ. 
+It offers a way to do "real-time map/reduce style computation" against live 
+streams of data. It can also be a powerful way to scale long-running, highly 
+parallel Python processes in production.
 
 |Demo|
 
