@@ -25,7 +25,7 @@
                        options
                        topology)
       ;; sleep for a few seconds to let the topology run locally
-      (Thread/sleep run-for-secs)
+      (Thread/sleep (if (= 0 run-for-secs) Integer/MAX_VALUE run-for-secs))
       ;; shutdown the cluster
       (.shutdown cluster))
     (catch Exception e
@@ -58,7 +58,7 @@
          (cli args
               ["-h" "--help" "Show this help screen." :flag true :default false]
               ["-d" "--debug" "Run with debug mode." :flag true :default false]
-              ["-t" "--time" "Amount of seconds to run cluser before shutting down." :default 5 :parse-fn #(Integer/parseInt %)]
+              ["-t" "--time" "Amount of seconds to run cluser before shutting down. If time <= 0, run indefinitely." :default 0 :parse-fn #(Integer/parseInt %)]
               ["-o" "--option" "Override topology config option."
                 :parse-fn -parse-topo-option :assoc-fn -assoc-topo-option])
         ]

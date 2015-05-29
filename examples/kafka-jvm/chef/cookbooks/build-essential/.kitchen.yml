@@ -1,0 +1,24 @@
+driver:
+  name: vagrant
+
+platforms:
+  - name: centos-5.10
+  - name: centos-6.5
+  - name: fedora-19
+  - name: freebsd-9.2
+    run_list: freebsd::portsnap
+  - name: freebsd-10.0
+    run_list: freebsd::portsnap
+  - name: macosx-10.9
+  - name: debian-7.4
+    run_list: apt::default
+  - name: ubuntu-10.04
+    run_list: apt::default
+  - name: ubuntu-12.04
+    run_list: apt::default
+  - name: ubuntu-13.10
+    run_list: apt::default
+
+suites:
+  - name: default
+    run_list: build-essential::default

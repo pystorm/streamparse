@@ -381,6 +381,43 @@ adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
             self.ack(tup)  # perform acknowledgement manually
 
 
+Handling Tick Tuples
+^^^^^^^^^^^^^^^^^^^^
+
+Ticks tuples are built into Storm to provide some simple forms of
+cron-like behaviour without actually having to use cron. You can
+receive and react to tick tuples as timer events with your python
+bolts using streamparse too.
+
+The first step is to override ``process_tick()`` in your custom
+Bolt class. Once this is overridden, you can set the storm option
+``topology.tick.tuple.freq.secs=<frequency>`` to cause a tick tuple
+to be emitted every ``<frequency>`` seconds.
+
+You can see the full docs for ``process_tick()`` in
+:class:`streamparse.bolt.Bolt`. 
+
+**Example**:
+
+.. code-block:: python
+
+    from streamparse.bolt import Bolt
+
+    class MyBolt(Bolt):
+
+        def process_tick(self, freq):
+            # An action we want to perform at some regular interval...
+            self.flush_old_state()
+
+Then, for example, to cause ``process_tick()`` to be called every
+2 seconds on all of your bolts that override it, you can launch
+your topology under ``sparse run`` by setting the appropriate -o
+option and value as in the following example:
+
+.. code-block:: bash
+
+    $ sparse run -o "topology.tick.tuple.freq.secs=2" ...
+
 Failed Tuples
 ^^^^^^^^^^^^^
 
@@ -427,6 +464,7 @@ in our ``config.json`` file:
                     "backup_count": 10,
                     "level": "info"
                 },
+                "use_ssh_for_nimbus": true,
                 "virtualenv_root": "/data/virtualenvs/"
             }
         }
@@ -458,6 +496,32 @@ these explicitly. streamparse will now:
 1. Package up a JAR containing all your Python source files
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
+
+Disabling Virtualenv Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you do not have ssh access to all of the servers in your Storm cluster, but
+you know they have all of the requirements for your Python code installed, you
+can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
+
+Using unofficial versions of Storm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you wish to use streamparse with unofficial versions of storm (such as the HDP Storm)
+you should set ``:repositories`` in your ``project.clj`` to point to the Maven repository
+containing the JAR you want to use, and set the version in ``:dependencies`` to match
+the desired version of Storm.
+
+For example, to use the version supplied by HDP, you would set ``:repositories`` to:
+
+``:repositories {"HDP Releases" "http://repo.hortonworks.com/content/repositories/releases"}``
+
+Local Clusters
+^^^^^^^^^^^^^^
+
+Streamparse assumes that your Storm cluster is not on your local machine. If it
+is, such as the case with VMs or Docker images, change ``"use_ssh_for_nimbus"``
+in ``config.json`` to ``false``.
 
 Logging
 ^^^^^^^

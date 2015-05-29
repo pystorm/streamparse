@@ -1,0 +1,25 @@
+description "zookeeper centralized coordination service"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+
+limit nofile 8192 8192
+
+console log
+
+script
+    . /etc/default/zookeeper
+    [ -r /etc/default/zookeeper ] && . /etc/default/zookeeper
+    [ -d $ZOO_LOG_DIR ] || mkdir -p $ZOO_LOG_DIR
+    chown $USER:$GROUP $ZOO_LOG_DIR
+    if [ -z "$JMXDISABLE" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.ssl=false \
+      -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=7199 \
+      -Dcom.sun.management.jmxremote.local.only=$JMXLOCALONLY"
+    fi
+    exec start-stop-daemon --start -c $USER --exec $JAVA --name zookeeper \
+        -- -cp $CLASSPATH $JAVA_OPTS -Dzookeeper.log.dir=${ZOO_LOG_DIR} \
+        -Dzookeeper.root.logger=${ZOO_LOG4J_PROP} $ZOOMAIN $ZOOCFG
+end script

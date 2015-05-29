@@ -1,0 +1,88 @@
+# This file is managed by Chef
+# Changes will be overwritten
+
+export KAFKA_USER="<%= @kafka_user %>"
+export KAFKA_HOME="<%= @kafka_home %>"
+export SCALA_VERSION="<%= @scala_version %>"
+
+# Directories
+export KAFKA_CONFIG="<%= @kafka_config %>"
+export KAFKA_BIN="<%= @kafka_bin %>"
+export KAFKA_LOG_DIR="<%= @kafka_log %>"
+
+# Which java to use
+if [ -z "$JAVA_HOME" ]; then
+  export JAVA="java"
+else
+  export JAVA="$JAVA_HOME/bin/java"
+fi
+
+##### RUN OPTIONS
+
+# JMX_PORT
+JMX_PORT=""
+
+# JMX settings
+export KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false"
+
+if [ ! -z $JMX_PORT ]; then
+  export KAFKA_JMX_OPTS="$KAFKA_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT"
+fi
+
+# Log4j settings
+export KAFKA_LOG4J_OPTS="-Dkafka.logs.dir=$KAFKA_LOG_DIR -Dlog4j.configuration=file:${KAFKA_CONFIG}/log4j.properties"
+
+# Generic jvm settings you want to add
+export KAFKA_OPTS=""
+
+# Memory options
+export KAFKA_HEAP_OPTS="<%= @kafka_heap_opts %>"
+
+# JVM performance options
+export KAFKA_JVM_PERFORMANCE_OPTS="-server -XX:+UseCompressedOops -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:+CMSScavengeBeforeRemark -XX:+DisableExplicitGC -Djava.awt.headless=true"
+
+##### CLASSPATH
+
+# run ./gradlew copyDependantLibs to get all dependant jars in a local dir
+for file in $KAFKA_HOME/core/build/dependant-libs-${SCALA_VERSION}/*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+for file in $KAFKA_HOME/perf/build/libs//kafka-perf_${SCALA_VERSION}*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+for file in $KAFKA_HOME/clients/build/libs//kafka-clients*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+for file in $KAFKA_HOME/examples/build/libs//kafka-examples*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+for file in $KAFKA_HOME/contrib/hadoop-consumer/build/libs//kafka-hadoop-consumer*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+for file in $KAFKA_HOME/contrib/hadoop-producer/build/libs//kafka-hadoop-producer*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+# classpath addition for release
+for file in $KAFKA_HOME/libs/*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+for file in $KAFKA_HOME/core/build/libs/kafka_${SCALA_VERSION}*.jar;
+do
+  CLASSPATH=$CLASSPATH:$file
+done
+
+export CLASSPATH

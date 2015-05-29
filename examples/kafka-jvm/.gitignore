@@ -2,3 +2,5 @@
 _build
 _resources
 .lein-repl-history
+.vagrant
+logs

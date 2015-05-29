@@ -1,0 +1,53 @@
+; supervisor config file
+;
+; Template:: default/supervisord.conf.erb
+; Cookbook Name:: supervisor
+;
+
+[unix_http_server]
+file=<%= @socket_file %>                                      ; (the path to the socket file)
+chmod=<%= @node['supervisor']['unix_http_server']['chmod'] %> ; socket file mode (default 0700)
+chown=<%= @node['supervisor']['unix_http_server']['chown'] %> ; socket file uid:gid owner
+<% unless @inet_port.nil? %>
+
+[inet_http_server]
+port=<%= @inet_port %>
+<% unless @inet_username.nil? %>
+username=<%= @inet_username %>
+<% unless @inet_password.nil? %>
+password=<%= @inet_password %>
+<% end %>
+<% end %>
+<% end %>
+
+[supervisord]
+logfile=<%= @node['supervisor']['log_dir'] %>/supervisord.log   ; (main log file;default $CWD/supervisord.log)
+logfile_maxbytes=<%= @node['supervisor']['logfile_maxbytes'] %> ; maximum size of logfile before rotation
+logfile_backups=<%= @node['supervisor']['logfile_backups'] %>   ; number of backed up logfiles
+loglevel=<%= @node['supervisor']['loglevel'] %>                 ; critical, error, warn, info, debug, trace, blather
+pidfile=/var/run/supervisord.pid                                ; (supervisord pidfile;default supervisord.pid)
+childlogdir=<%= @node['supervisor']['log_dir'] %>               ; ('AUTO' child log dir, default $TEMP)
+<% if @supervisor_version && @supervisor_version.match(/^3/) %>
+
+; minfds & minprocs first appeared in supervisord 3.0
+minfds = <%= @supervisord_minfds %>
+minprocs = <%= @supervisord_minprocs %>
+<% end %>
+
+; the below section must remain in the config file for RPC
+; (supervisorctl/web interface) to work, additional interfaces may be
+; added by defining them in separate rpcinterface: sections
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///var/run//supervisor.sock ; use a unix:// URL  for a unix socket
+
+; The [include] section can just contain the "files" setting.  This
+; setting can list multiple files (separated by whitespace or
+; newlines).  It can also contain wildcards.  The filenames are
+; interpreted as relative to this file.  Included files *cannot*
+; include files themselves.
+
+[include]
+files = <%= @node['supervisor']['dir'] %>/*.conf

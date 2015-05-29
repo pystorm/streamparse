@@ -1,0 +1,8 @@
+########### These MUST be filled in for a storm configuration
+storm.zookeeper.servers:
+<% node[:storm][:supervisor][:hosts].each do |host| %>
+- "<%= host %>"
+<% end %>
+
+storm.local.dir: "/home/<%= node[:storm][:deploy][:user] %>/storm-data"
+java.library.path: "/usr/local/lib"
