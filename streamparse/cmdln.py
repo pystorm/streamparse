@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-from docopt import docopt
+import argparse
 from pkg_resources import parse_version
 
 from .bootstrap import quickstart

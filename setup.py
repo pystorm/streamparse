@@ -72,8 +72,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'sparse = streamparse.cmdln:main',
-            'streamparse = streamparse.cmdln:main'
+            'sparse = streamparse.bin.sparse:main',
+            'streamparse = streamparse.bin.sparse:main'
         ]
     },
     install_requires=install_requires,
