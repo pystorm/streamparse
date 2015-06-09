@@ -2,7 +2,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import os
+import signal
 import sys
+import threading
+import time
 from collections import defaultdict
 
 from six import iteritems, itervalues, string_types, reraise
@@ -88,7 +92,7 @@ class Bolt(Component):
         """
         raise NotImplementedError()
 
-    def process_tick(self, tup):
+    def process_tick(self, freq):
         """Process special 'tick tuples' which allow time-based
         behaviour to be included in bolts.
 
@@ -100,8 +104,9 @@ class Bolt(Component):
         storm configuration option 'topology.tick.tuple.freq.secs'
         is set to an integer value, the number of seconds.
 
-        :param tup: the tuple to be processed.
-        :type tup: :class:`streamparse.storm.component.Tuple`
+        :param freq: the tick frequency, in seconds, as set in the
+                     storm configuration `topology.tick.tuple.freq.secs`
+        :type freq: int
         """
         pass
 
@@ -228,15 +233,14 @@ class Bolt(Component):
         if tup.task == -1 and tup.stream == '__heartbeat':
             self.send_message({'command': 'sync'})
         elif tup.component == '__system' and tup.stream == '__tick':
-            self.process_tick(tup)
-            if self.auto_ack:
-                 self.ack(tup)
+            frequency = tup.values[0]
+            self.process_tick(frequency)
         else:
             self.process(tup)
             if self.auto_ack:
                  self.ack(tup)
-        # reset so that we don't accidentally fail the wrong tuples
-        # if a successive call to read_tuple fails
+            # reset so that we don't accidentally fail the wrong tuples
+            # if a successive call to read_tuple fails
         self._current_tups = []
 
     def _handle_run_exception(self, exc):
@@ -342,6 +346,12 @@ class BatchingBolt(Bolt):
         self._batches = defaultdict(list)
         self._tick_counter = 0
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.process_batch(self.group_key(self._current_tups[0]),self._current_tups)
+
     def group_key(self, tup):
         """Return the group key used to group tuples within a batch.
 
@@ -385,14 +395,16 @@ class BatchingBolt(Bolt):
         kwargs['need_task_ids'] = False
         return super(BatchingBolt, self).emit_many(tups, **kwargs)
 
-    def process_tick(self, tick_tup):
-        """Increment tick counter, and call ``process_batch`` for all current
-        batches if tick counter exceeds ``ticks_between_batches``.
+    def process_tick(self, freq):
+        """Increment tick counter and call ``process_batch`` if enough ticks
+        have been received.
 
         See :class:`streamparse.storm.component.Bolt` for more information.
         """
         self._tick_counter += 1
-        if self._tick_counter > self.ticks_between_batches and self._batches:
+        if self._tick_counter > self.ticks_between_batches:
+            if not self._batches:
+                return # no tuples to save
             for key, batch in iteritems(self._batches):
                 self._current_tups = batch
                 self.process_batch(key, batch)
@@ -410,23 +422,6 @@ class BatchingBolt(Bolt):
         # Append latest tuple to batches
         group_key = self.group_key(tup)
         self._batches[group_key].append(tup)
-
-    def _run(self):
-        """The inside of ``run``'s infinite loop.
-
-        Separated out so it can be properly unit tested.
-        """
-        self._current_tups = [self.read_tuple()]
-        tup = self._current_tups[0]
-        if tup.task == -1 and tup.stream == '__heartbeat':
-            self.send_message({'command': 'sync'})
-        elif tup.component == '__system' and tup.stream == '__tick':
-            self.process_tick(tup)
-        else:
-            self.process(tup)
-        # reset so that we don't accidentally fail the wrong tuples
-        # if a successive call to read_tuple fails
-        self._current_tups = []
 
     def _handle_run_exception(self, exc):
         """Process an exception encountered while running the ``run()`` loop.
