@@ -7,7 +7,6 @@ This package makes it easier to work with Storm and Python.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import streamparse.bolt
-import streamparse.cmdln
 import streamparse.component
 import streamparse.contextmanagers
 import streamparse.debug
@@ -19,7 +18,6 @@ from streamparse.version import __version__, VERSION
 
 __all__ = [
     'bolt',
-    'cmdln',
     'component',
     'contextmanagers',
     'debug',

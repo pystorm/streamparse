@@ -34,7 +34,6 @@ def readme():
 install_requires = [
     'invoke',
     'fabric',
-    'docopt',
     'jinja2',
     'requests',
     'prettytable',
