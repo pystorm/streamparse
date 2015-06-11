@@ -41,5 +41,6 @@ def main(args):
     if storm_version >= parse_version('0.9.2-incubating'):
         display_stats(args.environment, args.name, args.component, args.all)
     else:
-        print("ERROR: Storm {} does not support this command."
-              .format(storm_version))
+        print("ERROR: Storm {0} does not support this command.".format(
+            storm_version)
+        )

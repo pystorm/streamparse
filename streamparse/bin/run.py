@@ -29,7 +29,8 @@ def subparser_hook(subparsers):
     )
     run_subparser.add_argument(
         '-n', '--name',
-        dest = 'name', help = ( 'The name of the topology to run. If you have only one topology'
+        dest = 'name', help = (
+            'The name of the topology to run. If you have only one topology'
             'defined in your topologies/ directory, streamparse will use it'
             'automatically.'
         )
