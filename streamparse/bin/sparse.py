@@ -3,6 +3,7 @@ import os
 import sys
 import pkgutil
 import argparse
+import importlib
 
 ###############################################################################
 # This module provides the base sparse command and a load hook for dynamically
@@ -12,23 +13,25 @@ import argparse
 # subparser as needed.
 ###############################################################################
 
-def load_suparsers(dirname, subparsers):
+def load_suparsers(subparsers):
     """
     searches modules in streamparse/bin for a 'subparser_hook' method and calls
     the 'subparser_hook' method on the sparse subparsers object.
     """
-    for importer, package_name, _ in pkgutil.iter_modules([dirname]):
-        full_package_name = '%s.%s' % (dirname, package_name)
-        if  full_package_name not in sys.modules:
-            # skip this package
-            if package_name in os.path.basename(__file__):
-                continue
-            module = importer.find_module(package_name).load_module(
-                full_package_name
+    for importer, package_name, _ in pkgutil.iter_modules([
+        os.path.dirname(__file__)
+    ]):
+        try:
+            mod_name = __name__.replace(
+                __file__.rsplit('/')[-1].split('.')[0], package_name
             )
-            # check for the subparser hook
-            if hasattr(module, 'subparser_hook'):
-                module.subparser_hook(subparsers)
+            module   = __import__(mod_name, fromlist=['subparser_hook'])
+        except ImportError:
+            # if we can't immport it we skip trying to add the subparser
+            pass
+        # check for the subparser hook
+        if hasattr(module, 'subparser_hook'):
+            module.subparser_hook(subparsers)
 
 
 def main():
@@ -46,9 +49,17 @@ def main():
     )
 
     subparsers = parser.add_subparsers()
-    load_suparsers(os.path.dirname(__file__), subparsers)
+    load_suparsers(subparsers)
     args = parser.parse_args()
-    args.func(args)
+
+    ### http://grokbase.com/t/python/python-bugs-list/12arsq9ayf/issue16308-undocumented-behaviour-change-in-argparse-from-3-2-3-to-3-3-0
+    try:
+        getattr(args, "func")
+        args.func(args)
+    # python3.3+ argparse changes
+    except AttributeError:
+        parser.print_help()
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
