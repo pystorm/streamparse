@@ -1,20 +1,30 @@
-from __future__ import absolute_import
-from streamparse.ext.invoke import display_worker_uptime
+"""
+Display uptime for workers in running Storm topologies.
+"""
+
+from __future__ import absolute_import, print_function
+
+from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
+from pkg_resources import parse_version
+
+from streamparse.bin.common import add_environment
+from streamparse.ext.invoke import display_worker_uptime, storm_lib_version
 
 
 def subparser_hook(subparsers):
-    worker_up_subparser = subparsers.add_parser('worker_uptime')
-    worker_up_subparser.set_defaults(func=main)
-    worker_up_subparser.add_argument(
-        '-e', '--envirionment',
-        dest = 'environ',
-        help = (
-            'The environment to use for the command corresponding to an'
-            'environment in your "envs" dictionary in config.json. If you'
-            'only have one environment specified, streamparse will'
-            'automatically use this.'
-       )
-    )
+    """ Hook to add subparser for this command. """
+    subparser = subparsers.add_parser('worker-uptime',
+                                      formatter_class=DefaultsHelpFormatter,
+                                      help=__doc__)
+    subparser.set_defaults(func=main)
+    add_environment(subparser)
+
 
 def main(args):
-    display_worker_uptime(args.environ)
+    """ Display uptime for workers in running Storm topologies. """
+    storm_version = storm_lib_version()
+    if storm_version >= parse_version('0.9.2-incubating'):
+        display_worker_uptime(args.environment)
+    else:
+        print("ERROR: Storm {0} does not support this command."
+              .format(storm_version))
