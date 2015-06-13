@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
-from streamparse.bin.common import (add_ackers, add_debug, add_environment,
+from streamparse.cli.common import (add_ackers, add_debug, add_environment,
                                     add_name, add_options, add_par, add_workers)
 from streamparse.ext.invoke import run_local_topology
 

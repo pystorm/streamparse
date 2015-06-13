@@ -1,19 +1,24 @@
-from   __future__ import print_function, unicode_literals
-from   nose.tools import ok_
+from __future__ import absolute_import, unicode_literals
+
 import argparse
 import unittest
-import streamparse.bin.sparse as sparse
+
+from streamparse.cli import sparse
+
+from nose.tools import ok_
 
 
 class SparseTestCase(unittest.TestCase):
+
     def test_load_subparsers(self):
-        parser     = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser()
         subparsers = parser.add_subparsers()
         sparse.load_suparsers(subparsers)
         # grab subcommands from subparsers
         subcommands = parser._optionals._actions[1].choices.keys()
         # we know quickstart will be a subcommand test others as needed
         ok_('quickstart' in subcommands)
+
 
 if __name__ == '__main__':
     unittest.main()
