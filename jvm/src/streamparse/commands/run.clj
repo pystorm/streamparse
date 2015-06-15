@@ -25,7 +25,7 @@
                        options
                        topology)
       ;; sleep for a few seconds to let the topology run locally
-      (Thread/sleep (if (= 0 run-for-secs) -1 run-for-secs))
+      (Thread/sleep (if (= 0 run-for-secs) Integer/MAX_VALUE run-for-secs))
       ;; shutdown the cluster
       (.shutdown cluster))
     (catch Exception e

@@ -504,6 +504,17 @@ If you do not have ssh access to all of the servers in your Storm cluster, but
 you know they have all of the requirements for your Python code installed, you
 can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
 
+Using unofficial versions of Storm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you wish to use streamparse with unofficial versions of storm (such as the HDP Storm)
+you should set ``:repositories`` in your ``project.clj`` to point to the Maven repository
+containing the JAR you want to use, and set the version in ``:dependencies`` to match
+the desired version of Storm.
+
+For example, to use the version supplied by HDP, you would set ``:repositories`` to:
+
+``:repositories {"HDP Releases" "http://repo.hortonworks.com/content/repositories/releases"}``
 
 Local Clusters
 ^^^^^^^^^^^^^^

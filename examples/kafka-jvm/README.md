@@ -13,9 +13,6 @@ as an exercise for the reader.
 
 Pixles are counted by URL in `pixel_count.PixelCounterBolt`.
 
-**Note**: This topology currently depends on an unmerged branch of
-[streamparse](https://github.com/Parsely/streamparse/tree/feature/uberjar).
-
 
 # Instructions
 
@@ -31,7 +28,7 @@ Run `vagrant up` to create a virtual machine and use chef-solo to automatically 
 - virtualenv (latest)
 - supervisord (latest)
 - Apache Zookeeper
-- Apache Storm (0.9.2-incubating)
+- Apache Storm (0.9.4)
 - Kafka (0.8.1.1)
 
 This will take a few minutes to fully provision the server. Once provisioned,
@@ -67,7 +64,7 @@ this step isn't necessary.
 Run this command to append the necessary info to your local `~/.ssh/config`.
 
 ```
-vagrant ssh-config | sed -e 's/Host default/Host streamparse-box/' -e 's/HostName 127.0.0.1/HostName 192.168.50.50/' -e 's/Port 2222/Port 22/' -e 's/LogLevel FATAL/LogLevel INFO/' >> ~/.ssh/config
+echo >> ~/.ssh/config && vagrant ssh-config | sed -e 's/Host default/Host streamparse-box/' -e 's/HostName 127.0.0.1/HostName 192.168.50.50/' -e 's/Port 2222/Port 22/' -e 's/LogLevel FATAL/LogLevel INFO/' >> ~/.ssh/config
 ```
 
 You can confirm that ssh is configured properly by running `ssh streamparse-box`

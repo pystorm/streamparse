@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from . import (bolt, cmdln, component, contextmanagers, debug, decorators, dsl,
+from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
                spout, storm)
 from .version import __version__, VERSION
 
