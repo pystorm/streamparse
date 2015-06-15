@@ -71,6 +71,7 @@ def add_workers(parser):
                         help='Set number of Storm workers. Takes precedence '
                              'over --par if both set.')
 
+
 def resolve_ackers_workers(args):
     """ Set --ackers and --workers to --par if they're None. """
     if args.ackers is None:

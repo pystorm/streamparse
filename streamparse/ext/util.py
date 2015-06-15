@@ -3,11 +3,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import os
 import re
+import shutil
 import sys
 from glob import glob
+from random import shuffle
 
+import requests
 from fabric.colors import red
+from invoke import run
+from pkg_resources import parse_version
 
+from ..contextmanagers import ssh_tunnel
 from ..decorators import memoized
 
 
@@ -102,3 +108,67 @@ def is_ssh_for_nimbus(env_config):
     """Check if we need to use SSH access to Nimbus or not.
     """
     return env_config.get('use_ssh_for_nimbus', True)
+
+
+def storm_lib_version():
+    """Get the Storm library version being used by Leiningen and Streamparse.
+
+    :returns: The Storm library version specified in project.clj
+    :rtype: pkg_resources.Version
+    """
+    deps_tree = run("lein deps :tree", hide=True).stdout
+    pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
+    versions = set(re.findall(pattern, deps_tree))
+
+    if len(versions) > 1:
+        raise RuntimeError("Multiple Storm Versions Detected.")
+    elif len(versions) == 0:
+        raise RuntimeError("No Storm version specified in project.clj dependencies.")
+    else:
+        return parse_version(versions.pop())
+
+
+def get_ui_jsons(env_name, api_paths):
+    """Take env_name as a string and api_paths that should
+    be a list of strings like '/api/v1/topology/summary'
+    """
+    _, env_config = get_env_config(env_name)
+    host, _ = get_nimbus_for_env_config(env_config)
+    # TODO: Get remote_ui_port from storm?
+    remote_ui_port = 8080
+    # SSH tunnel can take a while to close. Check multiples if necessary.
+    local_ports = list(range(8081, 8090))
+    shuffle(local_ports)
+    for local_port in local_ports:
+        try:
+            data = {}
+            with ssh_tunnel(env_config["user"],
+                            host,
+                            local_port=local_port,
+                            remote_port=remote_ui_port):
+                for api_path in api_paths:
+                    r = requests.get('http://127.0.0.1:%s%s' % (local_port,
+                                                                api_path))
+                    data[api_path] = r.json()
+            return data
+        except Exception as e:
+            if "already in use" in str(e):
+                continue
+            raise
+    raise RuntimeError("Cannot find local port for SSH tunnel to Storm Head.")
+
+
+def get_ui_json(env_name, api_path):
+    """Take env_name as a string and api_path that should
+    be a string like '/api/v1/topology/summary'
+    """
+    return get_ui_jsons(env_name, [api_path])[api_path]
+
+
+def prepare_topology():
+    """Prepare a topology for running locally or deployment to a remote
+    cluster.
+    """
+    if os.path.isdir("_resources/resources"):
+        shutil.rmtree("_resources/resources")
+    shutil.copytree("src", "_resources/resources")

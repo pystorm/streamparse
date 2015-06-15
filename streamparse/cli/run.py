@@ -2,14 +2,55 @@
 Run a local Storm topology.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
+import os
+import sys
 from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
-from streamparse.cli.common import (add_ackers, add_debug, add_environment,
-                                    add_name, add_options, add_par, add_workers,
-                                    resolve_ackers_workers)
-from streamparse.ext.invoke import run_local_topology
+from invoke import run
+
+from .common import (add_ackers, add_debug, add_environment, add_name,
+                     add_options, add_par, add_workers, resolve_ackers_workers)
+from ..ext.util import prepare_topology, get_topology_definition
+
+
+def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
+                       debug=False):
+    """Run a topology locally using Storm's LocalCluster class."""
+    prepare_topology()
+
+    name, topology_file = get_topology_definition(name)
+    print("Running {} topology...".format(name))
+    sys.stdout.flush()
+    cmd = ["lein",
+           "run -m streamparse.commands.run/-main",
+           topology_file]
+    cmd.append("-t {}".format(time))
+    if debug:
+        cmd.append("--debug")
+    cmd.append("--option 'topology.workers={}'".format(workers))
+    cmd.append("--option 'topology.acker.executors={}'".format(ackers))
+
+    # Python logging settings
+    if not os.path.isdir("logs"):
+        os.makedirs("logs")
+    log_path = os.path.join(os.getcwd(), "logs")
+    print("Routing Python logging to {}.".format(log_path))
+    sys.stdout.flush()
+    cmd.append("--option 'streamparse.log.path=\"{}\"'"
+               .format(log_path))
+    cmd.append("--option 'streamparse.log.level=\"debug\"'")
+
+    if options is None:
+        options = []
+    for option in options:
+        cmd.append('--option {}'.format(option))
+    full_cmd = " ".join(cmd)
+    print("Running lein command to run local cluster:")
+    print(full_cmd)
+    sys.stdout.flush()
+    run(full_cmd)
 
 
 def subparser_hook(subparsers):

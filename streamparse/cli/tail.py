@@ -6,8 +6,15 @@ from __future__ import absolute_import, print_function
 
 from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
-from streamparse.cli.common import add_environment, add_name
-from streamparse.ext.invoke import tail_topology
+from .common import add_environment, add_name
+from ..ext.fabric import activate_env, tail_logs
+from ..ext.util import get_topology_definition
+
+
+def tail_topology(topology_name=None, env_name=None, pattern=None):
+    get_topology_definition(topology_name)
+    activate_env(env_name)
+    tail_logs(topology_name, pattern)
 
 
 def subparser_hook(subparsers):
