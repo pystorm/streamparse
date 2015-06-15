@@ -286,8 +286,8 @@ class BatchingBolt(Bolt):
     the bolt is blocked waiting on stdin, then it can't process any waiting
     tuples, or even ack ones that were asynchronously written to a data store.
 
-    This bolt helps with that grouping tuples based on a time interval and then
-    processing them on a worker thread.
+    This bolt helps with that by grouping tuples received between tick tuples
+    into batches.
 
     To use this class, you must implement ``process_batch``. ``group_key`` can
     be optionally implemented so that tuples are grouped before
@@ -393,6 +393,10 @@ class BatchingBolt(Bolt):
         batches if tick counter exceeds ``ticks_between_batches``.
 
         See :class:`streamparse.storm.component.Bolt` for more information.
+
+        .. warning::
+            This method should **not** be overriden.  If you want to tweak
+            how tuples are grouped into batches, override ``group_key``.
         """
         self._tick_counter += 1
         if self._tick_counter > self.ticks_between_batches and self._batches:
