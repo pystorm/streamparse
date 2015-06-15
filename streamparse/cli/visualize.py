@@ -15,6 +15,7 @@ def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('visualize',
                                       formatter_class=DefaultsHelpFormatter,
+                                      description=__doc__,
                                       help=__doc__)
     subparser.set_defaults(func=main)
     subparser.add_argument('-f', '--flip',

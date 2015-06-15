@@ -16,6 +16,7 @@ def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('run',
                                       formatter_class=DefaultsHelpFormatter,
+                                      description=__doc__,
                                       help=__doc__)
     subparser.set_defaults(func=main)
     add_ackers(subparser)

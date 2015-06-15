@@ -13,6 +13,7 @@ def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('quickstart',
                                       formatter_class=DefaultsHelpFormatter,
+                                      description=__doc__,
                                       help=__doc__)
     subparser.set_defaults(func=main)
     subparser.add_argument('project_name',
