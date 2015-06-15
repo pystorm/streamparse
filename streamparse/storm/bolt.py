@@ -187,6 +187,9 @@ class Bolt(Component):
                               the tuple was emitted (default:
                               ``True``).
         :type need_task_ids: bool
+
+        .. deprecated:: 1.2.0
+            Just call :py:meth:`Bolt.emit` repeatedly instead.
         """
         if not isinstance(tuples, (list, tuple)):
             raise TypeError('tuples should be a list of lists/tuples, '
@@ -384,6 +387,10 @@ class BatchingBolt(Bolt):
         See :class:`streamparse.storm.component.Bolt` for more information.
 
         :returns: ``None``.
+
+        .. deprecated:: 1.2.0
+            Just call :py:meth:`BatchingBolt.emit` repeatedly instead.
+
         """
         kwargs['need_task_ids'] = False
         return super(BatchingBolt, self).emit_many(tups, **kwargs)
