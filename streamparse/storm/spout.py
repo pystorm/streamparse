@@ -4,7 +4,10 @@ Base Spout classes.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import itertools
 import logging
+
+from six.moves import zip
 
 from .component import Component
 
@@ -119,7 +122,7 @@ class Spout(Component):
         else:
             return None
 
-    def emit_many(self, tuples, stream=None, anchors=None, direct_task=None,
+    def emit_many(self, tuples, stream=None, tup_ids=None, direct_task=None,
                   need_task_ids=None):
         """Emit multiple tuples.
 
@@ -130,11 +133,11 @@ class Spout(Component):
         :param stream: the ID of the steram to emit these tuples to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples (or :class:`streamparse.ipc.Tuple`
-                        instances) which the emitted tuples should be anchored
-                        to. If ``auto_anchor`` is set to ``True`` and
-                        you have not specified ``anchors``, ``anchors`` will be
-                        set to the incoming/most recent tuple ID(s).
+        :param tup_ids: the ID for the tuple. Leave this blank for an
+                       unreliable emit.
+        :type tup_ids: list
+        :param tup_ids: IDs for each of the tuples in the list.  Omit these for
+                        an unreliable emit.
         :type anchors: list
         :param direct_task: indicates the task to send the tuple to.
         :type direct_task: int
@@ -142,14 +145,20 @@ class Spout(Component):
                               the tuple was emitted (default:
                               ``True``).
         :type need_task_ids: bool
+
+        .. deprecated:: 1.2.0
+            Just call :py:meth:`Spout.emit` repeatedly instead.
         """
         if not isinstance(tuples, (list, tuple)):
             raise TypeError('tuples should be a list of lists/tuples, '
                             'received {!r} instead.'.format(type(tuples)))
 
         all_task_ids = []
-        for tup in tuples:
-            all_task_ids.append(self.emit(tup, stream=stream, anchors=anchors,
+        if tup_ids is None:
+            tup_ids = itertools.repeat(None)
+
+        for tup, tup_id in zip(tuples, tup_ids):
+            all_task_ids.append(self.emit(tup, stream=stream, tup_id=tup_id,
                                           direct_task=direct_task,
                                           need_task_ids=need_task_ids))
 
