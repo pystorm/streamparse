@@ -42,7 +42,7 @@ class BoltTests(unittest.TestCase):
         self.bolt.initialize({}, {})
 
     @patch.object(Bolt, 'send_message', autospec=True)
-    def test_emit(self, send_message_mock):
+    def test_emit_basic(self, send_message_mock):
         # A basic emit
         self.bolt.emit([1, 2, 3], need_task_ids=False)
         send_message_mock.assert_called_with(self.bolt, {'command': 'emit',
@@ -50,6 +50,8 @@ class BoltTests(unittest.TestCase):
                                                          'tuple': [1, 2, 3],
                                                          'need_task_ids': False})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_emit_stream_anchors(self, send_message_mock):
         # Emit with stream and anchors
         self.bolt.emit([1, 2, 3], stream='foo', anchors=[4, 5],
                        need_task_ids=False)
@@ -59,6 +61,8 @@ class BoltTests(unittest.TestCase):
                                                          'tuple': [1, 2, 3],
                                                          'need_task_ids': False})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_emit_direct(self, send_message_mock):
         # Emit as a direct task
         self.bolt.emit([1, 2, 3], direct_task='other_bolt')
         send_message_mock.assert_called_with(self.bolt, {'command': 'emit',
@@ -66,26 +70,75 @@ class BoltTests(unittest.TestCase):
                                                          'tuple': [1, 2, 3],
                                                          'task': 'other_bolt'})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_emit_many_basic(self, send_message_mock):
+        # A basic emit
+        self.bolt.emit_many([[1, 2, 3], [4, 5, 6]], need_task_ids=False)
+        send_message_mock.assert_has_calls([mock.call(self.bolt,
+                                                      {'command': 'emit',
+                                                       'tuple': [1, 2, 3],
+                                                       'anchors': [],
+                                                       'need_task_ids': False}),
+                                            mock.call(self.bolt,
+                                                      {'command': 'emit',
+                                                       'tuple': [4, 5, 6],
+                                                       'anchors': [],
+                                                       'need_task_ids': False})])
 
     @patch.object(Bolt, 'send_message', autospec=True)
-    def test_ack(self, send_message_mock):
+    def test_emit_many_anchors(self, send_message_mock):
+        # Emit with anchors
+        self.bolt.emit_many([[1, 2, 3], [4, 5, 6]], anchors=['foo', 'bar'],
+                             need_task_ids=False)
+        send_message_mock.assert_has_calls([mock.call(self.bolt,
+                                                      {'command': 'emit',
+                                                       'tuple': [1, 2, 3],
+                                                       'need_task_ids': False,
+                                                       'anchors': ['foo', 'bar']}),
+                                            mock.call(self.bolt,
+                                                      {'command': 'emit',
+                                                       'tuple': [4, 5, 6],
+                                                       'anchors': ['foo', 'bar'],
+                                                       'need_task_ids': False})])
+
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_emit_many_direct(self, send_message_mock):
+        # Emit as a direct task
+        self.bolt.emit_many([[1, 2, 3], [4, 5, 6]], direct_task='other_bolt')
+        send_message_mock.assert_has_calls([mock.call(self.bolt,
+                                                      {'command': 'emit',
+                                                       'anchors': [],
+                                                       'tuple': [1, 2, 3],
+                                                       'task': 'other_bolt'}),
+                                            mock.call(self.bolt,
+                                                      {'command': 'emit',
+                                                       'anchors': [],
+                                                       'tuple': [4, 5, 6],
+                                                       'task': 'other_bolt'})])
+
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_ack_id(self, send_message_mock):
         # ack an ID
         self.bolt.ack(42)
         send_message_mock.assert_called_with(self.bolt, {'command': 'ack',
                                                          'id': 42})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_ack_tuple(self, send_message_mock):
         # ack a Tuple
         self.bolt.ack(self.tup)
         send_message_mock.assert_called_with(self.bolt, {'command': 'ack',
                                                          'id': 14})
 
     @patch.object(Bolt, 'send_message', autospec=True)
-    def test_fail(self, send_message_mock):
+    def test_fail_id(self, send_message_mock):
         # fail an ID
         self.bolt.fail(42)
         send_message_mock.assert_called_with(self.bolt, {'command': 'fail',
                                                          'id': 42})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_fail_tuple(self, send_message_mock):
         # fail a Tuple
         self.bolt.ack(self.tup)
         send_message_mock.assert_called_with(self.bolt, {'command': 'ack',
@@ -117,7 +170,7 @@ class BoltTests(unittest.TestCase):
         self.assertListEqual(ack_mock.call_args_list, [])
 
     @patch.object(Bolt, 'send_message', autospec=True)
-    def test_auto_anchor(self, send_message_mock):
+    def test_auto_anchor_on(self, send_message_mock):
         self.bolt._current_tups = [self.tup]
         # Test auto-anchor on (the default)
         self.bolt.emit([1, 2, 3], need_task_ids=False)
@@ -126,6 +179,8 @@ class BoltTests(unittest.TestCase):
                                                          'tuple': [1, 2, 3],
                                                          'need_task_ids': False})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_auto_anchor_off(self, send_message_mock):
         # Test auto-anchor off
         self.bolt.auto_anchor = False
         self.bolt.emit([1, 2, 3], need_task_ids=False)
@@ -134,6 +189,8 @@ class BoltTests(unittest.TestCase):
                                                          'tuple': [1, 2, 3],
                                                          'need_task_ids': False})
 
+    @patch.object(Bolt, 'send_message', autospec=True)
+    def test_auto_anchor_override(self, send_message_mock):
         # Test overriding auto-anchor
         self.bolt.auto_anchor = True
         self.bolt.emit([1, 2, 3], anchors=[42], need_task_ids=False)
