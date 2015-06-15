@@ -7,7 +7,8 @@ from __future__ import absolute_import
 from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
 from streamparse.cli.common import (add_ackers, add_debug, add_environment,
-                                    add_name, add_options, add_par, add_workers)
+                                    add_name, add_options, add_par, add_workers,
+                                    resolve_ackers_workers)
 from streamparse.ext.invoke import run_local_topology
 
 
@@ -33,6 +34,7 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Run the local topology with the given arguments """
+    resolve_ackers_workers(args)
     run_local_topology(name=args.name, time=args.time, workers=args.workers,
                        ackers=args.ackers, options=args.options,
                        debug=args.debug)

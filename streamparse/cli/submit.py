@@ -8,7 +8,7 @@ from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
 from streamparse.cli.common import (add_ackers, add_debug, add_environment,
                                     add_name, add_options, add_par, add_wait,
-                                    add_workers)
+                                    add_workers, resolve_ackers_workers)
 from streamparse.ext.invoke import submit_topology
 
 
@@ -40,6 +40,7 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Submit a Storm topology to Nimbus. """
+    resolve_ackers_workers(args)
     submit_topology(name=args.name, env_name=args.environment,
                     workers=args.workers, ackers=args.ackers,
                     options=args.options, force=args.force, debug=args.debug,
