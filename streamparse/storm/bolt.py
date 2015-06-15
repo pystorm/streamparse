@@ -263,7 +263,9 @@ class Bolt(Component):
         to subclasses.  Any exceptions are caught and logged back to Storm
         prior to the Python process exiting.
 
-        Subclasses should **not** override this method.
+        .. warning::
+
+            Subclasses should **not** override this method.
         """
         storm_conf, context = self.read_handshake()
         self._setup_component(storm_conf, context)
@@ -360,7 +362,8 @@ class BatchingBolt(Bolt):
 
         :param key: the group key for the list of batches.
         :type key: hashable
-        :param tups: a `list` of :class:`streamparse.storm.component.Tuple` s for the group.
+        :param tups: a `list` of :class:`streamparse.storm.component.Tuple` s
+                     for the group.
         :type tups: list
         """
         raise NotImplementedError()
@@ -406,7 +409,12 @@ class BatchingBolt(Bolt):
             self._tick_counter = 0
 
     def process(self, tup):
-        """Group non-tick tuples into batches."""
+        """Group non-tick tuples into batches by ``group_key``.
+
+        .. warning::
+            This method should **not** be overriden.  If you want to tweak
+            how tuples are grouped into batches, override ``group_key``.
+        """
         # Append latest tuple to batches
         group_key = self.group_key(tup)
         self._batches[group_key].append(tup)
