@@ -132,40 +132,16 @@ class Bolt(Component):
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
         """
-        if not isinstance(tup, (list, tuple)):
-            raise TypeError('All tuples must be either lists or tuples, '
-                            'received {!r} instead.'.format(type(tup)))
-
-        msg = {'command': 'emit', 'tuple': tup}
-
         if anchors is None:
             anchors = self._current_tups if self.auto_anchor else []
-        msg['anchors'] = [a.id if isinstance(a, Tuple) else a for a in anchors]
+        anchors = [a.id if isinstance(a, Tuple) else a for a in anchors]
 
-        if stream is not None:
-            msg['stream'] = stream
-        if direct_task is not None:
-            msg['task'] = direct_task
-
-        if need_task_ids is False:
-            # only need to send on False, Storm's default is True
-            msg['need_task_ids'] = need_task_ids
-
-        # Use both locks so we ensure send_message and read_task_ids are for
-        # same emit
-        with self._reader_lock, self._writer_lock:
-            # Message encoding will convert both list and tuple to a JSON array.
-            self.send_message(msg)
-
-            if need_task_ids is True:
-                downstream_task_ids = [direct_task] if direct_task is not None \
-                                      else self.read_task_ids()
-                return downstream_task_ids
-            else:
-                return None
+        return super(Bolt, self).emit(tup, stream=stream, anchors=anchors,
+                                      direct_task=direct_task,
+                                      need_task_ids=need_task_ids)
 
     def emit_many(self, tuples, stream=None, anchors=None, direct_task=None,
-                  need_task_ids=None):
+                  need_task_ids=True):
         """Emit multiple tuples.
 
         :param tuples: a ``list`` of multiple tuple payloads to send to
@@ -245,40 +221,15 @@ class Bolt(Component):
     def _handle_run_exception(self, exc):
         """Process an exception encountered while running the ``run()`` loop.
 
-        Mostly here to cut down on duplicate code for BatchingBolt.
+        Called right before program exits.
         """
-        log_msg = "Exception in {}.run()".format(self.__class__.__name__)
-        log.error(log_msg, exc_info=True)
+        super(Bolt, self)._handle_run_exception(exc)
 
         if len(self._current_tups) == 1:
             tup = self._current_tups[0]
-            log_msg = "{} while processing {!r}".format(log_msg, tup)
             self.raise_exception(exc, tup)
             if self.auto_fail:
                 self.fail(tup)
-
-        sys.exit(1)
-
-    def run(self):
-        """Main run loop for all bolts.
-
-        Performs initial handshake with Storm and reads tuples handing them off
-        to subclasses.  Any exceptions are caught and logged back to Storm
-        prior to the Python process exiting.
-
-        .. warning::
-
-            Subclasses should **not** override this method.
-        """
-        storm_conf, context = self.read_handshake()
-        self._setup_component(storm_conf, context)
-
-        try:
-            self.initialize(storm_conf, context)
-            while True:
-                self._run()
-        except Exception as e:
-            self._handle_run_exception(e)
 
 class BatchingBolt(Bolt):
     """A bolt which batches tuples for processing.
@@ -450,16 +401,13 @@ class BatchingBolt(Bolt):
     def _handle_run_exception(self, exc):
         """Process an exception encountered while running the ``run()`` loop.
 
-        Mostly here to cut down on duplicate code for BatchingBolt.
+        Called right before program exits.
         """
-        log_msg = ("Exception in {}.run() while processing tuple batch "
-                   "{!r}.".format(self.__class__.__name__, self._current_tups))
-        log.error(log_msg, exc_info=True)
+        # Don't use super here, because Bolt does its own auto fail handling.
+        Component._handle_run_exception(self, exc)
         self.raise_exception(exc, self._current_tups)
 
         if self.auto_fail:
             for batch in itervalues(self._batches):
                 for tup in batch:
                     self.fail(tup)
-
-        sys.exit(1)

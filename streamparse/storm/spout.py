@@ -69,7 +69,7 @@ class Spout(Component):
         raise NotImplementedError()
 
     def emit(self, tup, tup_id=None, stream=None, direct_task=None,
-             need_task_ids=None):
+             need_task_ids=True):
         """Emit a spout tuple message.
 
         :param tup: the tuple to send to Storm, should contain only
@@ -94,36 +94,12 @@ class Spout(Component):
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
         """
-        if not isinstance(tup, (list, tuple)):
-            raise TypeError('All tuples must be either lists or tuples, '
-                            'received {!r} instead'.format(type(tup)))
-
-        msg = {'command': 'emit', 'tuple': tup}
-        if tup_id is not None:
-            msg['id'] = tup_id
-        if stream is not None:
-            msg['stream'] = stream
-        if direct_task is not None:
-            msg['task'] = direct_task
-
-        if need_task_ids is None:
-            need_task_ids = True
-        elif need_task_ids is False:
-            # only need to send on False, Storm's default is True
-            msg['need_task_ids'] = need_task_ids
-
-        # Message encoding will convert both list and tuple to a JSON array.
-        self.send_message(msg)
-
-        if need_task_ids == True:
-            downstream_task_ids = [direct_task] if direct_task is not None \
-                                  else self.read_task_ids()
-            return downstream_task_ids
-        else:
-            return None
+        return super(Spout, self).emit(tup, tup_id=tup_id, stream=stream,
+                                       direct_task=direct_task,
+                                       need_task_ids=need_task_ids)
 
     def emit_many(self, tuples, stream=None, tup_ids=None, direct_task=None,
-                  need_task_ids=None):
+                  need_task_ids=True):
         """Emit multiple tuples.
 
         :param tuples: a ``list`` of multiple tuple payloads to send to
@@ -179,24 +155,3 @@ class Spout(Component):
         else:
             self.logger.error('Received invalid command from Storm: %r', cmd)
         self.send_message({'command': 'sync'})
-
-    def run(self):
-        """Main run loop for all spouts.
-
-        Performs initial handshake with Storm and reads tuples handing them off
-        to subclasses.  Any exceptions are caught and logged back to Storm
-        prior to the Python process exiting.
-
-        Subclasses should **not** override this method.
-        """
-        storm_conf, context = self.read_handshake()
-        self._setup_component(storm_conf, context)
-
-        try:
-            self.initialize(storm_conf, context)
-            while True:
-                self._run()
-        except Exception as e:
-            log.error('Error in %s.run()', self.__class__.__name__,
-                              exc_info=True)
-            self.raise_exception(e)

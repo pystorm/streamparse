@@ -376,3 +376,99 @@ class Component(object):
         level = _STORM_LOG_LEVELS.get(level, _STORM_LOG_INFO)
         self.send_message({'command': 'log', 'msg': str(message),
                            'level': level})
+
+    def emit(self, tup, tup_id=None, stream=None, anchors=None,
+             direct_task=None, need_task_ids=True):
+        """Emit a new tuple to a stream.
+
+        :param tup: the Tuple payload to send to Storm, should contain only
+                    JSON-serializable data.
+        :type tup: :class:`list` or :class:`streamparse.storm.component.Tuple`
+        :param tup_id: the ID for the tuple. If omitted by a
+                       :class:`streamparse.storm.spout.Spout`, this emit will be
+                       unreliable.
+        :type tup_id: str
+        :param stream: the ID of the stream to emit this tuple to. Specify
+                       ``None`` to emit to default stream.
+        :type stream: str
+        :param anchors: IDs the tuples (or :class:`streamparse.storm.component.Tuple`
+                        instances) which the emitted tuples should be anchored
+                        to. If ``auto_anchor`` is set to ``True`` and
+                        you have not specified ``anchors``, ``anchors`` will be
+                        set to the incoming/most recent tuple ID(s).  This is
+                        only passed by :class:`streamparse.storm.bolt.Bolt`.
+        :type anchors: list
+        :param direct_task: the task to send the tuple to.
+        :type direct_task: int
+        :param need_task_ids: indicate whether or not you'd like the task IDs
+                              the tuple was emitted (default: ``True``).
+        :type need_task_ids: bool
+
+        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+                  when specifying direct_task, this will be equal to
+                  ``[direct_task]``. If you specify ``need_task_ids=False``,
+                  this function will return ``None``.
+        """
+        if not isinstance(tup, (list, tuple)):
+            raise TypeError('All tuples must be either lists or tuples, '
+                            'received {!r} instead.'.format(type(tup)))
+
+        msg = {'command': 'emit', 'tuple': tup}
+
+        if anchors is not None:
+            msg['anchors'] = anchors
+        if tup_id is not None:
+            msg['id'] = tup_id
+        if stream is not None:
+            msg['stream'] = stream
+        if direct_task is not None:
+            msg['task'] = direct_task
+
+        if need_task_ids is False:
+            # only need to send on False, Storm's default is True
+            msg['need_task_ids'] = need_task_ids
+
+        # Use both locks so we ensure send_message and read_task_ids are for
+        # same emit
+        with self._reader_lock, self._writer_lock:
+            # Message encoding will convert both list and tuple to a JSON array.
+            self.send_message(msg)
+
+            if need_task_ids is True:
+                downstream_task_ids = [direct_task] if direct_task is not None \
+                                      else self.read_task_ids()
+                return downstream_task_ids
+            else:
+                return None
+
+    def run(self):
+        """Main run loop for all components.
+
+        Performs initial handshake with Storm and reads tuples handing them off
+        to subclasses.  Any exceptions are caught and logged back to Storm
+        prior to the Python process exiting.
+
+        .. warning::
+
+            Subclasses should **not** override this method.
+        """
+        storm_conf, context = self.read_handshake()
+        self._setup_component(storm_conf, context)
+
+        try:
+            self.initialize(storm_conf, context)
+            while True:
+                self._run()
+        except Exception as e:
+            self._handle_run_exception(e)
+            sys.exit(1)
+
+    def _handle_run_exception(self, exc):
+        """Process an exception encountered while running the ``run()`` loop.
+
+        Called right before program exits.
+        """
+        log_msg = "Exception in {}.run()".format(self.__class__.__name__)
+        log.error(log_msg, exc_info=True)
+        self.raise_exception(exc)
+
