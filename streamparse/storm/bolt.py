@@ -164,7 +164,7 @@ class Bolt(Component):
                               ``True``).
         :type need_task_ids: bool
 
-        .. deprecated:: 1.2.0
+        .. deprecated:: 2.0.0
             Just call :py:meth:`Bolt.emit` repeatedly instead.
         """
         if not isinstance(tuples, (list, tuple)):
@@ -339,7 +339,7 @@ class BatchingBolt(Bolt):
 
         :returns: ``None``.
 
-        .. deprecated:: 1.2.0
+        .. deprecated:: 2.0.0
             Just call :py:meth:`BatchingBolt.emit` repeatedly instead.
 
         """

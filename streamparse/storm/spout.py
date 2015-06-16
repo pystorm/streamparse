@@ -122,7 +122,7 @@ class Spout(Component):
                               ``True``).
         :type need_task_ids: bool
 
-        .. deprecated:: 1.2.0
+        .. deprecated:: 2.0.0
             Just call :py:meth:`Spout.emit` repeatedly instead.
         """
         if not isinstance(tuples, (list, tuple)):
