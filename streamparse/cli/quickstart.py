@@ -4,15 +4,12 @@ Create new streamparse project template.
 
 from __future__ import absolute_import
 
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
-
 from streamparse.bootstrap import quickstart
 
 
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('quickstart',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
                                       help=main.__doc__)
     subparser.set_defaults(func=main)

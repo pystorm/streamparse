@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 
 import os
 import sys
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
 from invoke import run
 
@@ -56,7 +55,6 @@ def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('run',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
                                       help=main.__doc__)
     subparser.set_defaults(func=main)
@@ -70,7 +68,8 @@ def subparser_hook(subparsers):
                            default=0,
                            type=int,
                            help='Time (in seconds) to keep local cluster '
-                                'running. If time <= 0, run indefinitely.')
+                                'running. If time <= 0, run indefinitely. '
+                                '(default: %(default)s)')
     add_workers(subparser)
 
 

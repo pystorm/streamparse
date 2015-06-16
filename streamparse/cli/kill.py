@@ -4,13 +4,11 @@ Kill the specified Storm topology.
 
 from __future__ import absolute_import
 
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
-
 from invoke import run
 
 from ..contextmanagers import ssh_tunnel
 from ..util import (get_topology_definition, get_env_config,
-                        get_nimbus_for_env_config, is_ssh_for_nimbus)
+                    get_nimbus_for_env_config, is_ssh_for_nimbus)
 from .common import add_environment, add_name, add_wait
 
 
@@ -47,7 +45,6 @@ def kill_topology(topology_name=None, env_name=None, wait=None):
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('kill',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
                                       help=main.__doc__)
     subparser.set_defaults(func=main)
