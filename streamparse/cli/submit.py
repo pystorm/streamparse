@@ -2,22 +2,22 @@
 Submit a Storm topology to Nimbus.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
 import sys
 import time
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
 from invoke import run
 from six import string_types
 
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_par, add_wait, add_workers,
-                     resolve_ackers_workers)
-from .list import _list_topologies
+                     add_options, add_par, add_simple_jar, add_wait,
+                     add_workers, resolve_ackers_workers)
+from .jar import jar_for_deploy
 from .kill import _kill_topology
+from .list import _list_topologies
 from .update_virtualenv import create_or_update_virtualenvs
 from ..contextmanagers import ssh_tunnel
 from ..util import (activate_env, get_config, get_env_config,
@@ -38,30 +38,6 @@ def get_user_tasks():
         return user_invoke, user_fabric
     except ImportError:
         return None, None
-
-
-def jar_for_deploy():
-    """ Build a jar to use for deploying the topology. """
-    print("Cleaning from prior builds...")
-    sys.stdout.flush()
-    res = run("lein clean", hide="stdout")
-    if not res.ok:
-        raise RuntimeError("Unable to run 'lein clean'!\nSTDOUT:\n{}"
-                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
-    print("Creating topology uberjar...")
-    sys.stdout.flush()
-    res = run("lein uberjar", hide="stdout")
-    if not res.ok:
-        raise RuntimeError("Unable to run 'lein uberjar'!\nSTDOUT:\n{}"
-                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
-    # XXX: This will fail if more than one JAR is built
-    lines = res.stdout.split()
-    lines = [l.strip().lstrip("Created ") for l in lines
-             if l.endswith("standalone.jar")]
-    uberjar = lines[0]
-    print("Uberjar created: {}".format(uberjar))
-    sys.stdout.flush()
-    return uberjar
 
 
 def is_safe_to_submit(topology_name, host=None, port=None):
@@ -185,7 +161,8 @@ def _post_submit_hooks(topology_name, env_name, env_config):
 
 
 def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
-                    options=None, force=False, debug=False, wait=None):
+                    options=None, force=False, debug=False, wait=None,
+                    simple_jar=False):
     """Submit a topology to a remote Storm cluster."""
     prepare_topology()
 
@@ -208,7 +185,7 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                                                         name))
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
-    topology_jar = jar_for_deploy()
+    topology_jar = jar_for_deploy(simple_jar=simple_jar)
 
     print('Deploying "{}" topology...'.format(name))
     sys.stdout.flush()
@@ -233,7 +210,6 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('submit',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
                                       help=main.__doc__)
     subparser.set_defaults(func=main)
@@ -248,11 +224,13 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_par(subparser)
+    add_simple_jar(subparser)
     subparser.add_argument('-t', '--time',
                            default=0,
                            type=int,
                            help='Time (in seconds) to keep local cluster '
-                                'running. If time <= 0, run indefinitely.')
+                                'running. If time <= 0, run indefinitely. '
+                                '(default: %(default)s)')
     add_wait(subparser)
     add_workers(subparser)
 
@@ -263,4 +241,4 @@ def main(args):
     submit_topology(name=args.name, env_name=args.environment,
                     workers=args.workers, ackers=args.ackers,
                     options=args.options, force=args.force, debug=args.debug,
-                    wait=args.wait)
+                    wait=args.wait, simple_jar=args.simple_jar)

@@ -53,7 +53,7 @@ def add_par(parser):
                         type=int,
                         help='Parallelism of topology; conveniently sets '
                              'number of Storm workers and acker bolts at once '
-                             'to passed value.')
+                             'to passed value. (default: %(default)s)')
 
 def add_pattern(parser):
     """ Add --pattern option to parser """
@@ -61,12 +61,25 @@ def add_pattern(parser):
                         help='Pattern of log files to operate on.')
 
 
+def add_simple_jar(parser):
+    """ Add --simple_jar option to parser. """
+    parser.add_argument("-s", "--simple_jar",
+                        action='store_true',
+                        help='Instead of creating an Uber-JAR for the '
+                             'topology, which contains all of its JVM'
+                             'dependencies, create a simple JAR with just the '
+                             'code for the project.  This is useful when your '
+                             'project is pure Python and has no JVM '
+                             'dependencies.')
+
+
 def add_wait(parser):
     """ Add --wait option to parser """
     parser.add_argument('--wait',
                         type=int,
                         default=5,
-                        help='Seconds to wait before killing topology.')
+                        help='Seconds to wait before killing topology. '
+                             '(default: %(default)s)')
 
 
 def add_workers(parser):
