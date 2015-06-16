@@ -164,8 +164,6 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                     options=None, force=False, debug=False, wait=None,
                     simple_jar=False):
     """Submit a topology to a remote Storm cluster."""
-    prepare_topology()
-
     config = get_config()
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)

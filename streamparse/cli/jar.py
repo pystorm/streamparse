@@ -9,10 +9,14 @@ import sys
 from invoke import run
 
 from .common import add_simple_jar
+from ..util import prepare_topology
 
 
 def jar_for_deploy(simple_jar=False):
     """ Build a jar to use for deploying the topology. """
+    # Create _resources folder which will contain Python code in JAR
+    prepare_topology()
+    # Use Leiningen to clean up and build JAR
     jar_type = "JAR" if simple_jar else "Uber-JAR"
     print("Cleaning from prior builds...")
     sys.stdout.flush()
