@@ -4,12 +4,10 @@ List the currently running Storm topologies.
 
 from __future__ import absolute_import
 
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
-
 from invoke import run
 
 from .common import add_environment
-from ..ext.util import (get_env_config, get_nimbus_for_env_config,
+from ..util import (get_env_config, get_nimbus_for_env_config,
                         is_ssh_for_nimbus)
 from ..contextmanagers import ssh_tunnel
 
@@ -42,9 +40,8 @@ def list_topologies(env_name):
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('list',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     add_environment(subparser)
 

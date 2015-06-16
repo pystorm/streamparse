@@ -14,7 +14,7 @@ def subparser_hook(subparsers):
     subparser = subparsers.add_parser('quickstart',
                                       formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     subparser.add_argument('project_name',
                            help='Name of new streamparse project.')

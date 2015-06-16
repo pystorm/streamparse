@@ -12,7 +12,7 @@ from invoke import run
 
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_par, add_workers, resolve_ackers_workers)
-from ..ext.util import prepare_topology, get_topology_definition
+from ..util import prepare_topology, get_topology_definition
 
 
 def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
@@ -58,7 +58,7 @@ def subparser_hook(subparsers):
     subparser = subparsers.add_parser('run',
                                       formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     add_ackers(subparser)
     add_debug(subparser)

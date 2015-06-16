@@ -1,35 +1,48 @@
 """
-Tail logs for specified Storm topology.
+Tail the specified log files with "tail -f".
 """
 
 from __future__ import absolute_import, print_function
 
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
+from fabric.api import env, execute, parallel, run, task
 
-from .common import add_environment, add_name
-from ..ext.fabric import activate_env, tail_logs
-from ..ext.util import get_topology_definition
+from .common import add_environment, add_name, add_pattern
+from ..util import (activate_env, get_env_config, get_logfiles_cmd,
+                    get_topology_definition)
+
+
+@parallel
+def _tail_logs(topology_name=None, pattern=None):
+    """
+    Actual task to run tail -f on all servers in parallel.
+    """
+    ls_cmd = get_logfiles_cmd(topology_name=topology_name, pattern=pattern)
+    tail_pipe = " | xargs tail"
+    run(ls_cmd + tail_pipe)
 
 
 def tail_topology(topology_name=None, env_name=None, pattern=None):
-    get_topology_definition(topology_name)
+    """Follow (tail -f) the log files on remote Storm workers.
+
+    Will use the `log_path` and `workers` properties from config.json.
+    """
+    topology_name = get_topology_definition(topology_name)[0]
     activate_env(env_name)
-    tail_logs(topology_name, pattern)
+    execute(_tail_logs, topology_name, pattern, hosts=env.storm_workers)
 
 
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('tail',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     add_environment(subparser)
     add_name(subparser)
-    subparser.add_argument('--pattern',
-                           help='Pattern of files to tail with "tail -f"')
+    add_pattern(subparser)
 
 
 def main(args):
     """ Tail logs for specified Storm topology. """
-    tail_topology(args.name, args.environment, args.pattern)
+    tail_topology(topology_name=args.name, env_name=args.environment,
+                  pattern=args.pattern)

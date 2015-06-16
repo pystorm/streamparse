@@ -1,17 +1,19 @@
 """
 Create a graphviz visualization of the specified topology.
-Does not currently work!
+
+Unfortunately, this does not currently work, because of packaging difficulities
+with Clojure.  In version 2.0, this will replaced with a pure-Python approach to
+visualizing topologies.  See GitHub issue #22.
 """
 
 from __future__ import absolute_import, print_function
 
 import sys
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 
 from invoke import run
 
 from .common import add_name
-from ..ext.util import get_topology_definition
+from ..util import get_topology_definition
 
 
 def visualize_topology(name=None, flip=False):
@@ -33,9 +35,8 @@ def visualize_topology(name=None, flip=False):
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('visualize',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     subparser.add_argument('-f', '--flip',
                            action='store_true',
@@ -43,5 +44,5 @@ def subparser_hook(subparsers):
     add_name(subparser)
 
 def main(args):
-    """ Create a graphviz visualization of the specified topology.   """
+    """ Create a graphviz visualization of a topology. """
     visualize_topology(args.name)

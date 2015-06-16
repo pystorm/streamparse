@@ -9,7 +9,7 @@ from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 from invoke import run
 
 from ..contextmanagers import ssh_tunnel
-from ..ext.util import (get_topology_definition, get_env_config,
+from ..util import (get_topology_definition, get_env_config,
                         get_nimbus_for_env_config, is_ssh_for_nimbus)
 from .common import add_environment, add_name, add_wait
 
@@ -49,7 +49,7 @@ def subparser_hook(subparsers):
     subparser = subparsers.add_parser('kill',
                                       formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     add_environment(subparser)
     add_name(subparser)

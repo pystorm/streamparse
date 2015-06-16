@@ -30,9 +30,8 @@ def load_suparsers(subparsers):
 
 def main():
     """main entry point for sparse"""
-    parser = argparse.ArgumentParser(prog='sparse',
-                                     description='sparse: manage streamparse '
-                                                 'clusters.',
+    parser = argparse.ArgumentParser(description='Utilities for managing Storm'
+                                                 '/streamparse topologies.',
                                      epilog='sparse provides a front-end to '
                                             'streamparse, a framework for '
                                             'creating Python projects for '
@@ -44,7 +43,7 @@ def main():
                                             'on your $PATH, and uses lein and '
                                             'Clojure under the hood for JVM/'
                                             'Thrift interop.')
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(title='sub-commands')
     load_suparsers(subparsers)
     args = parser.parse_args()
 

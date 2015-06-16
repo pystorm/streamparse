@@ -4,7 +4,7 @@ Display stats about running Storm topologies.
 
 from __future__ import absolute_import, print_function
 
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
+import sys
 from itertools import chain
 
 from pkg_resources import parse_version
@@ -12,8 +12,8 @@ from prettytable import PrettyTable
 from six import iteritems
 from six.moves import map, zip
 
-from .common import add_environment
-from ..ext.util import (get_env_config, get_ui_json, get_ui_jsons,
+from .common import add_environment, add_name
+from ..util import (get_env_config, get_ui_json, get_ui_jsons,
                         storm_lib_version)
 
 
@@ -211,32 +211,25 @@ def _get_topology_id(env_name, topology_name):
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('stats',
-                                      formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     subparser.add_argument('--all',
                            action='store_true',
                            help='All available stats.')
-    subparser.add_argument('-c', '--components',
+    subparser.add_argument('-c', '--component',
                            help='Topology component (bolt/spout) name as '
                                 'specified in Clojure topology specification')
     add_environment(subparser)
+    add_name(subparser)
 
 
 def main(args):
     """ Display stats about running Storm topologies. """
-    import sys
     storm_version = storm_lib_version()
-    print('Storm version: {}'.format(storm_version))
-    sys.stdout.flush()
     if storm_version >= parse_version('0.9.2-incubating'):
-        print('Trying to get stats')
-        sys.stdout.flush()
         display_stats(args.environment, topology_name=args.name,
                       component_name=args.component, all_components=args.all)
-        print('Ran display_stats')
-        sys.stdout.flush()
     else:
         print("ERROR: Storm {0} does not support this command."
               .format(storm_version))

@@ -4,20 +4,18 @@ Display uptime for workers in running Storm topologies.
 
 from __future__ import absolute_import, print_function
 
-from argparse import ArgumentDefaultsHelpFormatter as DefaultsHelpFormatter
 from pkg_resources import parse_version
 from prettytable import PrettyTable
 
 from .common import add_environment
-from ..ext.util import get_ui_json, storm_lib_version
+from ..util import get_ui_json, storm_lib_version
 
 
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
-    subparser = subparsers.add_parser('worker-uptime',
-                                      formatter_class=DefaultsHelpFormatter,
+    subparser = subparsers.add_parser('worker_uptime',
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     add_environment(subparser)
 
@@ -55,7 +53,7 @@ def display_worker_uptime(env_name):
 
 
 def main(args):
-    """ Display uptime for workers in running Storm topologies. """
+    """ Display uptime for Storm workers. """
     storm_version = storm_lib_version()
     if storm_version >= parse_version('0.9.2-incubating'):
         display_worker_uptime(args.environment)

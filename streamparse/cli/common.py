@@ -55,6 +55,11 @@ def add_par(parser):
                              'number of Storm workers and acker bolts at once '
                              'to passed value.')
 
+def add_pattern(parser):
+    """ Add --pattern option to parser """
+    parser.add_argument('--pattern',
+                        help='Pattern of log files to operate on.')
+
 
 def add_wait(parser):
     """ Add --wait option to parser """

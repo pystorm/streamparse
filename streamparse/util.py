@@ -9,12 +9,34 @@ from glob import glob
 from random import shuffle
 
 import requests
+from fabric.api import env
 from fabric.colors import red
 from invoke import run
 from pkg_resources import parse_version
 
-from ..contextmanagers import ssh_tunnel
-from ..decorators import memoized
+from .contextmanagers import ssh_tunnel
+from .decorators import memoized
+
+
+def activate_env(env_name=None):
+    """Activate a particular environment from a streamparse project's
+    config.json file and populatefabric's env dictionary with appropriate
+    values.
+
+    :param env_name: a `str` corresponding to the key within the config file's
+                     "envs" dictionary.
+    """
+    env_name, env_config = get_env_config(env_name)
+
+    env.storm_workers = env_config["workers"]
+    env.user = env_config["user"]
+    env.log_path = env_config.get("log_path") or \
+                   env_config.get("log", {}).get("path")
+    env.virtualenv_root = env_config.get("virtualenv_root") or \
+                          env_config.get("virtualenv_path")
+    env.disable_known_hosts = True
+    env.forward_agent = True
+    env.use_ssh_config = True
 
 
 def die(msg, error_code=1):
@@ -38,7 +60,8 @@ def get_topology_definition(topology_name=None):
     None, and there's only one topology definiton listed, we'll select that
     one, otherwise we'll die to avoid ambiguity.
 
-    :param topology_name: a `str`, the topology_name of the topology (without .clj extension).
+    :param topology_name: a `str`, the topology_name of the topology (without
+                          .clj extension).
     :returns: a `tuple` containing (topology_topology_name, topology_file).
     """
     config = get_config()
@@ -54,9 +77,11 @@ def get_topology_definition(topology_name=None):
                 "explicitly specify the topology by name using the -n or "
                 "--name flags.".format(specs_dir=topology_path))
         topology_file = topology_files[0]
-        topology_name = re.sub(r'(^{}|\.clj$)'.format(topology_path), '', topology_file)
+        topology_name = re.sub(r'(^{}|\.clj$)'.format(topology_path), '',
+                               topology_file)
     else:
-        topology_file = "{}.clj".format(os.path.join(topology_path, topology_name))
+        topology_file = "{}.clj".format(os.path.join(topology_path,
+                                                     topology_name))
         if not os.path.exists(topology_file):
             die("Topology definition file not found {}. You need to "
                 "create a topology definition file first."
@@ -123,7 +148,8 @@ def storm_lib_version():
     if len(versions) > 1:
         raise RuntimeError("Multiple Storm Versions Detected.")
     elif len(versions) == 0:
-        raise RuntimeError("No Storm version specified in project.clj dependencies.")
+        raise RuntimeError("No Storm version specified in project.clj "
+                           "dependencies.")
     else:
         return parse_version(versions.pop())
 
@@ -142,9 +168,7 @@ def get_ui_jsons(env_name, api_paths):
     for local_port in local_ports:
         try:
             data = {}
-            with ssh_tunnel(env_config["user"],
-                            host,
-                            local_port=local_port,
+            with ssh_tunnel(env_config["user"], host, local_port=local_port,
                             remote_port=remote_ui_port):
                 for api_path in api_paths:
                     r = requests.get('http://127.0.0.1:%s%s' % (local_port,
@@ -172,3 +196,27 @@ def prepare_topology():
     if os.path.isdir("_resources/resources"):
         shutil.rmtree("_resources/resources")
     shutil.copytree("src", "_resources/resources")
+
+
+def _get_file_names_command(path, patterns):
+    """Given a list of bash `find` patterns, return a string for the
+    bash command that will find those streamparse log files
+    """
+    patterns = "' -o -name '".join(patterns)
+    return ("cd {path} && "
+            "find . -maxdepth 1 -name '{patterns}' ") \
+            .format(path=path, patterns=patterns)
+
+
+def get_logfiles_cmd(topology_name=None, pattern=None):
+    """ Returns a string representing a command to run on the Storm workers that
+    will yield all of the logfiles for the given topology that meet the given
+    pattern (if specified).
+    """
+    # list log files found
+    log_name_patterns = ["worker*", "supervisor*", "access*", "metrics*",
+                         "streamparse_{topo_name}*".format(topo_name=topology_name)]
+    ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
+    if pattern is not None:
+        ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
+    return ls_cmd

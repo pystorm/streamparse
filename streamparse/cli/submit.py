@@ -18,11 +18,11 @@ from .common import (add_ackers, add_debug, add_environment, add_name,
                      resolve_ackers_workers)
 from .list import _list_topologies
 from .kill import _kill_topology
+from .update_virtualenv import create_or_update_virtualenvs
 from ..contextmanagers import ssh_tunnel
-from ..ext.util import (get_config, get_env_config, get_nimbus_for_env_config,
-                        get_topology_definition, is_ssh_for_nimbus,
-                        prepare_topology)
-from ..ext.fabric import activate_env, create_or_update_virtualenvs
+from ..util import (activate_env, get_config, get_env_config,
+                    get_nimbus_for_env_config, get_topology_definition,
+                    is_ssh_for_nimbus, prepare_topology)
 
 
 def get_user_tasks():
@@ -203,9 +203,9 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 
     if use_venv:
         config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-        create_or_update_virtualenvs(
-            name, "{}/{}.txt".format(config["virtualenv_specs"], name)
-        )
+        create_or_update_virtualenvs(env_name, name,
+                                     "{}/{}.txt".format(config["virtualenv_specs"],
+                                                        name))
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy()
@@ -235,7 +235,7 @@ def subparser_hook(subparsers):
     subparser = subparsers.add_parser('submit',
                                       formatter_class=DefaultsHelpFormatter,
                                       description=__doc__,
-                                      help=__doc__)
+                                      help=main.__doc__)
     subparser.set_defaults(func=main)
     add_ackers(subparser)
     add_debug(subparser)
