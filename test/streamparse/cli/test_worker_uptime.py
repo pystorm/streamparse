@@ -16,7 +16,7 @@ class WorkerUptimeTestCase(unittest.TestCase):
         subparser_hook(subparsers)
 
         subcommands = parser._optionals._actions[1].choices.keys()
-        ok_('worker-uptime' in subcommands)
+        ok_('worker_uptime' in subcommands)
 
 
 if __name__ == '__main__':
