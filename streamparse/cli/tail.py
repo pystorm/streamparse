@@ -43,6 +43,7 @@ def subparser_hook(subparsers):
     subparser.set_defaults(func=main)
     add_environment(subparser)
     subparser.add_argument('-f', '--follow',
+                           action='store_true',
                            help='Keep files open and append output as they '
                                 'grow.  This is the same as "-f" parameter for '
                                 'the tail command that will be executed on the '
