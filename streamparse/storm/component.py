@@ -16,6 +16,8 @@ try:
 except ImportError:
     import json
 
+from .. import serialize
+
 
 # Support for Storm Log levels as per STORM-414
 _STORM_LOG_TRACE = 0
@@ -282,7 +284,7 @@ class Component(object):
             msg = '{}{}\n'.format(msg, line[0:-1])
 
         try:
-            return json.loads(msg)
+            return json.loads(msg, object_hook=serialize.decode)
         except Exception:
             log.error("JSON decode error for message: %r", msg, exc_info=True)
             raise
@@ -330,7 +332,8 @@ class Component(object):
                        self.component_name, self.pid, message)
             return
 
-        wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
+        serialized_msg = json.dumps(message, default=serialize.encode)
+        wrapped_msg = "{}\nend\n".format(serialized_msg).encode('utf-8')
 
         with self._writer_lock:
             self.output_stream.flush()
