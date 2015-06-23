@@ -204,11 +204,9 @@ class Component(object):
             return io.TextIOWrapper(stream.buffer, encoding='utf-8')
         elif hasattr(stream, 'readable'):
             return io.TextIOWrapper(stream, encoding='utf-8')
-        # Python 2.x stdin and stdout are just files, so use codecs module
-        elif 'r' in stream.mode:
-            return codecs.getreader('utf-8')(stream)
+        # Python 2.x stdin and stdout are just files
         else:
-            return codecs.getwriter('utf-8')(stream)
+            return io.open(stream.fileno(), mode=stream.mode, encoding='utf-8')
 
     def _setup_component(self, storm_conf, context):
         """Add helpful instance variables to component after initial handshake
@@ -417,11 +415,9 @@ class Component(object):
         :param stream: the ID of the stream to emit this tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples (or :class:`streamparse.storm.component.Tuple`
-                        instances) which the emitted tuples should be anchored
-                        to. If ``auto_anchor`` is set to ``True`` and
-                        you have not specified ``anchors``, ``anchors`` will be
-                        set to the incoming/most recent tuple ID(s).  This is
+        :param anchors: IDs the tuples (or
+                        :class:`streamparse.storm.component.Tuple` instances)
+                        which the emitted tuples should be anchored to. This is
                         only passed by :class:`streamparse.storm.bolt.Bolt`.
         :type anchors: list
         :param direct_task: the task to send the tuple to.
