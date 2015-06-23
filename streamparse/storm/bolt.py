@@ -349,11 +349,6 @@ class BatchingBolt(Bolt):
         self._batcher.daemon = True
         self._batcher.start()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.process_batch(self.group_key(self._current_tups[0]),self._current_tups)
 
     def group_key(self, tup):
         """Return the group key used to group tuples within a batch.
