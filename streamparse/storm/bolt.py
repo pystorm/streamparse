@@ -298,6 +298,7 @@ class BatchingBolt(Bolt):
         self._batches = defaultdict(list)
         self._tick_counter = 0
 
+
     def group_key(self, tup):
         """Return the group key used to group tuples within a batch.
 
