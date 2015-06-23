@@ -17,8 +17,6 @@ except ImportError:
     import mock
     from mock import patch
 
-from six.moves import range
-
 from streamparse.storm import Component, Tuple
 
 
@@ -268,6 +266,23 @@ class ComponentTests(unittest.TestCase):
         component = Component(input_stream=BytesIO(), output_stream=BytesIO())
         inputs = [{"command": "emit", "id": 4, "stream": "", "task": 9,
                    "tuple": ["field1", 2, 3]},
+                  {"command": "log", "msg": "I am a robot monkey."},
+                  {"command": "next"},
+                  {"command": "sync"}]
+        for cmd in inputs:
+            component.output_stream.close()
+            component.output_stream = component._wrap_stream(BytesIO())
+            component.send_message(cmd)
+            self.assertEqual("{}\nend\n".format(json.dumps(cmd)).encode('utf-8'),
+                             component.output_stream.buffer.getvalue())
+
+        # Check that we properly skip over invalid input
+        self.assertIsNone(component.send_message(['foo', 'bar']))
+
+    def test_send_message_unicode(self):
+        component = Component(input_stream=BytesIO(), output_stream=BytesIO())
+        inputs = [{"command": "emit", "id": 4, "stream": "", "task": 9,
+                   "tuple": ["field\uFFE6", 2, 3]},
                   {"command": "log", "msg": "I am a robot monkey."},
                   {"command": "next"},
                   {"command": "sync"}]
