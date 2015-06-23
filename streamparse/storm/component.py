@@ -1,10 +1,10 @@
 """Base primititve classes for working with Storm."""
 from __future__ import absolute_import, print_function, unicode_literals
 
-import codecs
 import io
 import logging
 import os
+import signal
 import sys
 from collections import deque, namedtuple
 from logging.handlers import RotatingFileHandler
@@ -45,6 +45,19 @@ _PYTHON_LOG_LEVELS = {
 
 
 log = logging.getLogger(__name__)
+
+
+def remote_pdb_handler(signum, frame):
+    """ Handler to drop us into a remote debugger upon receiving SIGUSR1 """
+    try:
+        from remote_pdb import RemotePdb
+        rdb = RemotePdb(host='127.0.0.1', port=0)
+        rdb.set_trace(frame=frame)
+    except ImportError:
+        log.warning('remote_pdb unavailable.  Please install remote_pdb to '
+                    'allow remote debugging.')
+    # Restore signal handler for later
+    signal.signal(signum, remote_pdb_handler)
 
 
 class StormHandler(logging.Handler):
@@ -158,9 +171,10 @@ class Component(object):
     """
 
 
-    def __init__(self, input_stream=sys.stdin, output_stream=sys.stdout):
-        # Ensure we don't fall back on the platform-dependent encoding and always
-        # use UTF-8 https://docs.python.org/3.4/library/sys.html#sys.stdin
+    def __init__(self, input_stream=sys.stdin, output_stream=sys.stdout,
+                 rdb_signal=signal.SIGUSR1):
+        # Ensure we don't fall back on the platform-dependent encoding and
+        # always use UTF-8
         self.input_stream = self._wrap_stream(input_stream)
         self.output_stream = self._wrap_stream(output_stream)
         self.topology_name = None
@@ -177,6 +191,9 @@ class Component(object):
         self._pending_task_ids = deque()
         self._reader_lock = RLock()
         self._writer_lock = RLock()
+        # Setup remote pdb handler if asked to
+        if rdb_signal is not None:
+            signal.signal(rdb_signal, remote_pdb_handler)
 
     @staticmethod
     def _wrap_stream(stream):
