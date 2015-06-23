@@ -277,8 +277,8 @@ class Component(object):
                              "ID, Storm has instead sent %s '\\n' messages.",
                              num_blank_lines)
                 continue
-
-            msg = '{}{}\n'.format(msg, line[0:-1])
+            
+            msg = u'{}{}\n'.format(msg, (line[0:-1]).decode('utf-8'))
 
         try:
             return json.loads(msg)
