@@ -78,7 +78,7 @@ class ComponentTests(unittest.TestCase):
         self.assertEqual(given_conf, expected_conf)
         self.assertEqual(given_context, expected_context)
         self.assertEqual("{}\nend\n".format(json.dumps({"pid": component.pid})).encode('utf-8'),
-                         component.output_stream.getvalue())
+                         component.output_stream.buffer.getvalue())
 
     def test_setup_component(self):
         conf = {"topology.message.timeout.secs": 3,
@@ -137,6 +137,30 @@ class ComponentTests(unittest.TestCase):
         outputs = [json.loads(msg) for msg in inputs[::2] if msg]
         outputs.append('')
         component = Component(input_stream=StringIO(''.join(inputs)),
+                              output_stream=BytesIO())
+        for output in outputs:
+            log.info('Checking msg for %s', output)
+            if output:
+                msg = component.read_message()
+                self.assertEqual(output, msg)
+            else:
+                with self.assertRaises(SystemExit):
+                    component.read_message()
+
+    def test_read_message_unicode(self):
+        inputs = [# Task IDs
+                  '[12, 22, 24]\n', 'end\n',
+                  # Incoming tuple for bolt
+                  ('{ "id": "-6955786537413359385", "comp": "1", "stream": "1"'
+                   ', "task": 9, "tuple": ["snow white \uFFE6 the seven dwarfs"'
+                   ', "field2", 3]}\n'), 'end\n',
+                  # next command for spout
+                  '{"command": "next"}\n', 'end\n',
+                  # empty message, which should trigger sys.exit (end ignored)
+                  '', '']
+        outputs = [json.loads(msg) for msg in inputs[::2] if msg]
+        outputs.append('')
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf8')),
                               output_stream=BytesIO())
         for output in outputs:
             log.info('Checking msg for %s', output)
@@ -249,10 +273,10 @@ class ComponentTests(unittest.TestCase):
                   {"command": "sync"}]
         for cmd in inputs:
             component.output_stream.close()
-            component.output_stream = BytesIO()
+            component.output_stream = component._wrap_stream(BytesIO())
             component.send_message(cmd)
             self.assertEqual("{}\nend\n".format(json.dumps(cmd)).encode('utf-8'),
-                             component.output_stream.getvalue())
+                             component.output_stream.buffer.getvalue())
 
         # Check that we properly skip over invalid input
         self.assertIsNone(component.send_message(['foo', 'bar']))
@@ -264,7 +288,7 @@ class ComponentTests(unittest.TestCase):
                   ("I am a monkey who learned to talk.", 'warning', 3)]
         for msg, level, storm_level in inputs:
             component.output_stream.close()
-            component.output_stream = BytesIO()
+            component.output_stream = component._wrap_stream(BytesIO())
             component.log(msg, level=level)
             send_message_mock.assert_called_with(component, {'command': 'log',
                                                              'msg': msg,

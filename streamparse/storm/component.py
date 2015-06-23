@@ -160,15 +160,8 @@ class Component(object):
     def __init__(self, input_stream=sys.stdin, output_stream=sys.stdout):
         # Ensure we don't fall back on the platform-dependent encoding and always
         # use UTF-8 https://docs.python.org/3.4/library/sys.html#sys.stdin
-        if hasattr(input_stream, 'buffer'):
-            input_stream = io.TextIOWrapper(input_stream.buffer,
-                                            encoding='utf-8')
-        self.input_stream = input_stream
-        # Python 2 stdout does not have buffer, and neither would a StringIO
-        # object like nose replaces sys.stdout with
-        if hasattr(output_stream, 'buffer'):
-            output_stream = output_stream.buffer
-        self.output_stream = output_stream
+        self.input_stream = self._wrap_stream(input_stream)
+        self.output_stream = self._wrap_stream(output_stream)
         self.topology_name = None
         self.task_id = None
         self.component_name = None
@@ -183,6 +176,18 @@ class Component(object):
         self._pending_task_ids = deque()
         self._reader_lock = RLock()
         self._writer_lock = RLock()
+
+    @staticmethod
+    def _wrap_stream(stream):
+        """Returns a TextIOWrapper around the given stream that handles UTF-8
+        encoding/decoding.
+        """
+        if isinstance(stream, io.TextIOBase):
+            return stream
+        elif hasattr(stream, 'buffer'):
+            return io.TextIOWrapper(stream.buffer, encoding='utf-8')
+        else:
+            return io.TextIOWrapper(stream, encoding='utf-8')
 
     def _setup_component(self, storm_conf, context):
         """Add helpful instance variables to component after initial handshake
@@ -330,7 +335,7 @@ class Component(object):
                        self.component_name, self.pid, message)
             return
 
-        wrapped_msg = "{}\nend\n".format(json.dumps(message)).encode('utf-8')
+        wrapped_msg = "{}\nend\n".format(json.dumps(message))
 
         with self._writer_lock:
             self.output_stream.flush()
