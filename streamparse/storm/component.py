@@ -1,6 +1,7 @@
 """Base primititve classes for working with Storm."""
 from __future__ import absolute_import, print_function, unicode_literals
 
+import codecs
 import io
 import logging
 import os
@@ -184,8 +185,13 @@ class Component(object):
         """
         if hasattr(stream, 'buffer'):
             return io.TextIOWrapper(stream.buffer, encoding='utf-8')
-        else:
+        elif hasattr(stream, 'readable'):
             return io.TextIOWrapper(stream, encoding='utf-8')
+        # Python 2.x stdin and stdout are just files, so use codecs module
+        elif 'r' in stream.mode:
+            return codecs.getreader('utf-8')(stream)
+        else:
+            return codecs.getwriter('utf-8')(stream)
 
     def _setup_component(self, storm_conf, context):
         """Add helpful instance variables to component after initial handshake
