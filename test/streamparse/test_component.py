@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import unittest
-from io import BytesIO, StringIO
+from io import BytesIO
 
 try:
     from unittest import mock
@@ -69,7 +69,7 @@ class ComponentTests(unittest.TestCase):
         expected_context = handshake_dict['context']
         inputs = ["{}\n".format(json.dumps(handshake_dict)),
                   "end\n"]
-        component = Component(input_stream=StringIO(''.join(inputs)),
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf-8')),
                               output_stream=BytesIO())
         given_conf, given_context = component.read_handshake()
         pid_path = os.path.join(pid_dir, str(component.pid))
@@ -136,7 +136,7 @@ class ComponentTests(unittest.TestCase):
                   '', '']
         outputs = [json.loads(msg) for msg in inputs[::2] if msg]
         outputs.append('')
-        component = Component(input_stream=StringIO(''.join(inputs)),
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf-8')),
                               output_stream=BytesIO())
         for output in outputs:
             log.info('Checking msg for %s', output)
@@ -181,7 +181,7 @@ class ComponentTests(unittest.TestCase):
                   'end\n']
         output = json.loads(''.join(inputs[:-1]))
 
-        component = Component(input_stream=StringIO(''.join(inputs)),
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf-8')),
                               output_stream=BytesIO())
         msg = component.read_message()
         self.assertEqual(output, msg)
@@ -197,7 +197,7 @@ class ComponentTests(unittest.TestCase):
                   # next command for spout
                   '{"command": "next"}\n', 'end\n']
         outputs = [json.loads(msg) for msg in inputs[::2]]
-        component = Component(input_stream=StringIO(''.join(inputs)),
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf-8')),
                               output_stream=BytesIO())
 
         # Skip first output, because it's a task ID, and won't be returned by
@@ -221,7 +221,7 @@ class ComponentTests(unittest.TestCase):
                   # Task IDs
                   '[16, 23, 42]\n', 'end\n']
         outputs = [json.loads(msg) for msg in inputs[::2]]
-        component = Component(input_stream=StringIO(''.join(inputs)),
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf-8')),
                               output_stream=BytesIO())
 
         # Skip middle outputs, because they're commands and won't be returned by
@@ -256,7 +256,7 @@ class ComponentTests(unittest.TestCase):
             del output['tuple']
             outputs.append(Tuple(**output))
 
-        component = Component(input_stream=StringIO(''.join(inputs)),
+        component = Component(input_stream=BytesIO(''.join(inputs).encode('utf-8')),
                               output_stream=BytesIO())
 
         for output in outputs:

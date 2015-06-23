@@ -182,9 +182,7 @@ class Component(object):
         """Returns a TextIOWrapper around the given stream that handles UTF-8
         encoding/decoding.
         """
-        if isinstance(stream, io.TextIOBase):
-            return stream
-        elif hasattr(stream, 'buffer'):
+        if hasattr(stream, 'buffer'):
             return io.TextIOWrapper(stream.buffer, encoding='utf-8')
         else:
             return io.TextIOWrapper(stream, encoding='utf-8')

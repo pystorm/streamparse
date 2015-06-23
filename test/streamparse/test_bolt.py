@@ -4,11 +4,10 @@ Tests for Bolt and BatchingBolt classes
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import itertools
 import json
 import logging
 import unittest
-from io import BytesIO, StringIO
+from io import BytesIO
 
 try:
     from unittest import mock
@@ -33,11 +32,11 @@ class BoltTests(unittest.TestCase):
                          'stream': 'default',
                          'task': 'some_bolt',
                          'tuple': [1, 2, 3]}
-        tup_json = "{}\nend\n".format(json.dumps(self.tup_dict))
+        tup_json = "{}\nend\n".format(json.dumps(self.tup_dict)).encode('utf-8')
         self.tup = Tuple(self.tup_dict['id'], self.tup_dict['comp'],
                          self.tup_dict['stream'], self.tup_dict['task'],
                          self.tup_dict['tuple'],)
-        self.bolt = Bolt(input_stream=StringIO(tup_json),
+        self.bolt = Bolt(input_stream=BytesIO(tup_json),
                          output_stream=BytesIO())
         self.bolt.initialize({}, {})
 
@@ -291,7 +290,7 @@ class BatchingBoltTests(unittest.TestCase):
                            tup_dict['task'], tup_dict['tuple']) for tup_dict in
                      self.tup_dicts]
         self.nontick_tups = [tup for tup in self.tups if tup.stream != '__tick']
-        self.bolt = BatchingBolt(input_stream=StringIO(tups_json),
+        self.bolt = BatchingBolt(input_stream=BytesIO(tups_json.encode('utf-8')),
                                  output_stream=BytesIO())
         self.bolt.initialize({}, {})
 
