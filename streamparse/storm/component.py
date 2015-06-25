@@ -196,6 +196,11 @@ class Component(object):
             signal.signal(rdb_signal, remote_pdb_handler)
 
     @staticmethod
+    def is_heartbeat(tup):
+        """ :returns: Whether or not the given Tuple is a heartbeat """
+        return tup.task == -1 and tup.stream == '__heartbeat'
+
+    @staticmethod
     def _wrap_stream(stream):
         """Returns a TextIOWrapper around the given stream that handles UTF-8
         encoding/decoding.

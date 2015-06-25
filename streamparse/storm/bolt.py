@@ -55,9 +55,10 @@ class Bolt(Component):
     # Using a list so Bolt and subclasses can have more than one current_tup
     _current_tups = []
 
-    @classmethod
-    def spec(cls, **kwargs):
-        return BoltSpecification(cls, **kwargs)
+    @staticmethod
+    def is_tick(tup):
+        """ :returns: Whether or not the given Tuple is a tick tuple """
+        return tup.component == '__system' and tup.stream == '__tick'
 
     def initialize(self, storm_conf, context):
         """Called immediately after the initial handshake with Storm and before
@@ -204,9 +205,9 @@ class Bolt(Component):
         """
         self._current_tups = [self.read_tuple()]
         tup = self._current_tups[0]
-        if tup.task == -1 and tup.stream == '__heartbeat':
+        if self.is_heartbeat(tup):
             self.send_message({'command': 'sync'})
-        elif tup.component == '__system' and tup.stream == '__tick':
+        elif self.is_tick(tup):
             self.process_tick(tup)
             if self.auto_ack:
                  self.ack(tup)
@@ -357,6 +358,8 @@ class BatchingBolt(Bolt):
             how tuples are grouped into batches, override ``group_key``.
         """
         self._tick_counter += 1
+        # ACK tick tuple immediately, since it's just responsible for counter
+        self.ack(tick_tup)
         if self._tick_counter > self.ticks_between_batches and self._batches:
             for key, batch in iteritems(self._batches):
                 self._current_tups = batch
@@ -388,9 +391,9 @@ class BatchingBolt(Bolt):
         """
         self._current_tups = [self.read_tuple()]
         tup = self._current_tups[0]
-        if tup.task == -1 and tup.stream == '__heartbeat':
+        if self.is_heartbeat(tup):
             self.send_message({'command': 'sync'})
-        elif tup.component == '__system' and tup.stream == '__tick':
+        elif self.is_tick(tup):
             self.process_tick(tup)
         else:
             self.process(tup)
@@ -408,6 +411,11 @@ class BatchingBolt(Bolt):
         self.raise_exception(exc, self._current_tups)
 
         if self.auto_fail:
+            # Fail batches
             for batch in itervalues(self._batches):
                 for tup in batch:
+                    self.fail(tup)
+            # Fail current tick tuple if we have one
+            for tup in self._current_tups:
+                if self.is_tick(tup):
                     self.fail(tup)

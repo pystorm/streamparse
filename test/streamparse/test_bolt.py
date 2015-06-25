@@ -283,7 +283,7 @@ class BatchingBoltTests(unittest.TestCase):
                            'comp': '__system',
                            'stream': '__tick',
                            'task': -1,
-                           'tuple': [1]}]
+                           'tuple': [2]}]
         tups_json = '\nend\n'.join([json.dumps(tup_dict) for tup_dict in
                                     self.tup_dicts] + [''])
         self.tups = [Tuple(tup_dict['id'], tup_dict['comp'], tup_dict['stream'],
@@ -325,11 +325,10 @@ class BatchingBoltTests(unittest.TestCase):
         # Test auto-ack on (the default)
         for __ in self.tups:
             self.bolt._run()
-        ack_mock.assert_has_calls([mock.call(self.bolt, self.nontick_tups[0]),
-                                   mock.call(self.bolt, self.nontick_tups[1]),
-                                   mock.call(self.bolt, self.nontick_tups[2])],
+        ack_mock.assert_has_calls([mock.call(self.bolt, tup)
+                                   for tup in self.tups],
                                   any_order=True)
-        self.assertEqual(ack_mock.call_count, 3)
+        self.assertEqual(ack_mock.call_count, 5)
 
     @patch.object(BatchingBolt, 'ack', autospec=True)
     @patch.object(BatchingBolt, 'process_batch', new=lambda *args: None)
@@ -340,8 +339,11 @@ class BatchingBoltTests(unittest.TestCase):
             self.bolt._run()
         # Assert that this wasn't called, and print out what it was called with
         # otherwise.
-        self.assertListEqual(ack_mock.call_args_list, [])
-        self.assertEqual(ack_mock.call_count, 0)
+        ack_mock.assert_has_calls([mock.call(self.bolt, tup)
+                                   for tup in self.tups
+                                   if self.bolt.is_tick(tup)],
+                                  any_order=True)
+        self.assertEqual(ack_mock.call_count, 2)
 
     @patch.object(BatchingBolt, 'read_handshake', new=lambda x: ({}, {}))
     @patch.object(BatchingBolt, 'raise_exception', new=lambda *a: None)
