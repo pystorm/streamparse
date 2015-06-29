@@ -7,6 +7,8 @@ General Questions
 * `Is streamparse compatible with Python 3?`_
 * `How can I contribute to streamparse?`_
 * `How do I trigger some code before or after I submit my topology?`_
+* `How should I install streamparse on the cluster nodes?`_
+* `Should I install Clojure?`_
 
 Is streamparse compatible with Python 3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,6 +71,25 @@ is successfully submitted to prod.
         if env_name == "prod":
             write_to_irc("Deployed {} to {}".format(topo_name, env_name))
 
+
+How should I install streamparse on the cluster nodes?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+streamparse assumes your Storm servers have Python, pip, and virtualenv
+installed.  After that, the installation of all required dependencies (including
+streamparse itself) is taken care of via the `config.json` file for the
+streamparse project and the sparse submit command. See :ref:`Remote Deployment`
+for more information.
+
+Should I install Clojure?
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+No, the Java requirements for streamparse are identical to that of Storm itself.
+Storm requires Java and `bundles Clojure as a requirement`_, so you do not need
+to do any separate installation of Clojure.  You just need Java on all Storm
+servers.
+
+.. _bundles Clojure as a requirement: https://github.com/apache/storm/blob/5383ac375cb2955e3247d485e46f1f58bff62810/pom.xml#L320-L322
 
 Errors While Running streamparse
 --------------------------------
