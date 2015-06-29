@@ -66,7 +66,7 @@ def add_simple_jar(parser):
     parser.add_argument("-s", "--simple_jar",
                         action='store_true',
                         help='Instead of creating an Uber-JAR for the '
-                             'topology, which contains all of its JVM'
+                             'topology, which contains all of its JVM '
                              'dependencies, create a simple JAR with just the '
                              'code for the project.  This is useful when your '
                              'project is pure Python and has no JVM '
