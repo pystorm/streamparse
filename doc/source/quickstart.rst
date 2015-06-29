@@ -34,6 +34,8 @@ Once that's all set, you install streamparse using ``pip``::
 
     > pip install streamparse
 
+Note that installing streamparse depends on python-dev libs, hence make
+sure that your distro's python-dev package are also installed.
 
 Your First Project
 ------------------
@@ -169,8 +171,8 @@ function named "wordcount".
       ]
     )
 
-It turns out, the name of the name of the function doesn't matter much, we've
-used ``wordcount`` above, but it could just as easily be ``bananas``. What is
+It turns out, the name of the function doesn't matter much; we've used
+``wordcount`` above, but it could just as easily be ``bananas``. What is
 important, is that **the function must return an array with only two
 dictionaries and take one argument**.
 
