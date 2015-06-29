@@ -251,7 +251,10 @@ class BatchingBolt(Bolt):
     You must also set the `topology.tick.tuple.freq.secs` to how frequently you
     would like ticks to be sent.  If you want ``ticks_between_batches`` to work
     the same way ``secs_between_batches`` worked in older versions of
-    streamparse, just set `topology.tick.tuple.freq.secs` to 1.
+    streamparse, just set `topology.tick.tuple.freq.secs` to 1.  This setting
+    can be specified either at the topology level, or in the topology Clojure
+    file by adding `:conf {"topology.tick.tuple.freq.secs", 1}` to your
+    `python-bolt-spec`.
 
 
     :ivar auto_anchor: A ``bool`` indicating whether or not the bolt should

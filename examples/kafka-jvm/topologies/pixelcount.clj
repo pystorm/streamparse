@@ -29,7 +29,8 @@
         "bolts.pixel_count.PixelCounterBolt"
         ;; terminal bolt
         []
-        :p 1)
+        :p 1
+        :conf {"topology.tick.tuple.freq.secs", 1})
     }
   ]
 )
