@@ -37,7 +37,7 @@ def kill_topology(topology_name=None, env_name=None, wait=None):
     host, port = get_nimbus_for_env_config(env_config)
 
     if is_ssh_for_nimbus(env_config):
-        with ssh_tunnel(env_config["user"], host, 6627, port):
+        with ssh_tunnel(env_config.get("user"), host, 6627, port):
             return _kill_topology(topology_name, wait)
     return _kill_topology(topology_name, wait, host=host, port=port)
 

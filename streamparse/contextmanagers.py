@@ -31,11 +31,17 @@ def ssh_tunnel(user, host, local_port, remote_port):
         raise IOError("Local port: {} already in use, unable to open ssh "
                       "tunnel to {}:{}.".format(local_port, host, remote_port))
 
+    if user:
+        user_at_host = "{user}@{host}".format(user=user, host=host)
+    else:
+        user_at_host = host # Rely on SSH default or config to connect.
+
     ssh_cmd = ["ssh",
-               "{user}@{host}".format(user=user, host=host),
                "-NL",
-               "{local}:localhost:{remote}".format(local=local_port,
-                                                   remote=remote_port)]
+               "{local}:localhost:{remote}".format(
+                   local=local_port,
+                   remote=remote_port),
+               user_at_host]
     ssh_proc = subprocess.Popen(ssh_cmd, shell=False)
     # Validate that the tunnel is actually running before yielding
     while not _port_in_use(local_port):

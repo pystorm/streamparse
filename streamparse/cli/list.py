@@ -32,7 +32,7 @@ def list_topologies(env_name):
     host, port = get_nimbus_for_env_config(env_config)
 
     if is_ssh_for_nimbus(env_config):
-        with ssh_tunnel(env_config["user"], host, 6627, port):
+        with ssh_tunnel(env_config.get("user"), host, 6627, port):
             return _list_topologies()
     return _list_topologies(host=host, port=port)
 

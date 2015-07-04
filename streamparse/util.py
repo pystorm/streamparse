@@ -29,7 +29,7 @@ def activate_env(env_name=None):
     env_name, env_config = get_env_config(env_name)
 
     env.storm_workers = env_config["workers"]
-    env.user = env_config["user"]
+    env.user = env_config.get("user")
     env.log_path = env_config.get("log_path") or \
                    env_config.get("log", {}).get("path")
     env.virtualenv_root = env_config.get("virtualenv_root") or \
@@ -168,7 +168,7 @@ def get_ui_jsons(env_name, api_paths):
     for local_port in local_ports:
         try:
             data = {}
-            with ssh_tunnel(env_config["user"], host, local_port=local_port,
+            with ssh_tunnel(env_config.get("user"), host, local_port=local_port,
                             remote_port=remote_ui_port):
                 for api_path in api_paths:
                     r = requests.get('http://127.0.0.1:%s%s' % (local_port,

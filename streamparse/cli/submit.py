@@ -189,7 +189,7 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     sys.stdout.flush()
     # Use ssh tunnel with Nimbus or use host/port for Thrift connection
     if is_ssh_for_nimbus(env_config):
-        with ssh_tunnel(env_config["user"], host, 6627, port):
+        with ssh_tunnel(env_config.get("user"), host, 6627, port):
             print("ssh tunnel to Nimbus {}:{} established.".format(host, port))
             sys.stdout.flush()
             _kill_existing_topology(name, force, wait)
