@@ -497,12 +497,20 @@ these explicitly. streamparse will now:
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
 
-Disabling Virtualenv Creation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Disabling & Configuring Virtualenv Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you do not have ssh access to all of the servers in your Storm cluster, but
 you know they have all of the requirements for your Python code installed, you
 can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
+
+If you would like to pass command-line flags to virtualenv, you can set
+``"virtualenv_flags"`` in ``config.json``, for example::
+
+    "virtualenv_flags": "-p /path/to/python"
+
+Note that this only applies when the virtualenv is created, not when an
+existing virtualenv is used.
 
 Using unofficial versions of Storm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

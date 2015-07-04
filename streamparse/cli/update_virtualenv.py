@@ -13,18 +13,20 @@ from fabric.api import env, execute, parallel, prefix, put, puts, run, task
 from fabric.contrib.files import exists
 
 from .common import add_environment, add_name
-from ..util import (activate_env, die, get_config, get_env_config,
-                        get_topology_definition)
+from ..util import activate_env, die, get_config, get_topology_definition
 
 
 @parallel
 def _create_or_update_virtualenv(virtualenv_root,
                                  virtualenv_name,
-                                 requirements_file):
+                                 requirements_file,
+                                 virtualenv_flags=None):
     virtualenv_path = os.path.join(virtualenv_root, virtualenv_name)
     if not exists(virtualenv_path):
+        if not virtualenv_flags:
+            virtualenv_flags = ''
         puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-        run("virtualenv {}".format(virtualenv_path))
+        run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
 
     puts("Uploading requirements.txt to temporary file.")
     tmpfile = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
@@ -38,7 +40,8 @@ def _create_or_update_virtualenv(virtualenv_root,
     run("rm {}".format(tmpfile))
 
 
-def create_or_update_virtualenvs(env_name, topology_name, requirements_file):
+def create_or_update_virtualenvs(env_name, topology_name, requirements_file,
+                                 virtualenv_flags=None):
     """Create or update virtualenvs on remote servers.
 
     Assumes that virtualenv is on the path of the remote server(s).
@@ -63,7 +66,8 @@ def create_or_update_virtualenvs(env_name, topology_name, requirements_file):
                 .format(requirements_file))
 
     execute(_create_or_update_virtualenv, env.virtualenv_root, topology_name,
-            requirements_file, hosts=env.storm_workers)
+            requirements_file, virtualenv_flags=virtualenv_flags,
+            hosts=env.storm_workers)
 
 
 def subparser_hook(subparsers):
