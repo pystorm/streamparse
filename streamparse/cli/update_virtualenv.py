@@ -23,7 +23,7 @@ def _create_or_update_virtualenv(virtualenv_root,
                                  virtualenv_flags=None):
     virtualenv_path = os.path.join(virtualenv_root, virtualenv_name)
     if not exists(virtualenv_path):
-        if not virtualenv_flags:
+        if virtualenv_flags is None:
             virtualenv_flags = ''
         puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
         run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))

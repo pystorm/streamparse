@@ -22,7 +22,7 @@ from .update_virtualenv import create_or_update_virtualenvs
 from ..contextmanagers import ssh_tunnel
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_for_env_config, get_topology_definition,
-                    is_ssh_for_nimbus, prepare_topology)
+                    is_ssh_for_nimbus)
 
 
 def get_user_tasks():
