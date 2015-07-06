@@ -5,3 +5,4 @@ six
 requests
 prettytable
 setuptools
+simplejson

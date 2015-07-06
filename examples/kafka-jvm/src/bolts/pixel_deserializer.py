@@ -1,7 +1,4 @@
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import simplejson as json
 from streamparse.bolt import Bolt
 
 

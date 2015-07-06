@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
 import os
 import re
 import shutil
@@ -9,6 +8,7 @@ from glob import glob
 from random import shuffle
 
 import requests
+import simplejson as json
 from fabric.api import env
 from fabric.colors import red
 from invoke import run

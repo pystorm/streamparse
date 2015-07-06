@@ -4,11 +4,12 @@ Tests for basic IPC stuff via Component class
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
 import logging
 import os
 import unittest
 from io import BytesIO
+
+import simplejson as json
 
 try:
     from unittest import mock

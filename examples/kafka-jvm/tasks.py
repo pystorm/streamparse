@@ -1,9 +1,9 @@
 from __future__ import print_function
-import json
 import random
 import time
 import logging
 
+import simplejson as json
 from invoke import task, run
 from kafka.common import UnknownTopicOrPartitionError
 from kafka.client import KafkaClient

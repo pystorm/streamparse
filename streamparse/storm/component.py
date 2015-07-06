@@ -12,10 +12,7 @@ from os.path import join
 from threading import RLock
 from traceback import format_exc
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import simplejson as json
 
 
 # Support for Storm Log levels as per STORM-414

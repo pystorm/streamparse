@@ -38,6 +38,7 @@ install_requires = [
     'requests',
     'prettytable',
     'six'
+    'simplejson'
 ]
 
 if sys.version_info.major < 3:
