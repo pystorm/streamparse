@@ -22,7 +22,7 @@ from .update_virtualenv import create_or_update_virtualenvs
 from ..contextmanagers import ssh_tunnel
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_for_env_config, get_topology_definition,
-                    is_ssh_for_nimbus, prepare_topology)
+                    is_ssh_for_nimbus)
 
 
 def get_user_tasks():
@@ -181,9 +181,11 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 
     if use_venv:
         config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-        create_or_update_virtualenvs(env_name, name,
-                                     "{}/{}.txt".format(config["virtualenv_specs"],
-                                                        name))
+        create_or_update_virtualenvs(
+            env_name,
+            name,
+            "{}/{}.txt".format(config["virtualenv_specs"], name),
+            virtualenv_flags=env_config.get('virtualenv_flags'))
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy(simple_jar=simple_jar)
