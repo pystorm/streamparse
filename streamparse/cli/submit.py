@@ -174,9 +174,9 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 
     # Check if we need to maintain virtualenv during the process
     use_venv = env_config.get('use_virtualenv', True)
-    if use_venv:
-        activate_env(env_name)
-
+    # Setup the fabric env dictionary
+    activate_env(env_name)
+    # Run pre_submit actions provided by project
     _pre_submit_hooks(name, env_name, env_config)
 
     if use_venv:
