@@ -31,13 +31,16 @@ def get_user_tasks():
 
     :returns: tuple invoke_tasks, fabric_tasks
     """
+    sys.path.insert(0, os.getcwd())
     try:
-        sys.path.insert(0, os.getcwd())
         import tasks as user_invoke
-        import fabfile as user_fabric
-        return user_invoke, user_fabric
     except ImportError:
-        return None, None
+        user_invoke = None
+    try:
+        import fabfile as user_fabric
+    except ImportError:
+        user_fabric = None
+    return user_invoke, user_fabric
 
 
 def is_safe_to_submit(topology_name, host=None, port=None):
