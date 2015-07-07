@@ -3,7 +3,8 @@
   (:require [clojure.string :as string]
             [streamparse.cli :refer [cli]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [clojure.core :refer [fn?]])
+            [clojure.core :refer [fn?]]
+            [clojure.data.json :as json])
   (:use [backtype.storm clojure config])
   (:import  [backtype.storm StormSubmitter])
   (:gen-class))
@@ -34,10 +35,19 @@
         ""]
         (string/join \newline)))
 
+(defn smart-read-str [val]
+  "Read JSON string and don't convert git hashes to numbers"
+  ;; issue with literals that start with digits, but contain letters
+  (if (not= (re-find #"\d+[A-Za-z]" val) nil)
+    val
+    (try
+      (json/read-str val)
+      (catch Exception e val))))
+
 (defn -parse-topo-option [val-str]
   "Parse topology --option in option.key=val form."
   (let [[key val] (string/split val-str #"=")
-       parsed-val (read-string val)]
+       parsed-val (smart-read-str val)]
        {key parsed-val}))
 
 (defn -assoc-topo-option [previous key val]
