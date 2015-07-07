@@ -223,6 +223,7 @@ class Component(object):
                                          .get(str(self.task_id), '')
         self.debug = storm_conf.get("topology.debug", False)
         self.storm_conf = storm_conf
+        self.context = context
 
         # Set up logging
         self.logger = logging.getLogger('.'.join((__name__,

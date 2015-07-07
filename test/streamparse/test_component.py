@@ -43,7 +43,7 @@ class ComponentTests(unittest.TestCase):
                 },
                 "taskid": 3,
                 # Everything below this line is only available in Storm 0.10.0+
-                "componentid": "example-bolt",
+                "componentid": "example-bolt1",
                 "stream->target->grouping": {
                     "default": {
                         "example-bolt2": {
@@ -98,7 +98,7 @@ class ComponentTests(unittest.TestCase):
             },
             "taskid": 3,
             # Everything below this line is only available in Storm 0.11.0+
-            "componentid": "example-bolt",
+            "componentid": "example-bolt1",
             "stream->target->grouping": {
                 "default": {
                     "example-bolt2": {
@@ -114,6 +114,11 @@ class ComponentTests(unittest.TestCase):
                         "type": "FIELDS",
                         "fields": ["word"]
                     }
+                }
+            },
+            "source->stream->fields": {
+                "example-spout": {
+                    "default": ["word"]
                 }
             }
         }
