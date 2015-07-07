@@ -216,14 +216,17 @@ class Component(object):
         """
         self.topology_name = storm_conf.get('topology.name', '')
         self.task_id = context.get('taskid', '')
-        self.component_name = context.get('task->component', {})\
-                                      .get(str(self.task_id), '')
+        self.component_name = context.get('componentid')
+        # If using Storm before 0.10.0 componentid is not available
+        if self.component_name is None:
+            self.component_name = context.get('task->component', {})\
+                                         .get(str(self.task_id), '')
         self.debug = storm_conf.get("topology.debug", False)
         self.storm_conf = storm_conf
-        self.context = context
+
+        # Set up logging
         self.logger = logging.getLogger('.'.join((__name__,
                                                   self.component_name)))
-        # Set up logging
         log_path = self.storm_conf.get('streamparse.log.path')
         if log_path:
             root_log = logging.getLogger()
