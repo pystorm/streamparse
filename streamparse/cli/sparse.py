@@ -14,6 +14,8 @@ import os
 import pkgutil
 import sys
 
+from ..version import __version__
+
 
 def load_suparsers(subparsers):
     """
@@ -44,6 +46,8 @@ def main():
                                             'Clojure under the hood for JVM/'
                                             'Thrift interop.')
     subparsers = parser.add_subparsers(title='sub-commands')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {}'.format(__version__))
     load_suparsers(subparsers)
     args = parser.parse_args()
 
