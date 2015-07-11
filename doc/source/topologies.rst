@@ -229,5 +229,3 @@ If you submitted to a cluster, streamparse uses ``lein`` to compile the ``src``
 directory into a jar file, which is run on the cluster. Lein uses the
 ``project.clj`` file located in the root of your project. This file is a
 standard lein project file and can be customized according to your needs.
-
-

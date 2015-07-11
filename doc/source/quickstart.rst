@@ -169,7 +169,7 @@ function named "wordcount".
       ]
     )
 
-It turns out, the name of the function doesn't matter much; we've used 
+It turns out, the name of the function doesn't matter much; we've used
 ``wordcount`` above, but it could just as easily be ``bananas``. What is
 important, is that **the function must return an array with only two
 dictionaries and take one argument**.
@@ -395,7 +395,7 @@ Bolt class. Once this is overridden, you can set the storm option
 to be emitted every ``<frequency>`` seconds.
 
 You can see the full docs for ``process_tick()`` in
-:class:`streamparse.bolt.Bolt`. 
+:class:`streamparse.bolt.Bolt`.
 
 **Example**:
 
