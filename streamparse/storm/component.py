@@ -129,7 +129,7 @@ Tuple = namedtuple('Tuple', 'id component stream task values')
 
 
 class Component(object):
-    """Base class for Spouts and Bolts which contains class methods for
+    """Base class for spouts and bolts which contains class methods for
     logging messages back to the Storm worker process.
 
 
@@ -267,7 +267,7 @@ class Component(object):
     def read_message(self):
         """Read a message from Storm, reconstruct newlines appropriately.
 
-        All of Storm's messages (for either Bolts or Spouts) should be of the
+        All of Storm's messages (for either bolts or spouts) should be of the
         form::
 
             '<command or task_id form prior emit>\\nend\\n'
@@ -276,7 +276,7 @@ class Component(object):
 
             '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\\nend\\n'
 
-        Command example for a Spout to emit it's next tuple::
+        Command example for a spout to emit it's next tuple::
 
             '{"command": "next"}\\nend\\n'
 
@@ -499,4 +499,3 @@ class Component(object):
         log_msg = "Exception in {}.run()".format(self.__class__.__name__)
         log.error(log_msg, exc_info=True)
         self.raise_exception(exc)
-

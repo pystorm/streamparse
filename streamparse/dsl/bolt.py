@@ -38,7 +38,7 @@ class BoltSpecification(Specification):
         self.group_on = group_on
 
     def resolve_dependencies(self, specifications):
-        """Modifies the Bolt's sources to be references to other Specification
+        """Modifies the bolt's sources to be references to other Specification
         objects. Also ensures that group_on fields are provided by the
         source Specifications.
 

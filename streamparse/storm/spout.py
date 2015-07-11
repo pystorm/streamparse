@@ -27,7 +27,7 @@ class Spout(Component):
         the main run loop. A good place to initialize connections to data
         sources.
 
-        :param storm_conf: the Storm configuration for this Spout.  This is the
+        :param storm_conf: the Storm configuration for this spout. This is the
                            configuration provided to the topology, merged in
                            with cluster configuration on the worker node.
         :type storm_conf: dict
@@ -49,7 +49,7 @@ class Spout(Component):
     def fail(self, tup_id):
         """Called when a tuple fails in the topology
 
-        A Spout can choose to emit the tuple again or ignore the fail. The
+        A spout can choose to emit the tuple again or ignore the fail. The
         default is to ignore.
 
         :param tup_id: the ID of the tuple that has failed in the topology

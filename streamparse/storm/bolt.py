@@ -1,4 +1,4 @@
-"""Base Bolt classes."""
+"""Base bolt classes."""
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
@@ -52,7 +52,7 @@ class Bolt(Component):
     auto_ack = True
     auto_fail = True
 
-    # Using a list so Bolt and subclasses can have more than one current_tup
+    # Using list; Bolt class and subclasses can have more than one current_tup.
     _current_tups = []
 
     @staticmethod
@@ -65,7 +65,7 @@ class Bolt(Component):
         the main run loop. A good place to initialize connections to data
         sources.
 
-        :param storm_conf: the Storm configuration for this Bolt.  This is the
+        :param storm_conf: the Storm configuration for this bolt.  This is the
                            configuration provided to the topology, merged in
                            with cluster configuration on the worker node.
         :type storm_conf: dict
@@ -409,7 +409,7 @@ class BatchingBolt(Bolt):
 
         Called right before program exits.
         """
-        # Don't use super here, because Bolt does its own auto fail handling.
+        # Don't use super here, because Bolt class has own auto fail handling.
         Component._handle_run_exception(self, exc)
         self.raise_exception(exc, self._current_tups)
 
