@@ -214,7 +214,8 @@ run the class provided.  We've also let Storm know exactly what these spouts
 will be emitting, namely a single field called ``sentence``.
 
 You'll notice that in ``sentence-spout-1``, we've passed an optional map of
-configuration parameters ``:p 2``, we'll get back to this later.
+configuration parameters ``:p 2``, which sets the spout to have 2 Python
+processes. This is discussed in :ref:`parallelism`.
 
 Creating bolts is very similar and uses the ``python-bolt-spec`` function:
 
