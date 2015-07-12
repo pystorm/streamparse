@@ -38,29 +38,29 @@ class Spout(Component):
         pass
 
     def ack(self, tup_id):
-        """Called when a bolt acknowledges a tuple in the topology.
+        """Called when a bolt acknowledges a Tuple in the topology.
 
-        :param tup_id: the ID of the tuple that has been fully acknowledged in
+        :param tup_id: the ID of the Tuple that has been fully acknowledged in
                        the topology.
         :type tup_id: str
         """
         pass
 
     def fail(self, tup_id):
-        """Called when a tuple fails in the topology
+        """Called when a Tuple fails in the topology
 
-        A spout can choose to emit the tuple again or ignore the fail. The
+        A spout can choose to emit the Tuple again or ignore the fail. The
         default is to ignore.
 
-        :param tup_id: the ID of the tuple that has failed in the topology
-                       either due to a bolt calling ``fail()`` or a tuple
+        :param tup_id: the ID of the Tuple that has failed in the topology
+                       either due to a bolt calling ``fail()`` or a Tuple
                        timing out.
         :type tup_id: str
         """
         pass
 
     def next_tuple(self):
-        """Implement this function to emit tuples as necessary.
+        """Implement this function to emit Tuples as necessary.
 
         This function should not block, or Storm will think the
         spout is dead. Instead, let it return and streamparse will
@@ -70,26 +70,26 @@ class Spout(Component):
 
     def emit(self, tup, tup_id=None, stream=None, direct_task=None,
              need_task_ids=True):
-        """Emit a spout tuple message.
+        """Emit a spout Tuple message.
 
-        :param tup: the tuple to send to Storm, should contain only
+        :param tup: the Tuple to send to Storm, should contain only
                     JSON-serializable data.
         :type tup: list or tuple
-        :param tup_id: the ID for the tuple. Leave this blank for an
+        :param tup_id: the ID for the Tuple. Leave this blank for an
                        unreliable emit.
         :type tup_id: str
-        :param stream: ID of the stream this tuple should be emitted to.
+        :param stream: ID of the stream this Tuple should be emitted to.
                        Leave empty to emit to the default stream.
         :type stream: str
-        :param direct_task: the task to send the tuple to if performing a
+        :param direct_task: the task to send the Tuple to if performing a
                             direct emit.
         :type direct_task: int
         :param need_task_ids: indicate whether or not you'd like the task IDs
-                              the tuple was emitted (default:
+                              the Tuple was emitted (default:
                               ``True``).
         :type need_task_ids: bool
 
-        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+        :returns: a ``list`` of task IDs that the Tuple was sent to. Note that
                   when specifying direct_task, this will be equal to
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
@@ -102,23 +102,23 @@ class Spout(Component):
                   need_task_ids=True):
         """Emit multiple tuples.
 
-        :param tuples: a ``list`` of multiple tuple payloads to send to
-                       Storm. All tuples should contain only
+        :param tuples: a ``list`` of multiple Tuple payloads to send to
+                       Storm. All Tuples should contain only
                        JSON-serializable data.
         :type tuples: list
-        :param stream: the ID of the steram to emit these tuples to. Specify
+        :param stream: the ID of the stream to emit these Tuples to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param tup_ids: the ID for the tuple. Leave this blank for an
+        :param tup_ids: the ID for the Tuple. Leave this blank for an
                        unreliable emit.
         :type tup_ids: list
-        :param tup_ids: IDs for each of the tuples in the list.  Omit these for
+        :param tup_ids: IDs for each of the Tuples in the list.  Omit these for
                         an unreliable emit.
         :type anchors: list
-        :param direct_task: indicates the task to send the tuple to.
+        :param direct_task: indicates the task to send the Tuple to.
         :type direct_task: int
         :param need_task_ids: indicate whether or not you'd like the task IDs
-                              the tuple was emitted (default:
+                              the Tuple was emitted (default:
                               ``True``).
         :type need_task_ids: bool
 
@@ -126,7 +126,7 @@ class Spout(Component):
             Just call :py:meth:`Spout.emit` repeatedly instead.
         """
         if not isinstance(tuples, (list, tuple)):
-            raise TypeError('tuples should be a list of lists/tuples, '
+            raise TypeError('Tuples should be a list of lists/tuples, '
                             'received {!r} instead.'.format(type(tuples)))
 
         all_task_ids = []

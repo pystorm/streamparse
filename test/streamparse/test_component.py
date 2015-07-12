@@ -135,7 +135,7 @@ class ComponentTests(unittest.TestCase):
     def test_read_message(self):
         inputs = [# Task IDs
                   '[12, 22, 24]\n', 'end\n',
-                  # Incoming tuple for bolt
+                  # Incoming Tuple for bolt
                   ('{ "id": "-6955786537413359385", "comp": "1", "stream": "1"'
                    ', "task": 9, "tuple": ["snow white and the seven dwarfs", '
                    '"field2", 3]}\n'), 'end\n',
@@ -159,7 +159,7 @@ class ComponentTests(unittest.TestCase):
     def test_read_message_unicode(self):
         inputs = [# Task IDs
                   '[12, 22, 24]\n', 'end\n',
-                  # Incoming tuple for bolt
+                  # Incoming Tuple for bolt
                   ('{ "id": "-6955786537413359385", "comp": "1", "stream": "1"'
                    ', "task": 9, "tuple": ["snow white \uFFE6 the seven dwarfs"'
                    ', "field2", 3]}\n'), 'end\n',
@@ -199,7 +199,7 @@ class ComponentTests(unittest.TestCase):
         # Check that we properly queue task IDs and return only commands
         inputs = [# Task IDs
                   '[12, 22, 24]\n', 'end\n',
-                  # Incoming tuple for bolt
+                  # Incoming Tuple for bolt
                   ('{ "id": "-6955786537413359385", "comp": "1", "stream": "1"'
                    ', "task": 9, "tuple": ["snow white and the seven dwarfs", '
                    '"field2", 3]}\n'), 'end\n',
@@ -221,7 +221,7 @@ class ComponentTests(unittest.TestCase):
         # Check that we properly queue commands and return only task IDs
         inputs = [# Task IDs
                   '[4, 8, 15]\n', 'end\n',
-                  # Incoming tuple for bolt
+                  # Incoming Tuple for bolt
                   ('{ "id": "-6955786537413359385", "comp": "1", "stream": "1"'
                    ', "task": 9, "tuple": ["snow white and the seven dwarfs", '
                    '"field2", 3]}\n'), 'end\n',
@@ -244,15 +244,15 @@ class ComponentTests(unittest.TestCase):
 
     def test_read_tuple(self):
         # This is only valid for bolts, so we only need to test with task IDs
-        # and tuples
+        # and Tuples
         inputs = [# Tuple with all values
                   ('{ "id": "-6955786537413359385", "comp": "1", "stream": "1"'
                    ', "task": 9, "tuple": ["snow white and the seven dwarfs", '
                    '"field2", 3]}\n'), 'end\n',
-                  # Tick tuple
+                  # Tick Tuple
                   ('{ "id": null, "task": -1, "comp": "__system", "stream": '
                    '"__tick", "tuple": [50]}\n'), 'end\n',
-                  # Heartbeat tuple
+                  # Heartbeat Tuple
                   ('{ "id": null, "task": -1, "comp": "__system", "stream": '
                    '"__heartbeat", "tuple": []}\n'), 'end\n',
                   ]
@@ -269,7 +269,7 @@ class ComponentTests(unittest.TestCase):
                               output_stream=BytesIO())
 
         for output in outputs:
-            log.info('Checking tuple for %s', output)
+            log.info('Checking Tuple for %s', output)
             tup = component.read_tuple()
             self.assertEqual(output, tup)
 
