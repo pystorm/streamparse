@@ -19,7 +19,7 @@ class Spout(Component):
     """Base class for all streamparse spouts.
 
     For more information on spouts, consult Storm's
-    `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+    `Concepts documentation <http://storm.apache.org/documentation/Concepts.html>`_.
     """
 
     def initialize(self, storm_conf, context):

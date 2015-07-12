@@ -198,7 +198,7 @@ Groupings
 ^^^^^^^^^
 
 Storm offers comprehensive options for `stream groupings
-<http://storm.incubator.apache.org/documentation/Concepts.html#stream-groupings>`_,
+<http://storm.apache.org/documentation/Concepts.html#stream-groupings>`_,
 but you will most commonly use a **shuffle** or **fields** grouping:
 
 * **Shuffle grouping**: Tuples are randomly distributed across the bolt’s tasks

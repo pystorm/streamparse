@@ -90,7 +90,7 @@ streamparse projects expect to have the following directory layout:
     "project.clj","leiningen project file, can be used to add external JVM dependencies."
     "src/","Python source files (bolts/spouts/etc.) for topologies."
     "tasks.py","Optional custom invoke tasks."
-    "topologies/","Contains topology definitions written using the `Clojure DSL <http://storm.incubator.apache.org/documentation/Clojure-DSL.html>`_ for Storm."
+    "topologies/","Contains topology definitions written using the `Clojure DSL <http://storm.apache.org/documentation/Clojure-DSL.html>`_ for Storm."
     "virtualenvs/","Contains pip requirements files in order to install dependencies on remote Storm servers."
 
 
@@ -169,7 +169,7 @@ function named "wordcount".
       ]
     )
 
-It turns out, the name of the function doesn't matter much; we've used 
+It turns out, the name of the function doesn't matter much; we've used
 ``wordcount`` above, but it could just as easily be ``bananas``. What is
 important, is that **the function must return an array with only two
 dictionaries and take one argument**.
@@ -258,7 +258,7 @@ sources for the bolt. It's completely fine to add multiple sources to any bolts.
 In the ``word-counter`` bolt, we've told Storm that we'd like the stream of
 input tuples to be grouped by the named field ``word``. Storm offers
 comprehensive options for `stream groupings
-<http://storm.incubator.apache.org/documentation/Concepts.html#stream-groupings>`_,
+<http://storm.apache.org/documentation/Concepts.html#stream-groupings>`_,
 but you will most commonly use a **shuffle** or **fields** grouping:
 
 * **Shuffle grouping**: Tuples are randomly distributed across the bolt’s tasks
@@ -270,7 +270,7 @@ but you will most commonly use a **shuffle** or **fields** grouping:
 
 There are more options to configure with spouts and bolts, we'd encourage you
 to refer to `Storm's Concepts
-<http://storm.incubator.apache.org/documentation/Concepts.html>`_ for more
+<http://storm.apache.org/documentation/Concepts.html>`_ for more
 information.
 
 Spouts and Bolts
@@ -395,7 +395,7 @@ Bolt class. Once this is overridden, you can set the storm option
 to be emitted every ``<frequency>`` seconds.
 
 You can see the full docs for ``process_tick()`` in
-:class:`streamparse.bolt.Bolt`. 
+:class:`streamparse.bolt.Bolt`.
 
 **Example**:
 

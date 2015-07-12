@@ -18,13 +18,13 @@ class Bolt(Component):
     """The base class for all streamparse bolts.
 
     For more information on bolts, consult Storm's
-    `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+    `Concepts documentation <http://storm.apache.org/documentation/Concepts.html>`_.
 
     :ivar auto_anchor: A ``bool`` indicating whether or not the bolt should
                        automatically anchor emits to the incoming Tuple ID.
                        Tuple anchoring is how Storm provides reliability, you
                        can read more about
-                       `Tuple anchoring in Storm's docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+                       `Tuple anchoring in Storm's docs <https://storm.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
                        Default is ``True``.
 
     :ivar auto_ack: A ``bool`` indicating whether or not the bolt should
@@ -261,7 +261,7 @@ class BatchingBolt(Bolt):
                        automatically anchor emits to the incoming Tuple ID.
                        Tuple anchoring is how Storm provides reliability, you
                        can read more about `Tuple anchoring in Storm's
-                       docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+                       docs <https://storm.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
                        Default is ``True``.
     :ivar auto_ack: A ``bool`` indicating whether or not the bolt should
                     automatically acknowledge Tuples after ``process_batch()``
