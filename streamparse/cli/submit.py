@@ -29,7 +29,7 @@ def get_user_tasks():
     """Get tasks defined in a user's tasks.py and fabric.py file which is
     assumed to be in the current working directory.
 
-    :returns: tuple invoke_tasks, fabric_tasks
+    :returns: a `tuple` (invoke_tasks, fabric_tasks)
     """
     sys.path.insert(0, os.getcwd())
     try:

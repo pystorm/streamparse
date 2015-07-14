@@ -27,7 +27,7 @@ Integrates with Apache Storm.
 
    <!-- Wrap YouTube embed in a div to get auto-sizing, ref: https://github.com/rtfd/readthedocs.org/issues/879 -->
    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
-     <iframe src="https://www.youtube.com/embed/ja4Qj9-l6WQ?start=94" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+     <iframe src="https://www.youtube.com/embed/ja4Qj9-l6WQ?start=94" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding-bottom: 1em;"></iframe>
    </div>
 
 Indices and tables

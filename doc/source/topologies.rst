@@ -44,7 +44,7 @@ take up multiple lines.
 Topology Files
 --------------
 A topology file describes your topology in terms of Directed Acyclic Graph (DAC)
-of Storm components, namely Bolts and Spouts. It uses the
+of Storm components, namely `bolts` and `spouts`. It uses the
 `Clojure DSL <http://storm.apache.org/documentation/Clojure-DSL.html>`_ for
 this, along with some utility functions streamparse provides.
 
@@ -198,7 +198,7 @@ Groupings
 ^^^^^^^^^
 
 Storm offers comprehensive options for `stream groupings
-<http://storm.incubator.apache.org/documentation/Concepts.html#stream-groupings>`_,
+<http://storm.apache.org/documentation/Concepts.html#stream-groupings>`_,
 but you will most commonly use a **shuffle** or **fields** grouping:
 
 * **Shuffle grouping**: Tuples are randomly distributed across the bolt’s tasks
@@ -229,5 +229,3 @@ If you submitted to a cluster, streamparse uses ``lein`` to compile the ``src``
 directory into a jar file, which is run on the cluster. Lein uses the
 ``project.clj`` file located in the root of your project. This file is a
 standard lein project file and can be customized according to your needs.
-
-

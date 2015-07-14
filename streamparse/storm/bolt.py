@@ -1,4 +1,4 @@
-"""Base Bolt classes."""
+"""Base bolt classes."""
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
@@ -18,20 +18,20 @@ class Bolt(Component):
     """The base class for all streamparse bolts.
 
     For more information on bolts, consult Storm's
-    `Concepts documentation <http://storm.incubator.apache.org/documentation/Concepts.html>`_.
+    `Concepts documentation <http://storm.apache.org/documentation/Concepts.html>`_.
 
     :ivar auto_anchor: A ``bool`` indicating whether or not the bolt should
-                       automatically anchor emits to the incoming tuple ID.
+                       automatically anchor emits to the incoming Tuple ID.
                        Tuple anchoring is how Storm provides reliability, you
                        can read more about
-                       `tuple anchoring in Storm's docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+                       `Tuple anchoring in Storm's docs <https://storm.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
                        Default is ``True``.
 
     :ivar auto_ack: A ``bool`` indicating whether or not the bolt should
-                    automatically acknowledge tuples after ``process()``
+                    automatically acknowledge Tuples after ``process()``
                     is called. Default is ``True``.
     :ivar auto_fail: A ``bool`` indicating whether or not the bolt should
-                     automatically fail tuples when an exception occurs when the
+                     automatically fail Tuples when an exception occurs when the
                      ``process()`` method is called. Default is ``True``.
 
     **Example**:
@@ -52,12 +52,12 @@ class Bolt(Component):
     auto_ack = True
     auto_fail = True
 
-    # Using a list so Bolt and subclasses can have more than one current_tup
+    # Using list; Bolt class and subclasses can have more than one current_tup.
     _current_tups = []
 
     @staticmethod
     def is_tick(tup):
-        """ :returns: Whether or not the given Tuple is a tick tuple """
+        """ :returns: Whether or not the given Tuple is a tick Tuple """
         return tup.component == '__system' and tup.stream == '__tick'
 
     def initialize(self, storm_conf, context):
@@ -65,7 +65,7 @@ class Bolt(Component):
         the main run loop. A good place to initialize connections to data
         sources.
 
-        :param storm_conf: the Storm configuration for this Bolt.  This is the
+        :param storm_conf: the Storm configuration for this bolt.  This is the
                            configuration provided to the topology, merged in
                            with cluster configuration on the worker node.
         :type storm_conf: dict
@@ -76,59 +76,59 @@ class Bolt(Component):
         pass
 
     def process(self, tup):
-        """Process a single tuple :class:`streamparse.storm.component.Tuple` of
+        """Process a single Tuple :class:`streamparse.storm.component.Tuple` of
         input
 
         This should be overridden by subclasses.
         :class:`streamparse.storm.component.Tuple` objects contain metadata
         about which component, stream and task it came from. The actual values
-        of the tuple can be accessed by calling ``tup.values``.
+        of the Tuple can be accessed by calling ``tup.values``.
 
-        :param tup: the tuple to be processed.
+        :param tup: the Tuple to be processed.
         :type tup: :class:`streamparse.storm.component.Tuple`
         """
         raise NotImplementedError()
 
     def process_tick(self, tup):
-        """Process special 'tick tuples' which allow time-based
+        """Process special 'tick Tuples' which allow time-based
         behaviour to be included in bolts.
 
         Default behaviour is to ignore time ticks.  This should be
         overridden by subclasses who wish to react to timer events
-        via tick tuples.
+        via tick Tuples.
 
-        Tick tuples will be sent to all bolts in a toplogy when the
+        Tick Tuples will be sent to all bolts in a toplogy when the
         storm configuration option 'topology.tick.tuple.freq.secs'
         is set to an integer value, the number of seconds.
 
-        :param tup: the tuple to be processed.
+        :param tup: the Tuple to be processed.
         :type tup: :class:`streamparse.storm.component.Tuple`
         """
         pass
 
     def emit(self, tup, stream=None, anchors=None, direct_task=None,
              need_task_ids=True):
-        """Emit a new tuple to a stream.
+        """Emit a new Tuple to a stream.
 
         :param tup: the Tuple payload to send to Storm, should contain only
                     JSON-serializable data.
         :type tup: :class:`list` or :class:`streamparse.storm.component.Tuple`
-        :param stream: the ID of the stream to emit this tuple to. Specify
+        :param stream: the ID of the stream to emit this Tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples (or :class:`streamparse.storm.component.Tuple`
-                        instances) which the emitted tuples should be anchored
+        :param anchors: IDs the Tuples (or :class:`streamparse.storm.component.Tuple`
+                        instances) which the emitted Tuples should be anchored
                         to. If ``auto_anchor`` is set to ``True`` and
                         you have not specified ``anchors``, ``anchors`` will be
-                        set to the incoming/most recent tuple ID(s).
+                        set to the incoming/most recent Tuple ID(s).
         :type anchors: list
-        :param direct_task: the task to send the tuple to.
+        :param direct_task: the task to send the Tuple to.
         :type direct_task: int
         :param need_task_ids: indicate whether or not you'd like the task IDs
-                              the tuple was emitted (default: ``True``).
+                              the Tuple was emitted (default: ``True``).
         :type need_task_ids: bool
 
-        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+        :returns: a ``list`` of task IDs that the Tuple was sent to. Note that
                   when specifying direct_task, this will be equal to
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
@@ -143,25 +143,25 @@ class Bolt(Component):
 
     def emit_many(self, tuples, stream=None, anchors=None, direct_task=None,
                   need_task_ids=True):
-        """Emit multiple tuples.
+        """Emit multiple Tuples.
 
-        :param tuples: a ``list`` of multiple tuple payloads to send to
-                       Storm. All tuples should contain only
+        :param tuples: a ``list`` of multiple Tuple payloads to send to
+                       Storm. All Tuples should contain only
                        JSON-serializable data.
         :type tuples: list
-        :param stream: the ID of the steram to emit these tuples to. Specify
+        :param stream: the ID of the steram to emit these Tuples to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples (or :class:`streamparse.storm.component.Tuple`
-                        instances) which the emitted tuples should be anchored
+        :param anchors: IDs the Tuples (or :class:`streamparse.storm.component.Tuple`
+                        instances) which the emitted Tuples should be anchored
                         to. If ``auto_anchor`` is set to ``True`` and
                         you have not specified ``anchors``, ``anchors`` will be
-                        set to the incoming/most recent tuple ID(s).
+                        set to the incoming/most recent Tuple ID(s).
         :type anchors: list
-        :param direct_task: indicates the task to send the tuple to.
+        :param direct_task: indicates the task to send the Tuple to.
         :type direct_task: int
         :param need_task_ids: indicate whether or not you'd like the task IDs
-                              the tuple was emitted (default:
+                              the Tuple was emitted (default:
                               ``True``).
         :type need_task_ids: bool
 
@@ -169,7 +169,7 @@ class Bolt(Component):
             Just call :py:meth:`Bolt.emit` repeatedly instead.
         """
         if not isinstance(tuples, (list, tuple)):
-            raise TypeError('tuples should be a list of lists/tuples, '
+            raise TypeError('Tuples should be a list of lists/tuples, '
                             'received {!r} instead.'.format(type(tuples)))
 
         all_task_ids = []
@@ -181,18 +181,18 @@ class Bolt(Component):
         return all_task_ids
 
     def ack(self, tup):
-        """Indicate that processing of a tuple has succeeded.
+        """Indicate that processing of a Tuple has succeeded.
 
-        :param tup: the tuple to acknowledge.
+        :param tup: the Tuple to acknowledge.
         :type tup: :class:`str` or :class:`streamparse.storm.component.Tuple`
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
         self.send_message({'command': 'ack', 'id': tup_id})
 
     def fail(self, tup):
-        """Indicate that processing of a tuple has failed.
+        """Indicate that processing of a Tuple has failed.
 
-        :param tup: the tuple to fail (its ``id`` if ``str``).
+        :param tup: the Tuple to fail (its ``id`` if ``str``).
         :type tup: :class:`str` or :class:`streamparse.storm.component.Tuple`
         """
         tup_id = tup.id if isinstance(tup, Tuple) else tup
@@ -215,7 +215,7 @@ class Bolt(Component):
             self.process(tup)
             if self.auto_ack:
                  self.ack(tup)
-        # reset so that we don't accidentally fail the wrong tuples
+        # reset so that we don't accidentally fail the wrong Tuples
         # if a successive call to read_tuple fails
         self._current_tups = []
 
@@ -233,19 +233,19 @@ class Bolt(Component):
                 self.fail(tup)
 
 class BatchingBolt(Bolt):
-    """A bolt which batches tuples for processing.
+    """A bolt which batches Tuples for processing.
 
-    Batching tuples is unexpectedly complex to do correctly. The main problem
+    Batching Tuples is unexpectedly complex to do correctly. The main problem
     is that all bolts are single-threaded. The difficult comes when the
-    topology is shutting down because Storm stops feeding the bolt tuples. If
+    topology is shutting down because Storm stops feeding the bolt Tuples. If
     the bolt is blocked waiting on stdin, then it can't process any waiting
-    tuples, or even ack ones that were asynchronously written to a data store.
+    Tuples, or even ack ones that were asynchronously written to a data store.
 
-    This bolt helps with that by grouping tuples received between tick tuples
+    This bolt helps with that by grouping Tuples received between tick Tuples
     into batches.
 
     To use this class, you must implement ``process_batch``. ``group_key`` can
-    be optionally implemented so that tuples are grouped before
+    be optionally implemented so that Tuples are grouped before
     ``process_batch`` is even called.
 
     You must also set the `topology.tick.tuple.freq.secs` to how frequently you
@@ -258,18 +258,18 @@ class BatchingBolt(Bolt):
 
 
     :ivar auto_anchor: A ``bool`` indicating whether or not the bolt should
-                       automatically anchor emits to the incoming tuple ID.
+                       automatically anchor emits to the incoming Tuple ID.
                        Tuple anchoring is how Storm provides reliability, you
-                       can read more about `tuple anchoring in Storm's
-                       docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+                       can read more about `Tuple anchoring in Storm's
+                       docs <https://storm.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
                        Default is ``True``.
     :ivar auto_ack: A ``bool`` indicating whether or not the bolt should
-                    automatically acknowledge tuples after ``process_batch()``
+                    automatically acknowledge Tuples after ``process_batch()``
                     is called. Default is ``True``.
     :ivar auto_fail: A ``bool`` indicating whether or not the bolt should
-                     automatically fail tuples when an exception occurs when the
+                     automatically fail Tuples when an exception occurs when the
                      ``process_batch()`` method is called. Default is ``True``.
-    :ivar ticks_between_batches: The number of tick tuples to wait before
+    :ivar ticks_between_batches: The number of tick Tuples to wait before
                                  processing a batch.
 
 
@@ -303,20 +303,20 @@ class BatchingBolt(Bolt):
         self._tick_counter = 0
 
     def group_key(self, tup):
-        """Return the group key used to group tuples within a batch.
+        """Return the group key used to group Tuples within a batch.
 
-        By default, returns None, which put all tuples in a single
+        By default, returns None, which put all Tuples in a single
         batch, effectively just time-based batching. Override this to create
         multiple batches based on a key.
 
-        :param tup: the tuple used to extract a group key
+        :param tup: the Tuple used to extract a group key
         :type tup: :class:`streamparse.storm.component.Tuple`
         :returns: Any ``hashable`` value.
         """
         return None
 
     def process_batch(self, key, tups):
-        """Process a batch of tuples. Should be overridden by subclasses.
+        """Process a batch of Tuples. Should be overridden by subclasses.
 
         :param key: the group key for the list of batches.
         :type key: hashable
@@ -358,10 +358,10 @@ class BatchingBolt(Bolt):
 
         .. warning::
             This method should **not** be overriden.  If you want to tweak
-            how tuples are grouped into batches, override ``group_key``.
+            how Tuples are grouped into batches, override ``group_key``.
         """
         self._tick_counter += 1
-        # ACK tick tuple immediately, since it's just responsible for counter
+        # ACK tick Tuple immediately, since it's just responsible for counter
         self.ack(tick_tup)
         if self._tick_counter > self.ticks_between_batches and self._batches:
             for key, batch in iteritems(self._batches):
@@ -377,13 +377,13 @@ class BatchingBolt(Bolt):
             self._tick_counter = 0
 
     def process(self, tup):
-        """Group non-tick tuples into batches by ``group_key``.
+        """Group non-tick Tuples into batches by ``group_key``.
 
         .. warning::
             This method should **not** be overriden.  If you want to tweak
-            how tuples are grouped into batches, override ``group_key``.
+            how Tuples are grouped into batches, override ``group_key``.
         """
-        # Append latest tuple to batches
+        # Append latest Tuple to batches
         group_key = self.group_key(tup)
         self._batches[group_key].append(tup)
 
@@ -400,7 +400,7 @@ class BatchingBolt(Bolt):
             self.process_tick(tup)
         else:
             self.process(tup)
-        # reset so that we don't accidentally fail the wrong tuples
+        # reset so that we don't accidentally fail the wrong Tuples
         # if a successive call to read_tuple fails
         self._current_tups = []
 
@@ -409,7 +409,7 @@ class BatchingBolt(Bolt):
 
         Called right before program exits.
         """
-        # Don't use super here, because Bolt does its own auto fail handling.
+        # Don't use super here, because Bolt class has own auto fail handling.
         Component._handle_run_exception(self, exc)
         self.raise_exception(exc, self._current_tups)
 
@@ -418,7 +418,7 @@ class BatchingBolt(Bolt):
             for batch in itervalues(self._batches):
                 for tup in batch:
                     self.fail(tup)
-            # Fail current tick tuple if we have one
+            # Fail current tick Tuple if we have one
             for tup in self._current_tups:
                 if self.is_tick(tup):
                     self.fail(tup)

@@ -297,7 +297,7 @@ class BatchingBoltTests(unittest.TestCase):
 
     @patch.object(BatchingBolt, 'process_batch', autospec=True)
     def test_batching(self, process_batch_mock):
-        # Add a bunch of tuples
+        # Add a bunch of Tuples
         for __ in self.tups:
             self.bolt._run()
 
@@ -309,7 +309,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Change the group key to even/odd grouping
         self.bolt.group_key = lambda t: sum(t.values) % 2
 
-        # Add a bunch of tuples
+        # Add a bunch of Tuples
         for __ in self.tups:
             self.bolt._run()
 
@@ -357,7 +357,7 @@ class BatchingBoltTests(unittest.TestCase):
         # Test auto-fail on (the default)
         self.bolt.run()
 
-        # All waiting tuples should have failed at this point
+        # All waiting Tuples should have failed at this point
         fail_mock.assert_has_calls([mock.call(self.bolt, self.nontick_tups[0]),
                                     mock.call(self.bolt, self.nontick_tups[1]),
                                     mock.call(self.bolt, self.nontick_tups[2])],
@@ -377,7 +377,7 @@ class BatchingBoltTests(unittest.TestCase):
         self.bolt.auto_fail = False
         self.bolt.run()
 
-        # All waiting tuples should have failed at this point
+        # All waiting Tuples should have failed at this point
         self.assertEqual(exit_mock.call_count, 1)
         self.assertListEqual(fail_mock.call_args_list, [])
 
@@ -402,8 +402,8 @@ class BatchingBoltTests(unittest.TestCase):
         process_batch_mock.side_effect = work_once
         # Run the batches
         self.bolt.run()
-        # Only some tuples should have failed at this point. The key is that
-        # all un-acked tuples should be failed, even for batches we haven't
+        # Only some Tuples should have failed at this point. The key is that
+        # all un-acked Tuples should be failed, even for batches we haven't
         # started processing yet.
         self.assertEqual(fail_mock.call_count, 2)
         self.assertEqual(exit_mock.call_count, 1)

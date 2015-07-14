@@ -115,21 +115,21 @@ class LogStream(object):
 Tuple = namedtuple('Tuple', 'id component stream task values')
 """Storm's primitive data type passed around via streams.
 
-:ivar id: the ID of the tuple.
+:ivar id: the ID of the Tuple.
 :type id: str
-:ivar component: component that the tuple was generated from.
+:ivar component: component that the Tuple was generated from.
 :type component: str
-:ivar stream: the stream that the tuple was emitted into.
+:ivar stream: the stream that the Tuple was emitted into.
 :type stream: str
-:ivar task: the task the tuple was generated from.
+:ivar task: the task the Tuple was generated from.
 :type task: int
-:ivar values: the payload of the tuple where data is stored.
+:ivar values: the payload of the Tuple where data is stored.
 :type values: list
 """
 
 
 class Component(object):
-    """Base class for Spouts and Bolts which contains class methods for
+    """Base class for spouts and bolts which contains class methods for
     logging messages back to the Storm worker process.
 
 
@@ -182,9 +182,9 @@ class Component(object):
         self.context = None
         self.pid = os.getpid()
         self.logger = None
-        # pending commands/tuples we read while trying to read task IDs
+        # pending commands/Tuples we read while trying to read task IDs
         self._pending_commands = deque()
-        # pending task IDs we read while trying to read commands/tuples
+        # pending task IDs we read while trying to read commands/Tuples
         self._pending_task_ids = deque()
         self._reader_lock = RLock()
         self._writer_lock = RLock()
@@ -267,16 +267,16 @@ class Component(object):
     def read_message(self):
         """Read a message from Storm, reconstruct newlines appropriately.
 
-        All of Storm's messages (for either Bolts or Spouts) should be of the
+        All of Storm's messages (for either bolts or spouts) should be of the
         form::
 
             '<command or task_id form prior emit>\\nend\\n'
 
-        Command example, an incoming tuple to a bolt::
+        Command example, an incoming Tuple to a bolt::
 
             '{ "id": "-6955786537413359385",  "comp": "1", "stream": "1", "task": 9, "tuple": ["snow white and the seven dwarfs", "field2", 3]}\\nend\\n'
 
-        Command example for a Spout to emit it's next tuple::
+        Command example for a spout to emit its next Tuple::
 
             '{"command": "next"}\\nend\\n'
 
@@ -374,7 +374,7 @@ class Component(object):
         :param tup: a :class:`Tuple` object.
         """
         if tup:
-            message = ('Python {exception_name} raised while processing tuple '
+            message = ('Python {exception_name} raised while processing Tuple '
                        '{tup!r}\n{traceback}')
         else:
             message = 'Python {exception_name} raised\n{traceback}'
@@ -409,36 +409,36 @@ class Component(object):
 
     def emit(self, tup, tup_id=None, stream=None, anchors=None,
              direct_task=None, need_task_ids=True):
-        """Emit a new tuple to a stream.
+        """Emit a new Tuple to a stream.
 
         :param tup: the Tuple payload to send to Storm, should contain only
                     JSON-serializable data.
         :type tup: :class:`list` or :class:`streamparse.storm.component.Tuple`
-        :param tup_id: the ID for the tuple. If omitted by a
+        :param tup_id: the ID for the Tuple. If omitted by a
                        :class:`streamparse.storm.spout.Spout`, this emit will be
                        unreliable.
         :type tup_id: str
-        :param stream: the ID of the stream to emit this tuple to. Specify
+        :param stream: the ID of the stream to emit this Tuple to. Specify
                        ``None`` to emit to default stream.
         :type stream: str
-        :param anchors: IDs the tuples (or
+        :param anchors: IDs the Tuples (or
                         :class:`streamparse.storm.component.Tuple` instances)
-                        which the emitted tuples should be anchored to. This is
+                        which the emitted Tuples should be anchored to. This is
                         only passed by :class:`streamparse.storm.bolt.Bolt`.
         :type anchors: list
-        :param direct_task: the task to send the tuple to.
+        :param direct_task: the task to send the Tuple to.
         :type direct_task: int
         :param need_task_ids: indicate whether or not you'd like the task IDs
-                              the tuple was emitted (default: ``True``).
+                              the Tuple was emitted (default: ``True``).
         :type need_task_ids: bool
 
-        :returns: a ``list`` of task IDs that the tuple was sent to. Note that
+        :returns: a ``list`` of task IDs that the Tuple was sent to. Note that
                   when specifying direct_task, this will be equal to
                   ``[direct_task]``. If you specify ``need_task_ids=False``,
                   this function will return ``None``.
         """
         if not isinstance(tup, (list, tuple)):
-            raise TypeError('All tuples must be either lists or tuples, '
+            raise TypeError('All Tuples must be either lists or tuples, '
                             'received {!r} instead.'.format(type(tup)))
 
         msg = {'command': 'emit', 'tuple': tup}
@@ -472,7 +472,7 @@ class Component(object):
     def run(self):
         """Main run loop for all components.
 
-        Performs initial handshake with Storm and reads tuples handing them off
+        Performs initial handshake with Storm and reads Tuples handing them off
         to subclasses.  Any exceptions are caught and logged back to Storm
         prior to the Python process exiting.
 
@@ -499,4 +499,3 @@ class Component(object):
         log_msg = "Exception in {}.run()".format(self.__class__.__name__)
         log.error(log_msg, exc_info=True)
         self.raise_exception(exc)
-
