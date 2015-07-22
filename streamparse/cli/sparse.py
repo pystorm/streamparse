@@ -17,7 +17,7 @@ import sys
 from ..version import __version__
 
 
-def load_suparsers(subparsers):
+def load_subparsers(subparsers):
     """
     searches modules in streamparse/bin for a 'subparser_hook' method and calls
     the 'subparser_hook' method on the sparse subparsers object.
@@ -48,7 +48,7 @@ def main():
     subparsers = parser.add_subparsers(title='sub-commands')
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(__version__))
-    load_suparsers(subparsers)
+    load_subparsers(subparsers)
     args = parser.parse_args()
 
     ### http://grokbase.com/t/python/python-bugs-list/12arsq9ayf/issue16308-undocumented-behaviour-change-in-argparse-from-3-2-3-to-3-3-0
