@@ -18,7 +18,8 @@ parallel Python processes in production.
 Documentation
 -------------
 
-`http://streamparse.readthedocs.org/en/latest/ <http://streamparse.readthedocs.org/en/latest/>`__
+* `HEAD <http://streamparse.readthedocs.org/en/master/>`_
+* `Stable <http://streamparse.readthedocs.org/en/stable/>`_
 
 User Group
 ----------
@@ -44,7 +45,7 @@ Alphabetical, by last name:
 -  Rohit Sankaran (`@roadhead <https://twitter.com/roadhead>`__)
 -  Viktor Shlapakov (`@vshlapakov <https://github.com/vshlapakov>`__)
 -  Mike Sukmanowsky (`@msukmanowsky <https://twitter.com/msukmanowsky>`__)
--  Cody Wilbourn (`@codywilbourn <https://github.com/https://github.com/codywilbourn>`__)
+-  Cody Wilbourn (`@codywilbourn <https://github.com/codywilbourn>`__)
 -  Curtis Vogt (`@omus <https://github.com/omus>`__)
 
 Roadmap
