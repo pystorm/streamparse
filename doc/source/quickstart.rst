@@ -214,7 +214,8 @@ run the class provided.  We've also let Storm know exactly what these spouts
 will be emitting, namely a single field called ``sentence``.
 
 You'll notice that in ``sentence-spout-1``, we've passed an optional map of
-configuration parameters ``:p 2``, we'll get back to this later.
+configuration parameters ``:p 2``, which sets the spout to have 2 Python
+processes. This is discussed in :ref:`parallelism`.
 
 Creating bolts is very similar and uses the ``python-bolt-spec`` function:
 
@@ -264,9 +265,9 @@ but you will most commonly use a **shuffle** or **fields** grouping:
 * **Shuffle grouping**: Tuples are randomly distributed across the bolt’s tasks
   in a way such that each bolt is guaranteed to get an equal number of tuples.
 * **Fields grouping**: The stream is partitioned by the fields specified in the
-  grouping. For example, if the stream is grouped by the “user-id” field,
-  tuples with the same “user-id” will always go to the same task, but tuples
-  with different “user-id”’s may go to different tasks.
+  grouping. For example, if the stream is grouped by the "user-id" field,
+  tuples with the same "user-id" will always go to the same task, but tuples
+  with different "user-id"’s may go to different tasks.
 
 There are more options to configure with spouts and bolts, we'd encourage you
 to refer to `Storm's Concepts
