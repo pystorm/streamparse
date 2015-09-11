@@ -4,11 +4,20 @@ Frequently Asked Questions (FAQ)
 General Questions
 -----------------
 
+* `Why use streamparse?`_
 * `Is streamparse compatible with Python 3?`_
 * `How can I contribute to streamparse?`_
 * `How do I trigger some code before or after I submit my topology?`_
 * `How should I install streamparse on the cluster nodes?`_
 * `Should I install Clojure?`_
+
+Why use streamparse?
+~~~~~~~~~~~~~~~~~~~~
+
+To lay your Python code out in topologies which can be automatically
+parallelized in a Storm cluster of machines. This lets you scale your
+computation horizontally and avoid issues related to Python's GIL. See
+:ref:`parallelism`.
 
 Is streamparse compatible with Python 3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
