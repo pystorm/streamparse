@@ -238,12 +238,10 @@ standard lein project file and can be customized according to your needs.
 Parallelism and Workers
 -----------------------
 
-Reference: `Understanding the Parallelism of a Storm Topology <https://storm.apache.org/documentation/Understanding-the-parallelism-of-a-Storm-topology.html>`_
-
 **In general, use the :p "parallelism hint" parameter per spout and bolt in
-your configuration to control the number of Python processes per
-component. When getting started, let streamparse set the default number of
-topology workers, then tune once you observe specific bottlenecks.**
+your configuration to control the number of Python processes per component.**
+
+Reference: `Understanding the Parallelism of a Storm Topology <https://storm.apache.org/documentation/Understanding-the-parallelism-of-a-Storm-topology.html>`_
 
 Storm parallelism entities:
 
