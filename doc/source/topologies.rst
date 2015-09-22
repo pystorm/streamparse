@@ -43,10 +43,10 @@ take up multiple lines.
 
 Topology Files
 --------------
-A topology file describes your topology in terms of Directed Acyclic Graph (DAC)
-of Storm components, namely `bolts` and `spouts`. It uses the
-`Clojure DSL <http://storm.apache.org/documentation/Clojure-DSL.html>`_ for
-this, along with some utility functions streamparse provides.
+
+A topology file describes your topology in terms of Directed Acyclic Graph
+(DAC) of Storm components, namely `bolts` and `spouts`. It uses the `Clojure
+DSL`_ for this, along with some utility functions streamparse provides.
 
 Topology files are located in ``topologies`` in your streamparse project folder.
 There can be any number of topology files for your project in this directory.
@@ -211,6 +211,56 @@ but you will most commonly use a **shuffle** or **fields** grouping:
   with different "user-id"’s may go to different tasks.
 
 
+Streams
+^^^^^^^
+
+Topologies support multiple streams when routing tuples between components. The
+:meth:`~streamparse.storm.component.Component.emit` method takes an optional
+`stream` argument to specify the stream ID. For example:
+
+.. code-block:: python
+
+    self.emit([term, timestamp, lookup_result], stream='index')
+    self.emit([term, timestamp, lookup_result], stream='topic')
+
+The topology definition can include these stream IDs to route between
+components, and a component can specify more than one stream. Example with the
+`Clojure DSL`_:
+
+.. code-block:: clojure
+
+
+    "lookup-bolt" (python-bolt-spec
+        options
+        {"search-bolt" :shuffle}
+        "birding.bolt.TwitterLookupBolt"
+        {"index" ["url" "timestamp" "search_result"]
+         "topic" ["url" "timestamp" "search_result"]}
+        :p 2
+        )
+    "elasticsearch-index-bolt" (python-bolt-spec
+        options
+        {["lookup-bolt" "index"] ["url" "timestamp" "search_result"]}
+        "birding.bolt.ElasticsearchIndexBolt"
+        []
+        :p 1
+        )
+    "result-topic-bolt" (python-bolt-spec
+        options
+        {["lookup-bolt" "index"] ["url" "timestamp" "search_result"]
+         ["lookup-bolt" "topic"] ["url" "timestamp" "search_result"]}
+        "birding.bolt.ResultTopicBolt"
+        []
+        :p 1
+        )
+
+Storm sets a default stream ID of ``"default"``, as described in its doc on
+Streams_:
+
+    Every stream is given an id when declared. Since single-stream spouts and
+    bolts are so common, ... the stream is given the default id of "default".
+
+
 Running Topologies
 ------------------
 
@@ -316,3 +366,6 @@ when tuning your topology:
 * bottlenecks where the number of spout and bolt processes are out of balance
 * serialization/deserialization overhead of more data emitted than you need
 * slow routines/callables in your code
+
+.. _`Clojure DSL`: http://storm.apache.org/documentation/Clojure-DSL.html
+.. _Streams: http://storm.apache.org/documentation/Concepts.html#streams
