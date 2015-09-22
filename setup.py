@@ -32,7 +32,7 @@ def readme():
 
 
 install_requires = [
-    'invoke',
+    'invoke<0.8',
     'fabric',
     'jinja2',
     'requests',
