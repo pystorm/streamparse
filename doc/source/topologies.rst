@@ -214,6 +214,9 @@ but you will most commonly use a **shuffle** or **fields** grouping:
 Running Topologies
 ------------------
 
+What Streamparse Does
+^^^^^^^^^^^^^^^^^^^^^
+
 When you run a topology either locally or by submitting to a cluster,
 streamparse will
 
@@ -227,10 +230,40 @@ streamparse will
 If you invoked streamparse with ``sparse run``, your code is executed directly
 from the ``src/`` directory.
 
-If you submitted to a cluster, streamparse uses ``lein`` to compile the ``src``
-directory into a jar file, which is run on the cluster. Lein uses the
-``project.clj`` file located in the root of your project. This file is a
-standard lein project file and can be customized according to your needs.
+If you submitted to a cluster with ``sparse submit``, streamparse uses ``lein``
+to compile the ``src`` directory into a jar file, which is run on the
+cluster. Lein uses the ``project.clj`` file located in the root of your
+project. This file is a standard lein project file and can be customized
+according to your needs.
+
+.. _dealing-with-errors:
+
+Dealing With Errors
+^^^^^^^^^^^^^^^^^^^
+
+When detecting an error, bolt code can call its
+:meth:`~streamparse.storm.bolt.Bolt.fail` method in order to have Storm call
+the respective spout's :meth:`~streamparse.storm.spout.Spout.fail`
+method. Known error/failure cases result in explicit callbacks to the spout
+using this approach.
+
+Exceptions which propagate without being caught will cause the component to
+crash. On ``sparse run``, the entire topology will stop execution. On a running
+cluster (i.e. ``sparse submit``), Storm will auto-restart the crashed component
+and the spout will receive a :meth:`~streamparse.storm.spout.Spout.fail` call.
+
+If the spout's fail handling logic is to hold back the tuple and not re-emit
+it, then things will keep going. If it re-emits it, then it may crash that
+component again. Whether the topology is tolerant of the failure depends on how
+you implement failure handling in your spout.
+
+Common approaches are to:
+
+* Append errant tuples to some sort of error log or queue for manual inspection
+  later, while letting processing continue otherwise.
+* Attempt 1 or 2 retries before considering the tuple a failure, if the error
+  was likely an transient problem.
+* Ignore the failed tuple, if appropriate to the application.
 
 
 .. _parallelism:

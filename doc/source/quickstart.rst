@@ -356,6 +356,18 @@ being processed and acknowledged after ``process()`` completes.
 If an Exception is raised while ``process()`` is called, streamparse
 automatically fails the current tuple prior to killing the Python process.
 
+Failed Tuples
+^^^^^^^^^^^^^
+
+In the example above, we added the ability to fail a sentence tuple if it did
+not provide any words. What happens when we fail a tuple? Storm will send a
+"fail" message back to the spout where the tuple originated from (in this case
+``SentenceSpout``) and streamparse calls the spout's
+:meth:`~streamparse.storm.spout.Spout.fail` method. It's then up to your spout
+implementation to decide what to do. A spout could retry a failed tuple, send
+an error message, or kill the topology. See :ref:`dealing-with-errors` for
+more discussion.
+
 Bolt Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -380,7 +392,6 @@ adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
             if error:
               self.fail(tup)  # perform failure manually
             self.ack(tup)  # perform acknowledgement manually
-
 
 Handling Tick Tuples
 ^^^^^^^^^^^^^^^^^^^^
@@ -418,16 +429,6 @@ option and value as in the following example:
 .. code-block:: bash
 
     $ sparse run -o "topology.tick.tuple.freq.secs=2" ...
-
-Failed Tuples
-^^^^^^^^^^^^^
-
-In the example above, we added the ability to fail a sentence tuple if it
-did not provide any words. What happens when we fail a tuple? Storm will send a
-"fail" message back to the spout where the tuple originated from (in this case
-``SentenceSpout``) and streamparse calls the spout's ``fail()`` method. It's
-then up to your spout implementation to decide what to do. A spout could retry
-a failed tuple, send an error message, or kill the topology.
 
 Remote Deployment
 -----------------
