@@ -17,9 +17,7 @@ except ImportError:
     import mock
     from mock import patch
 
-from six.moves import range
-
-from streamparse.storm import BatchingBolt, Bolt, Component, Tuple
+from streamparse.storm import BatchingBolt, Bolt, Tuple
 
 
 log = logging.getLogger(__name__)

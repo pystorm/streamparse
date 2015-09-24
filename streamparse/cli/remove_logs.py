@@ -4,7 +4,7 @@ Remove all logs from Storm workers for the specified Storm topology.
 
 from __future__ import absolute_import, print_function
 
-from fabric.api import env, execute, parallel, run, sudo
+from fabric.api import env, execute, parallel, sudo
 
 from .common import add_environment, add_name, add_pattern
 from ..util import activate_env, get_topology_definition, get_logfiles_cmd

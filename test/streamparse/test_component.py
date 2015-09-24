@@ -12,10 +12,8 @@ from io import BytesIO
 import simplejson as json
 
 try:
-    from unittest import mock
     from unittest.mock import patch
 except ImportError:
-    import mock
     from mock import patch
 
 from streamparse.storm import Component, Tuple

@@ -2,11 +2,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import sys
 from collections import defaultdict
 
-from six import iteritems, itervalues, string_types, reraise
-from six.moves import range
+from six import iteritems, itervalues
 
 from .component import Component, Tuple
 

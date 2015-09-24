@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 
-from fabric.api import env, execute, parallel, prefix, put, puts, run, task
+from fabric.api import env, execute, parallel, prefix, put, puts, run
 from fabric.contrib.files import exists
 
 from .common import add_environment, add_name

@@ -16,8 +16,20 @@ from .version import __version__, VERSION
 # https://lukasa.co.uk/2014/05/A_Brief_Digression_About_Logging/
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__all__ = ['bolt', 'cmdln', 'component', 'contextmanagers', 'debug',
-           'decorators', 'dsl', 'spout', 'storm', '__version__', 'VERSION']
+__all__ = [
+    'VERSION',
+    '__version__',
+    'bolt',
+    'cli',
+    'cmdln',
+    'component',
+    'contextmanagers',
+    'debug',
+    'decorators',
+    'dsl',
+    'spout',
+    'storm',
+]
 
 __license__ = """
 Copyright 2014-2015 Parsely, Inc.

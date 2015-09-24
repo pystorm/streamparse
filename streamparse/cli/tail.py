@@ -4,11 +4,10 @@ Tail the specified log files.
 
 from __future__ import absolute_import, print_function
 
-from fabric.api import env, execute, parallel, run, task
+from fabric.api import env, execute, parallel, run
 
 from .common import add_environment, add_name, add_pattern
-from ..util import (activate_env, get_env_config, get_logfiles_cmd,
-                    get_topology_definition)
+from ..util import activate_env, get_logfiles_cmd, get_topology_definition
 
 
 @parallel
