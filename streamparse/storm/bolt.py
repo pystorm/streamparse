@@ -204,20 +204,22 @@ class Bolt(Component):
         Separated out so it can be properly unit tested.
         """
         self._current_tups = [self.read_tuple()]
-        tup = self._current_tups[0]
-        if self.is_heartbeat(tup):
-            self.send_message({'command': 'sync'})
-        elif self.is_tick(tup):
-            self.process_tick(tup)
-            if self.auto_ack:
-                 self.ack(tup)
-        else:
-            self.process(tup)
-            if self.auto_ack:
-                 self.ack(tup)
-        # reset so that we don't accidentally fail the wrong Tuples
-        # if a successive call to read_tuple fails
-        self._current_tups = []
+        try:
+            tup = self._current_tups[0]
+            if self.is_heartbeat(tup):
+                self.send_message({'command': 'sync'})
+            elif self.is_tick(tup):
+                self.process_tick(tup)
+                if self.auto_ack:
+                     self.ack(tup)
+            else:
+                self.process(tup)
+                if self.auto_ack:
+                     self.ack(tup)
+        finally:
+            # reset so that we don't accidentally fail the wrong Tuples
+            # if a successive call to read_tuple fails
+            self._current_tups = []
 
     def _handle_run_exception(self, exc):
         """Process an exception encountered while running the ``run()`` loop.
