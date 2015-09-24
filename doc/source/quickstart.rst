@@ -433,6 +433,14 @@ option and value as in the following example:
 Remote Deployment
 -----------------
 
+Setting up a Storm Cluster
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See Storm's `Setting up a Storm Cluster <https://storm.apache.org/documentation/Setting-up-a-Storm-cluster.html>`_.
+
+Submit
+^^^^^^
+
 When you are satisfied that your topology works well via testing with::
 
     > sparse run -d
