@@ -37,7 +37,7 @@ install_requires = [
     'jinja2',
     'requests',
     'prettytable',
-    'six',
+    'six>=1.5',
     'simplejson'
 ]
 
