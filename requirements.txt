@@ -1,7 +1,7 @@
 jinja2
 -e git+https://github.com/pashinin/fabric@p33#egg=fabric
 invoke<0.8
-six
+six>=1.5
 requests
 prettytable
 setuptools
