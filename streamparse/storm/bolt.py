@@ -364,17 +364,26 @@ class BatchingBolt(Bolt):
         # ACK tick Tuple immediately, since it's just responsible for counter
         self.ack(tick_tup)
         if self._tick_counter > self.ticks_between_batches and self._batches:
-            for key, batch in iteritems(self._batches):
-                self._current_tups = batch
-                self.process_batch(key, batch)
-                if self.auto_ack:
-                    for tup in batch:
-                        self.ack(tup)
-                # Set current batch to [] so that we know it was acked if a
-                # later batch raises an exception
-                self._batches[key] = []
-            self._batches = defaultdict(list)
+            self.process_batches()
             self._tick_counter = 0
+
+    def process_batches(self):
+        """Iterate through all batches, call process_batch on them, and ack.
+
+        Separated out for the rare instances when we want to subclass
+        BatchingBolt and customize what mechanism causes batches to be
+        processed.
+        """
+        for key, batch in iteritems(self._batches):
+            self._current_tups = batch
+            self.process_batch(key, batch)
+            if self.auto_ack:
+                for tup in batch:
+                    self.ack(tup)
+            # Set current batch to [] so that we know it was acked if a
+            # later batch raises an exception
+            self._batches[key] = []
+        self._batches = defaultdict(list)
 
     def process(self, tup):
         """Group non-tick Tuples into batches by ``group_key``.
