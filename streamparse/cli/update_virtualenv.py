@@ -35,7 +35,7 @@ def _create_or_update_virtualenv(virtualenv_root,
     puts("Updating virtualenv: {}".format(virtualenv_name))
     cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
     with prefix(cmd):
-        run("pip install -r {}".format(tmpfile))
+        run("pip install -r {} --exists-action wipe".format(tmpfile))
 
     run("rm {}".format(tmpfile))
 
