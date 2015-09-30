@@ -2,6 +2,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import os
+import signal
+import sys
+import threading
+import time
 from collections import defaultdict
 
 from six import iteritems, itervalues
@@ -431,3 +436,132 @@ class BatchingBolt(Bolt):
             for tup in self._current_tups:
                 if self.is_tick(tup):
                     self.fail(tup)
+
+
+class TicklessBatchingBolt(BatchingBolt):
+    """A BatchingBolt which uses a timer thread instead of tick tuples.
+
+    Batching tuples is unexpectedly complex to do correctly. The main problem
+    is that all bolts are single-threaded. The difficult comes when the
+    topology is shutting down because Storm stops feeding the bolt tuples. If
+    the bolt is blocked waiting on stdin, then it can't process any waiting
+    tuples, or even ack ones that were asynchronously written to a data store.
+
+    This bolt helps with that grouping tuples based on a time interval and then
+    processing them on a worker thread.
+
+    To use this class, you must implement ``process_batch``. ``group_key`` can
+    be optionally implemented so that tuples are grouped before
+    ``process_batch`` is even called.
+
+
+    :ivar auto_anchor: A ``bool`` indicating whether or not the bolt should
+                       automatically anchor emits to the incoming tuple ID.
+                       Tuple anchoring is how Storm provides reliability, you
+                       can read more about `tuple anchoring in Storm's
+                       docs <https://storm.incubator.apache.org/documentation/Guaranteeing-message-processing.html#what-is-storms-reliability-api>`_.
+                       Default is ``True``.
+    :ivar auto_ack: A ``bool`` indicating whether or not the bolt should
+                    automatically acknowledge tuples after ``process_batch()``
+                    is called. Default is ``True``.
+    :ivar auto_fail: A ``bool`` indicating whether or not the bolt should
+                     automatically fail tuples when an exception occurs when the
+                     ``process_batch()`` method is called. Default is ``True``.
+    :ivar secs_between_batches: The time (in seconds) between calls to
+                                ``process_batch()``. Note that if there are no
+                                tuples in any batch, the TicklessBatchingBolt will
+                                continue to sleep.
+
+                                .. note::
+                                  Can be fractional to specify greater
+                                  precision (e.g. 2.5).
+
+    **Example**:
+
+    .. code-block:: python
+
+        from streamparse.bolt import TicklessBatchingBolt
+
+        class WordCounterBolt(TicklessBatchingBolt):
+
+            secs_between_batches = 5
+
+            def group_key(self, tup):
+                word = tup.values[0]
+                return word  # collect batches of words
+
+            def process_batch(self, key, tups):
+                # emit the count of words we had per 5s batch
+                self.emit([key, len(tups)])
+    """
+
+    auto_anchor = True
+    auto_ack = True
+    auto_fail = True
+    secs_between_batches = 2
+
+    def __init__(self, *args, **kwargs):
+        super(TicklessBatchingBolt, self).__init__(*args, **kwargs)
+        self.exc_info = None
+        signal.signal(signal.SIGUSR1, self._handle_worker_exception)
+
+        iname = self.__class__.__name__
+        threading.current_thread().name = '{}:main-thread'.format(iname)
+        self._batches = defaultdict(list)
+        self._batch_lock = threading.Lock()
+        self._batcher = threading.Thread(target=self._batch_entry)
+        self._batcher.name = '{}:_batcher-thread'.format(iname)
+        self._batcher.daemon = True
+        self._batcher.start()
+
+    def process_tick(self, tick_tup):
+        """ Just ack tick tuples and ignore them. """
+        if self.auto_ack:
+             self.ack(tick_tup)
+
+    def process(self, tup):
+        """Group non-tick Tuples into batches by ``group_key``.
+
+        .. warning::
+            This method should **not** be overriden.  If you want to tweak
+            how Tuples are grouped into batches, override ``group_key``.
+        """
+        # Append latest Tuple to batches
+        group_key = self.group_key(tup)
+        with self._batch_lock:
+            self._batches[group_key].append(tup)
+
+    def _batch_entry_run(self):
+        """The inside of ``_batch_entry``'s infinite loop.
+
+        Separated out so it can be properly unit tested.
+        """
+        time.sleep(self.secs_between_batches)
+        with self._batch_lock:
+            self.process_batches()
+
+    def _batch_entry(self):
+        """Entry point for the batcher thread."""
+        try:
+            while True:
+                self._batch_entry_run()
+        except Exception:
+            self.exc_info = sys.exc_info()
+            os.kill(self.pid, signal.SIGUSR1)  # interrupt stdin waiting
+
+    def _handle_worker_exception(self, signum, frame):
+        """Handle an exception raised in the worker thread.
+
+        Exceptions in the _batcher thread will send a SIGUSR1 to the main
+        thread which we catch here, and then raise in the main thread.
+        """
+        reraise(*self.exc_info)
+
+
+    def _handle_run_exception(self, exc):
+        """Process an exception encountered while running the ``run()`` loop.
+
+        Called right before program exits.
+        """
+        with self._batch_lock:
+            super(TicklessBatchingBolt, self)._handle_run_exception(self, exc)
