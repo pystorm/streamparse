@@ -19,7 +19,7 @@ def lint():
             run("pyflakes streamparse/{}".format(src))
 
 
-@task(pre=["test"])
+@task(pre=[test])
 def build(docs=False):
     run("python setup.py build")
     if docs:
