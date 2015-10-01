@@ -237,6 +237,7 @@ class Bolt(Component):
             if self.auto_fail:
                 self.fail(tup)
 
+
 class BatchingBolt(Bolt):
     """A bolt which batches Tuples for processing.
 
