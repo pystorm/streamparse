@@ -38,7 +38,8 @@ install_requires = [
     'requests',
     'prettytable',
     'six>=1.5',
-    'simplejson'
+    'simplejson',
+    'pystorm'
 ]
 
 if sys.version_info.major < 3:

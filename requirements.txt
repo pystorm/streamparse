@@ -6,3 +6,4 @@ requests
 prettytable
 setuptools
 simplejson
+pystorm

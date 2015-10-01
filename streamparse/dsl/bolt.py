@@ -7,9 +7,10 @@ This module is called bolt to mirror organization of storm package.
 from collections import Iterable
 from six import string_types
 
+from pystorm.bolt import Bolt
+
 from .component import Specification
 from .topology import Grouping, TopologyError
-from ..storm.bolt import Bolt
 
 
 class BoltSpecification(Specification):

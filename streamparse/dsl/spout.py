@@ -4,8 +4,9 @@ Spout Specification
 This module is called spout to mirror organization of storm package.
 """
 
+from pystorm.spout import Spout
+
 from .component import Specification
-from ..storm.spout import Spout
 
 
 class SpoutSpecification(Specification):

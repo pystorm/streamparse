@@ -1,7 +1,8 @@
+from pystorm.bolt import Bolt
+from pystorm.spout import Spout
+
 from .spout import SpoutSpecification
 from .bolt import BoltSpecification
-from ..storm.bolt import Bolt
-from ..storm.spout import Spout
 
 
 def Spec(component_cls, *args, **kwargs):
