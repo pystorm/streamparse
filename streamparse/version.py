@@ -21,5 +21,13 @@ in one place. Based on the suggestion `here. <http://bit.ly/16LbuJF>`_
 :organization: Parsely
 '''
 
-__version__ = '2.2.0-dev'
-VERSION = tuple(int(x) for x in __version__.split('.'))
+def _safe_int(string):
+    """ Simple function to convert strings into ints without dying. """
+    try:
+        return int(string)
+    except ValueError:
+        return string
+
+
+__version__ = '2.2.0.dev'
+VERSION = tuple(_safe_int(x) for x in __version__.split('.'))
