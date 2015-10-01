@@ -7,9 +7,11 @@ This package makes it easier to work with Storm and Python.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+# For backward compatibility
+import pystorm as storm
 
 from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
-               spout, storm)
+               spout)
 from .version import __version__, VERSION
 
 # Enable default NullHandler to prevent "No handlers could be found for logger"
@@ -21,14 +23,13 @@ __all__ = [
     '__version__',
     'bolt',
     'cli',
-    'cmdln',
     'component',
     'contextmanagers',
     'debug',
     'decorators',
     'dsl',
     'spout',
-    'storm',
+    'storm'
 ]
 
 __license__ = """
