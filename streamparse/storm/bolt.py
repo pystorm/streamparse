@@ -9,7 +9,7 @@ import threading
 import time
 from collections import defaultdict
 
-from six import iteritems, itervalues
+from six import iteritems, itervalues, reraise
 
 from .component import Component, Tuple
 
