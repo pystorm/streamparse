@@ -565,4 +565,4 @@ class TicklessBatchingBolt(BatchingBolt):
         Called right before program exits.
         """
         with self._batch_lock:
-            super(TicklessBatchingBolt, self)._handle_run_exception(self, exc)
+            super(TicklessBatchingBolt, self)._handle_run_exception(exc)
