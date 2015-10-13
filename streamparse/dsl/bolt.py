@@ -3,11 +3,12 @@ Bolt Specification
 
 This module is called bolt to mirror organization of storm package.
 """
+from __future__ import absolute_import
 
 from collections import Iterable
-from six import string_types
 
 from pystorm.bolt import Bolt
+from six import string_types
 
 from .component import Specification
 from .topology import Grouping, TopologyError
@@ -54,8 +55,8 @@ class BoltSpecification(Specification):
                 if source in specifications:
                     self.sources[i] = specifications[source]
                 else:
-                    raise TopologyError(
-                        'Missing source named {} from {}'.format(source, self))
+                    raise TopologyError('Missing source named {} from {}'
+                                        .format(source, self))
 
                 # Ensure that source always references a specification object.
                 source = self.sources[i]
@@ -66,6 +67,6 @@ class BoltSpecification(Specification):
 
                 for group in self.group_on:
                     if group not in outputs:
-                        raise TopologyError(
-                            'Field {} does not exist in source {} as an '
-                            'output'.format(group, outputs))
+                        raise TopologyError('Field {} does not exist in source '
+                                            '{} as an output'.format(group,
+                                                                     outputs))

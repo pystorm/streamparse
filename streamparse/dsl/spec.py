@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from pystorm.bolt import Bolt
 from pystorm.spout import Spout
 

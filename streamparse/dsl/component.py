@@ -3,6 +3,9 @@ Component-level Specification
 
 This module is called component to mirror organization of storm package.
 """
+from __future__ import absolute_import
+
+from copy import deepcopy
 
 from pystorm.component import Component
 
@@ -28,3 +31,14 @@ class Specification(object):
         :type specifications: dict
         """
         pass
+
+    def __repr__(self):
+        """:returns: A string representation of the Specification. """
+        attr_dict = deepcopy(self.__dict__)
+        component_cls = attr_dict.pop('component_cls')
+        repr_str = '{}({cls}'.format(self.__class__.__name__,
+                                     cls=component_cls.__name__)
+        for key, val in attr_dict.items():
+            repr_str += ', {}={!r}'.format(key, val)
+        repr_str += ')'
+        return repr_str

@@ -3,6 +3,7 @@ Spout Specification
 
 This module is called spout to mirror organization of storm package.
 """
+from __future__ import absolute_import
 
 from pystorm.spout import Spout
 
