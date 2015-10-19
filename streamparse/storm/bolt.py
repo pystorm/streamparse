@@ -517,8 +517,7 @@ class TicklessBatchingBolt(BatchingBolt):
 
     def process_tick(self, tick_tup):
         """ Just ack tick tuples and ignore them. """
-        if self.auto_ack:
-             self.ack(tick_tup)
+        self.ack(tick_tup)
 
     def _batch_entry_run(self):
         """The inside of ``_batch_entry``'s infinite loop.
