@@ -3,14 +3,6 @@ Topology base class
 """
 from __future__ import absolute_import
 
-
-import thriftpy
-thriftpy.install_import_hook()
-import storm_thrift
-from storm_thrift import (ComponentCommon, Grouping, NullStruct, GlobalStreamId,
-                          StreamInfo, SpoutSpec, ShellComponent,
-                          ComponentObject, StormTopology)
-from storm_thrift import Bolt as BoltSpec
 from six import add_metaclass, iteritems, string_types
 from thriftpy.transport import TMemoryBuffer
 from thriftpy.protocol import TBinaryProtocol
@@ -18,6 +10,10 @@ from thriftpy.protocol import TBinaryProtocol
 from .bolt import BoltSpecification
 from .component import Specification
 from .spout import SpoutSpecification
+from .storm_thrift import (ComponentCommon, Grouping, NullStruct, GlobalStreamId,
+                           StreamInfo, SpoutSpec, ShellComponent,
+                           ComponentObject, StormTopology)
+from .storm_thrift import Bolt as BoltSpec
 
 
 class Grouping(object):
@@ -43,8 +39,6 @@ class TopologyType(type):
         specs = {}
         bolt_specs = {}
         spout_specs = {}
-        for spec_id, bolt in self.specs.items():
-
         for spoutId, spout in self._spouts.iteritems():
             spout_spec = SpoutSpec()
             shell_object = ShellComponent()

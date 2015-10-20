@@ -1,17 +1,21 @@
 """
 Component-level Specification
 
-This module is called component to mirror organization of storm package.
+This module is called component to mirror organization of pystorm package.
 """
 from __future__ import absolute_import
 
 from copy import deepcopy
 
+import simplejson as json
 from pystorm.component import Component
 
+from .storm_thrift import ComponentCommon, StreamInfo
 
-class Specification(object):
-    def __init__(self, component_cls, name=None, parallelism=1):
+
+class ComponentSpecification(object):
+    def __init__(self, component_cls, name=None, parallelism=1, config=None,
+                 output_fields=None):
         if not issubclass(component_cls, Component):
             raise TypeError("Invalid component: {}".format(component_cls))
 
@@ -20,7 +24,10 @@ class Specification(object):
 
         self.component_cls = component_cls
         self.name = name
-        self.parallelism = parallelism
+        self.common = ComponentCommon(inputs={}, streams={},
+                                      parallelism_hint=parallelism)
+        if config is not None:
+            self.common.json_conf = json.dumps(config)
 
     def resolve_dependencies(self, specifications):
         """Allows specification subclasses to resolve an dependencies
@@ -42,3 +49,11 @@ class Specification(object):
             repr_str += ', {}={!r}'.format(key, val)
         repr_str += ')'
         return repr_str
+
+    def _get_common(self):
+        """:returns: A ``storm_thrift.ComponentCommon`` object representing the
+                     ``inputs``, ``streams``, ``parallelism_hint``, and
+                     ``json_conf`` for this component.
+        """
+        if hasattr(self, 'sources'):
+

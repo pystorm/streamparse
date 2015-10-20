@@ -7,10 +7,10 @@ from __future__ import absolute_import
 
 from pystorm.spout import Spout
 
-from .component import Specification
+from .component import ComponentSpecification
 
 
-class SpoutSpecification(Specification):
+class SpoutSpecification(ComponentSpecification):
     def __init__(self, component_cls, **kwargs):
         if not issubclass(component_cls, Spout):
             raise TypeError("Invalid spout: {}".format(component_cls))

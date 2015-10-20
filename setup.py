@@ -39,7 +39,8 @@ install_requires = [
     'prettytable',
     'six>=1.5',
     'simplejson',
-    'pystorm'
+    'pystorm',
+    'thriftpy>=0.3.2'
 ]
 
 if sys.version_info.major < 3:

@@ -7,14 +7,19 @@ from __future__ import absolute_import
 
 from collections import Iterable
 
+import thriftpy
 from pystorm.bolt import Bolt
 from six import string_types
 
-from .component import Specification
+from . import storm_thrift
+from .component import ComponentSpecification
 from .topology import Grouping, TopologyError
 
 
-class BoltSpecification(Specification):
+class ShellBolt(object):
+
+
+class BoltSpecification(ComponentSpecification):
     def __init__(self, component_cls, source=None, group_on=Grouping.SHUFFLE,
                  **kwargs):
         if not issubclass(component_cls, Bolt):
@@ -70,3 +75,25 @@ class BoltSpecification(Specification):
                         raise TopologyError('Field {} does not exist in source '
                                             '{} as an output'.format(group,
                                                                      outputs))
+
+    def to_thrift(self):
+        """:returns: A ``storm_thrift.Bolt`` object to be serialized as part of
+                     a Storm Thrift topology.
+        """
+        bolt_spec = storm_thrift.Bolt()
+        shell_object = storm_thrift.ShellComponent()
+        shell_object.execution_command = bolt_spec.execution_command
+        shell_object.script = bolt_spec.script
+        bolt_spec.spout_object = ComponentObject()
+        bolt_spec.spout_object.shell = shell_object
+        bolt_spec.common = self._getComponentCommon(spoutId, spout)
+
+        common = self._commons[id]
+        stream_info = storm_thrift.StreamInfo()
+        stream_info.output_fields = component.declareOutputFields()
+        stream_info.direct = False # Appears to be unused by Storm
+        common.streams['default'] = stream_info
+
+
+
+
