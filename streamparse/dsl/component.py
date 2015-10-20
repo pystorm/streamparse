@@ -4,7 +4,7 @@ Component-level Specification
 This module is called component to mirror organization of storm package.
 """
 
-from ..storm.component import Component
+from pystorm.component import Component
 
 
 class Specification(object):

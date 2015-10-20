@@ -32,13 +32,14 @@ def readme():
 
 
 install_requires = [
-    'invoke',
+    'invoke>=0.8',
     'fabric',
-    'docopt',
     'jinja2',
     'requests',
     'prettytable',
-    'six'
+    'six>=1.5',
+    'simplejson',
+    'pystorm'
 ]
 
 if sys.version_info.major < 3:
@@ -72,8 +73,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'sparse = streamparse.cmdln:main',
-            'streamparse = streamparse.cmdln:main'
+            'sparse = streamparse.cli.sparse:main',
+            'streamparse = streamparse.cli.sparse:main'
         ]
     },
     install_requires=install_requires,

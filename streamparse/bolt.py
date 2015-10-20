@@ -2,4 +2,4 @@
 Placeholder module to not break API
 """
 
-from .storm.bolt import *
+from pystorm.bolt import *

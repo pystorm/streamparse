@@ -21,14 +21,14 @@ To do this, add a directory called ``checkouts`` and symlink it up::
     ln -s ../../../streamparse/jvm streamparse
     cd ..
 
-Now, comment out the ``com.parsely/streamparse`` dependency in ``project.clj``. 
+Now, comment out the ``com.parsely/streamparse`` dependency in ``project.clj``.
 It will now pick up the Clojure commands from your local repo. So, now you can
 tweak and change them!
 
 Local pip installation
 ----------------------
 
-In your virtualenv for this project, go into ``~/repos/streamparse`` (where you 
+In your virtualenv for this project, go into ``~/repos/streamparse`` (where you
 cloned streamparse) and simply run::
 
     python setup.py develop
@@ -47,7 +47,7 @@ Installing Storm pre-releases
 
 You can clone Storm from Github here::
 
-    git clone git@github.com:apache/storm.git 
+    git clone git@github.com:apache/storm.git
 
 There are tags available for releases, e.g.::
 

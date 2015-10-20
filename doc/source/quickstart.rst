@@ -90,7 +90,7 @@ streamparse projects expect to have the following directory layout:
     "project.clj","leiningen project file, can be used to add external JVM dependencies."
     "src/","Python source files (bolts/spouts/etc.) for topologies."
     "tasks.py","Optional custom invoke tasks."
-    "topologies/","Contains topology definitions written using the `Clojure DSL <http://storm.incubator.apache.org/documentation/Clojure-DSL.html>`_ for Storm."
+    "topologies/","Contains topology definitions written using the `Clojure DSL <http://storm.apache.org/documentation/Clojure-DSL.html>`_ for Storm."
     "virtualenvs/","Contains pip requirements files in order to install dependencies on remote Storm servers."
 
 
@@ -169,8 +169,8 @@ function named "wordcount".
       ]
     )
 
-It turns out, the name of the name of the function doesn't matter much, we've
-used ``wordcount`` above, but it could just as easily be ``bananas``. What is
+It turns out, the name of the function doesn't matter much; we've used
+``wordcount`` above, but it could just as easily be ``bananas``. What is
 important, is that **the function must return an array with only two
 dictionaries and take one argument**.
 
@@ -214,7 +214,8 @@ run the class provided.  We've also let Storm know exactly what these spouts
 will be emitting, namely a single field called ``sentence``.
 
 You'll notice that in ``sentence-spout-1``, we've passed an optional map of
-configuration parameters ``:p 2``, we'll get back to this later.
+configuration parameters ``:p 2``, which sets the spout to have 2 Python
+processes. This is discussed in :ref:`parallelism`.
 
 Creating bolts is very similar and uses the ``python-bolt-spec`` function:
 
@@ -258,19 +259,19 @@ sources for the bolt. It's completely fine to add multiple sources to any bolts.
 In the ``word-counter`` bolt, we've told Storm that we'd like the stream of
 input tuples to be grouped by the named field ``word``. Storm offers
 comprehensive options for `stream groupings
-<http://storm.incubator.apache.org/documentation/Concepts.html#stream-groupings>`_,
+<http://storm.apache.org/documentation/Concepts.html#stream-groupings>`_,
 but you will most commonly use a **shuffle** or **fields** grouping:
 
 * **Shuffle grouping**: Tuples are randomly distributed across the bolt’s tasks
   in a way such that each bolt is guaranteed to get an equal number of tuples.
 * **Fields grouping**: The stream is partitioned by the fields specified in the
-  grouping. For example, if the stream is grouped by the “user-id” field,
-  tuples with the same “user-id” will always go to the same task, but tuples
-  with different “user-id”’s may go to different tasks.
+  grouping. For example, if the stream is grouped by the "user-id" field,
+  tuples with the same "user-id" will always go to the same task, but tuples
+  with different "user-id"’s may go to different tasks.
 
 There are more options to configure with spouts and bolts, we'd encourage you
 to refer to `Storm's Concepts
-<http://storm.incubator.apache.org/documentation/Concepts.html>`_ for more
+<http://storm.apache.org/documentation/Concepts.html>`_ for more
 information.
 
 Spouts and Bolts
@@ -355,6 +356,18 @@ being processed and acknowledged after ``process()`` completes.
 If an Exception is raised while ``process()`` is called, streamparse
 automatically fails the current tuple prior to killing the Python process.
 
+Failed Tuples
+^^^^^^^^^^^^^
+
+In the example above, we added the ability to fail a sentence tuple if it did
+not provide any words. What happens when we fail a tuple? Storm will send a
+"fail" message back to the spout where the tuple originated from (in this case
+``SentenceSpout``) and streamparse calls the spout's
+:meth:`~streamparse.storm.spout.Spout.fail` method. It's then up to your spout
+implementation to decide what to do. A spout could retry a failed tuple, send
+an error message, or kill the topology. See :ref:`dealing-with-errors` for
+more discussion.
+
 Bolt Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -380,7 +393,6 @@ adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
               self.fail(tup)  # perform failure manually
             self.ack(tup)  # perform acknowledgement manually
 
-
 Handling Tick Tuples
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -395,7 +407,7 @@ Bolt class. Once this is overridden, you can set the storm option
 to be emitted every ``<frequency>`` seconds.
 
 You can see the full docs for ``process_tick()`` in
-:class:`streamparse.bolt.Bolt`. 
+:class:`streamparse.bolt.Bolt`.
 
 **Example**:
 
@@ -418,18 +430,16 @@ option and value as in the following example:
 
     $ sparse run -o "topology.tick.tuple.freq.secs=2" ...
 
-Failed Tuples
-^^^^^^^^^^^^^
-
-In the example above, we added the ability to fail a sentence tuple if it
-did not provide any words. What happens when we fail a tuple? Storm will send a
-"fail" message back to the spout where the tuple originated from (in this case
-``SentenceSpout``) and streamparse calls the spout's ``fail()`` method. It's
-then up to your spout implementation to decide what to do. A spout could retry
-a failed tuple, send an error message, or kill the topology.
-
 Remote Deployment
 -----------------
+
+Setting up a Storm Cluster
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See Storm's `Setting up a Storm Cluster <https://storm.apache.org/documentation/Setting-up-a-Storm-cluster.html>`_.
+
+Submit
+^^^^^^
 
 When you are satisfied that your topology works well via testing with::
 
@@ -497,12 +507,20 @@ these explicitly. streamparse will now:
 2. Build a virtualenv on all your Storm workers (in parallel)
 3. Submit the topology to the ``nimbus`` server
 
-Disabling Virtualenv Creation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Disabling & Configuring Virtualenv Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you do not have ssh access to all of the servers in your Storm cluster, but
 you know they have all of the requirements for your Python code installed, you
 can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
+
+If you would like to pass command-line flags to virtualenv, you can set
+``"virtualenv_flags"`` in ``config.json``, for example::
+
+    "virtualenv_flags": "-p /path/to/python"
+
+Note that this only applies when the virtualenv is created, not when an
+existing virtualenv is used.
 
 Using unofficial versions of Storm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

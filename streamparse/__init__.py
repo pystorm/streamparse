@@ -6,29 +6,30 @@ This package makes it easier to work with Storm and Python.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import streamparse.bolt
-import streamparse.cmdln
-import streamparse.component
-import streamparse.contextmanagers
-import streamparse.debug
-import streamparse.decorators
-import streamparse.dsl
-import streamparse.spout
-import streamparse.storm
-from streamparse.version import __version__, VERSION
+import logging
+# For backward compatibility
+import pystorm as storm
+
+from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
+               spout)
+from .version import __version__, VERSION
+
+# Enable default NullHandler to prevent "No handlers could be found for logger"
+# https://lukasa.co.uk/2014/05/A_Brief_Digression_About_Logging/
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
+    'VERSION',
+    '__version__',
     'bolt',
-    'cmdln',
+    'cli',
     'component',
     'contextmanagers',
     'debug',
     'decorators',
     'dsl',
     'spout',
-    'storm',
-    '__version__',
-    'VERSION',
+    'storm'
 ]
 
 __license__ = """

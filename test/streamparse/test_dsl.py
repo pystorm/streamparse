@@ -1,9 +1,12 @@
 import unittest
 import logging
+
+from pystorm.spout import Spout
+from pystorm.bolt import Bolt
+
 from streamparse.dsl.topology import Topology, Grouping, TopologyError
 from streamparse.dsl.spec import Spec
-from streamparse.storm.spout import Spout
-from streamparse.storm.bolt import Bolt
+
 
 log = logging.getLogger(__name__)
 

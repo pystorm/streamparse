@@ -1,6 +1,3 @@
-from streamparse.ext.fabric import *
-
-
 def pre_submit(topology_name, env_name, env_config):
     """Override this function to perform custom actions prior to topology
     submission. No SSH tunnels will be active when this function is called."""
