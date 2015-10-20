@@ -517,20 +517,7 @@ class TicklessBatchingBolt(BatchingBolt):
 
     def process_tick(self, tick_tup):
         """ Just ack tick tuples and ignore them. """
-        if self.auto_ack:
-             self.ack(tick_tup)
-
-    def process(self, tup):
-        """Group non-tick Tuples into batches by ``group_key``.
-
-        .. warning::
-            This method should **not** be overriden.  If you want to tweak
-            how Tuples are grouped into batches, override ``group_key``.
-        """
-        # Append latest Tuple to batches
-        group_key = self.group_key(tup)
-        with self._batch_lock:
-            self._batches[group_key].append(tup)
+        self.ack(tick_tup)
 
     def _batch_entry_run(self):
         """The inside of ``_batch_entry``'s infinite loop.
@@ -559,10 +546,27 @@ class TicklessBatchingBolt(BatchingBolt):
         reraise(*self.exc_info)
 
 
-    def _handle_run_exception(self, exc):
-        """Process an exception encountered while running the ``run()`` loop.
+    def _run(self):
+        """The inside of ``run``'s infinite loop.
 
-        Called right before program exits.
+        Separate from BatchingBolt's implementation because
+        we need to be able to acquire the batch lock after
+        reading the tuple.
+
+        We can't acquire the lock before reading the tuple because if
+        that hange (i.e. the topology is shutting down) the lock being
+        acquired will freeze the rest of the bolt, which is precisely
+        what this batcher seeks to avoid.
         """
+        tup = self.read_tuple()
         with self._batch_lock:
-            super(TicklessBatchingBolt, self)._handle_run_exception(exc)
+            self._current_tups = [tup]
+            if self.is_heartbeat(tup):
+                self.send_message({'command': 'sync'})
+            elif self.is_tick(tup):
+                self.process_tick(tup)
+            else:
+                self.process(tup)
+            # reset so that we don't accidentally fail the wrong Tuples
+            # if a successive call to read_tuple fails
+            self._current_tups = []
