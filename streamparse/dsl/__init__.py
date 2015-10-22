@@ -561,4 +561,4 @@ service DistributedRPCInvocations {
 """
 
 storm_thrift = thriftpy.load_fp(io.StringIO(_THRIFT_STR),
-							    module_name='storm_thrift')
+                                module_name='storm_thrift')
