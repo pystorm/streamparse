@@ -9,6 +9,7 @@ python:
   - "3.4"
   - "3.5"
   - "pypy"
+  - "pypy-2.6.1"
 
 install:
   - travis_retry pip install -r requirements.txt
