@@ -60,7 +60,8 @@ class ComponentSpec(object):
                 for input_spec in inputs:
                     grouping = Grouping.SHUFFLE
                     if isinstance(input_spec, ComponentSpec):
-                        stream_id = GlobalStreamId(componentId=input_spec.name,
+                        component_id = input_spec.name or input_spec
+                        stream_id = GlobalStreamId(componentId=component_id,
                                                    streamId='default')
                         # Can only automatically determine if grouping should be
                         # direct when given a ComponentSpec.  If
@@ -89,7 +90,7 @@ class ComponentSpec(object):
                             .format(config))
         if outputs is None:
             outputs = []
-        elif isinstance(outputs, (list, tuple)):
+        if isinstance(outputs, (list, tuple)):
             streams = {}
             for output in outputs:
                 if isinstance(output, Stream):
@@ -112,7 +113,7 @@ class ComponentSpec(object):
         self.parallelism = parallelism
         self.config = config
         self.outputs = outputs
-        self.inputs = inputs
+        self.inputs = input_dict
         self.common = ComponentCommon(inputs=input_dict, streams=streams,
                                       parallelism_hint=parallelism,
                                       json_conf=config)

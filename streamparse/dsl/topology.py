@@ -4,7 +4,7 @@ Topology base class
 from __future__ import absolute_import
 
 from pystorm.component import Component
-from six import add_metaclass, iteritems, string_types
+from six import add_metaclass, iteritems, iterkeys, string_types
 from thriftpy.transport import TMemoryBuffer
 from thriftpy.protocol import TBinaryProtocol
 
@@ -49,6 +49,13 @@ class TopologyType(type):
                 else:
                     raise TopologyError('Specifications should either be bolts '
                                         'or spouts.  Given: {!r}'.format(spec))
+                # Clean up ComponentSpec componentIds in inputs
+                if spec.inputs is None:
+                    spec.inputs = {}
+                for stream_id in iterkeys(spec.inputs):
+                    if isinstance(stream_id.componentId, ComponentSpec):
+                        stream_id.componentId = stream_id.componentId.name
+
             elif isinstance(spec, Component):
                 raise TopologyError('Topology objects should only have '
                                     'ComponentSpec attributes.  Did you forget '
@@ -73,12 +80,13 @@ class Topology(object):
         """:returns: A string representation of the topology"""
         return repr(self.specs)
 
-    def write(self, stream):
+    @classmethod
+    def write(cls, stream):
         """Writes the topology to a stream or file."""
         def write_it(stream):
             transport_out = TMemoryBuffer()
             protocol_out = TBinaryProtocol(transport_out)
-            self._topology.write(protocol_out)
+            cls._topology.write(protocol_out)
             transport_bytes = transport_out.getvalue()
             stream.write(transport_bytes)
 
@@ -88,7 +96,8 @@ class Topology(object):
         else:
             write_it(stream)
 
-    def read(self, stream):
+    @classmethod
+    def read(cls, stream):
         """Reads the topology from a stream or file."""
         def read_it(stream):
             stream_bytes = stream.read()
