@@ -5,14 +5,23 @@ This module is called spout to mirror organization of storm package.
 """
 from __future__ import absolute_import
 
-from pystorm.spout import Spout
-
-from .component import ComponentSpecification
+from .component import JavaComponentSpec, ShellComponentSpec
 
 
-class SpoutSpecification(ComponentSpecification):
-    def __init__(self, component_cls, **kwargs):
-        if not issubclass(component_cls, Spout):
-            raise TypeError("Invalid spout: {}".format(component_cls))
+class ShellSpoutSpec(ShellComponentSpec):
+    def __init__(self, component_cls, name=None, command=None, script=None,
+                 parallelism=1, config=None, outputs=None):
+        super(ShellSpoutSpec, self).__init__(component_cls=component_cls,
+                                             name=name, parallelism=parallelism,
+                                             config=config, outputs=outputs,
+                                             command=command, script=script)
 
-        return super(SpoutSpecification, self).__init__(component_cls, **kwargs)
+
+class JavaSpoutSpec(JavaComponentSpec):
+    def __init__(self, component_cls, name=None, full_class_name=None,
+                 args_list=None, parallelism=1, config=None, outputs=None):
+        super(JavaSpoutSpec, self).__init__(component_cls=component_cls,
+                                            name=name, parallelism=parallelism,
+                                            config=config, outputs=outputs,
+                                            full_class_name=full_class_name,
+                                            args_list=args_list)

@@ -1,0 +1,111 @@
+"""
+Streams and Groupings
+"""
+from __future__ import absolute_import
+
+from six import string_types
+
+from .thrift import storm_thrift
+from .util import to_java_arg
+from storm_thrift import NullStruct
+
+
+class Stream(storm_thrift.StreamInfo):
+    """
+    A Storm output stream
+    """
+    def __init__(self, fields=None, name='default', direct=False):
+        if fields is None:
+            fields = []
+        elif isinstance(fields, (list, tuple)):
+            fields = list(fields)
+            for field in fields:
+                if not isinstance(field, string_types):
+                    raise TypeError('All field names must be strings; given: '
+                                    '{!r}'.format(field))
+        else:
+            raise TypeError('Stream fields must be a list, tuple, or None; '
+                            'given: {!r}'.format(fields))
+        self.fields = fields
+        if isinstance(name, string_types):
+            self.name = name
+        else:
+            raise TypeError('Stream name must be a string; given: {!r}'
+                            .format(name))
+        if isinstance(direct, bool):
+            self.direct = direct
+        else:
+            raise TypeError('"direct" must be either True or False; given: {!r}'
+                            .format(direct))
+
+
+class Grouping(object):
+    """
+    A Grouping describes how Tuples should be distributed to the tasks of a
+    Bolt listening on a particular stream.
+
+    When no Grouping is specified, it defaults to `SHUFFLE` for normal streams,
+    and `DIRECT` for direct streams.
+
+    :ivar SHUFFLE: Tuples are randomly distributed across the Bolt's tasks in a
+                   way such that each Bolt is guaranteed to get an equal number
+                   of Tuples.
+    :ivar GLOBAL: The entire stream goes to a single one of the Bolt's tasks.
+                  Specifically, it goes to the task with the lowest id.
+    :ivar DIRECT: This is a special kind of grouping. A stream grouped this way
+                  means that the producer of the Tuple decides which task of the
+                  consumer will receive this Tuple. Direct groupings can only be
+                  declared on streams that have been declared as direct streams.
+                  Tuples emitted to a direct stream must be emitted using the
+                  the `emit_direct` method.
+    :ivar ALL: The stream is replicated across all the Bolt's tasks. Use this
+               grouping with care.
+    :ivar NONE: This grouping specifies that you don't care how the stream is
+                grouped. Currently, none groupings are equivalent to shuffle
+                groupings. Eventually though, Storm will push down Bolts with
+                none groupings to execute in the same thread as the Bolt or
+                Spout they subscribe from (when possible).
+    :ivar LOCAL_OR_SHUFFLE: If the target Bolt has one or more tasks in the
+                            same worker process, Tuples will be shuffled to
+                            just those in-process tasks. Otherwise, this acts
+                            like a normal shuffle grouping.
+    """
+    __slots__ = ()
+
+    SHUFFLE = storm_thrift.Grouping(shuffle=NullStruct())
+    GLOBAL = storm_thrift.Grouping(fields=[])
+    DIRECT = storm_thrift.Grouping(direct=NullStruct())
+    ALL = storm_thrift.Grouping(all=NullStruct())
+    NONE = storm_thrift.Grouping(none=NullStruct())
+    LOCAL_OR_SHUFFLE = storm_thrift.Grouping(local_or_shuffle=NullStruct())
+
+    @classmethod
+    def fields(cls, *fields):
+        """The stream is partitioned by the fields specified in the grouping.
+
+        For example, if the stream is grouped by the `user-id` field, Tuples
+        with the same `user-id` will always go to the same task, but Tuples with
+        different `user-id`'s may go to different tasks."""
+        if len(fields) == 1 and isinstance(fields[0], list):
+            fields = fields[0]
+        else:
+            fields = list(fields)
+        return storm_thrift.Grouping(fields=fields)
+
+    @classmethod
+    def custom_object(cls, java_class_name, arg_list):
+        """Tuples will be assigned to tasks by the given Java class."""
+        java_object = storm_thrift.JavaObject(full_class_name=java_class_name,
+                                              arg_list=[to_java_arg(arg)
+                                                        for arg in arg_list])
+        return storm_thrift.Grouping(custom_object=java_object)
+
+    @classmethod
+    def custom_serialized(cls, java_serialized):
+        """Tuples will be assigned to tasks by the given Java serialized class.
+        """
+        if not isinstance(java_serialized, bytes):
+            return TypeError('Argument to custom_serialized must be a '
+                             'serialized Java class as bytes.  Given: {!r}'
+                             .format(java_serialized))
+        return storm_thrift.Grouping(custom_serialized=java_serialized)

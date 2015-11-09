@@ -8,36 +8,121 @@ from __future__ import absolute_import
 from copy import deepcopy
 
 import simplejson as json
-from pystorm.component import Component
+from six import iteritems, string_types
 
-from .storm_thrift import ComponentCommon, StreamInfo
+from .stream import Grouping, Stream
+from .thrift import storm_thrift
+from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
+                          JavaObject, ShellComponent, StreamInfo)
 
 
-class ComponentSpecification(object):
-    def __init__(self, component_cls, name=None, parallelism=1, config=None,
-                 output_fields=None):
-        if not issubclass(component_cls, Component):
-            raise TypeError("Invalid component: {}".format(component_cls))
-
-        if not isinstance(parallelism, int) or parallelism < 1:
+class ComponentSpec(object):
+    def __init__(self, component_cls, name=None, inputs=None, parallelism=1,
+                 config=None, outputs=None):
+        # Grab class attribute versions of args if necessary
+        if parallelism is None:
+            parallelism = component_cls.parallelism
+        if config is None:
+            config = component_cls.config
+        if outputs is None:
+            config = component_cls.outputs
+        # Validate args
+        if not isinstance(parallelism, int):
+            raise TypeError("Parallelism must be a integer greater than 0")
+        elif parallelism < 1:
             raise ValueError("Parallelism must be a integer greater than 0")
+        # if not issubclass(component_cls, Component):
+        #     raise TypeError("Invalid component: {}".format(component_cls))
+        if isinstance(inputs, dict):
+            for key, val in list(iteritems(inputs)):
+                if not isinstance(key, GlobalStreamId):
+                    if isinstance(key, ComponentSpec):
+                        inputs[key['default']] = val
+                        del inputs[key]
+                    else:
+                        raise TypeError('If inputs is a dict, it is expected to'
+                                        ' map from GlobalStreamId or '
+                                        'ComponentSpec objects to Grouping '
+                                        'objects.  Given key: {!r}; Given '
+                                        'value: {!r}'.format(key, val))
+                if not isinstance(val, storm_thrift.Grouping):
+                    raise TypeError('If inputs is a dict, it is expected to map'
+                                    ' from GlobalStreamId or ComponentSpec '
+                                    'objects to Grouping objects.  '
+                                    'Given key: {!r}; Given value: {!r}'
+                                    .format(key, val))
+            input_dict = inputs
+        else:
+            if isinstance(inputs, ComponentSpec):
+                inputs = [inputs]
+            if isinstance(inputs, (list, tuple)):
+                input_dict = {}
+                for input_spec in inputs:
+                    grouping = Grouping.SHUFFLE
+                    if isinstance(input_spec, ComponentSpec):
+                        stream_id = GlobalStreamId(componentId=input_spec.name,
+                                                   streamId='default')
+                        # Can only automatically determine if grouping should be
+                        # direct when given a ComponentSpec.  If
+                        # GlobalStreamId, we're out of luck.
+                        # TODO: Document this.
+                        if input_spec.common.streams['default'].direct:
+                            grouping = Grouping.DIRECT
+                    elif isinstance(input_spec, GlobalStreamId):
+                        stream_id = input_spec
+                    else:
+                        raise TypeError('Inputs must be ComponentSpec or '
+                                        'GlobalStreamId objects.  Given: {!r}'
+                                        .format(input_spec))
+                    input_dict[stream_id] = grouping
+            elif inputs is None:
+                input_dict = {}
+            else:
+                raise TypeError('Inputs must either be a list, dict, or None.  '
+                                'Given: {!r}'.format(inputs))
+        if isinstance(config, dict):
+            config = json.dumps(config)
+        elif config is None:
+            config = '{}'
+        else:
+            raise TypeError('Config must either be a dict or None.  Given: {!r}'
+                            .format(config))
+        if outputs is None:
+            outputs = []
+        elif isinstance(outputs, (list, tuple)):
+            streams = {}
+            for output in outputs:
+                if isinstance(output, Stream):
+                    streams[output.name] = StreamInfo(output_fields=output.fields,
+                                                      direct=output.direct)
+                # Strings are output fields for default stream
+                elif isinstance(output, string_types):
+                    default = streams.setdefault('default',
+                                                 StreamInfo(output_fields=[],
+                                                            direct=False))
+                    default.output_fields.append(output)
+                else:
+                    raise TypeError('Outputs must either be a list of strings '
+                                    'or a list of Streams.  Invalid entry: {!r}'
+                                    .format(output))
 
+        # Set validated/normalized arguments
         self.component_cls = component_cls
         self.name = name
-        self.common = ComponentCommon(inputs={}, streams={},
-                                      parallelism_hint=parallelism)
-        if config is not None:
-            self.common.json_conf = json.dumps(config)
+        self.parallelism = parallelism
+        self.config = config
+        self.outputs = outputs
+        self.inputs = inputs
+        self.common = ComponentCommon(inputs=input_dict, streams=streams,
+                                      parallelism_hint=parallelism,
+                                      json_conf=config)
 
-    def resolve_dependencies(self, specifications):
-        """Allows specification subclasses to resolve an dependencies
-        that they may have on other specifications.
-
-        :param specifications: all of the specification objects for this
-                               topology.
-        :type specifications: dict
-        """
-        pass
+    def __getitem__(self, stream):
+        if stream not in self.common.streams:
+            raise KeyError('Invalid stream for {}: {!r}. Valid streams are: '
+                           '{!r}'.format(self.name, stream,
+                                         list(self.common.streams.keys())))
+        return GlobalStreamId(componentId=self.name, streamId=stream)
 
     def __repr__(self):
         """:returns: A string representation of the Specification. """
@@ -50,10 +135,42 @@ class ComponentSpecification(object):
         repr_str += ')'
         return repr_str
 
-    def _get_common(self):
-        """:returns: A ``storm_thrift.ComponentCommon`` object representing the
-                     ``inputs``, ``streams``, ``parallelism_hint``, and
-                     ``json_conf`` for this component.
-        """
-        if hasattr(self, 'sources'):
 
+class JavaComponentSpec(ComponentSpec):
+    def __init__(self, component_cls, name=None, serialized_java=None,
+                 full_class_name=None, args_list=None, inputs=None,
+                 parallelism=None, config=None, outputs=None):
+        super(JavaComponentSpec, self).__init__(component_cls=component_cls,
+                                                name=name, inputs=inputs,
+                                                parallelism=parallelism,
+                                                config=config, outputs=outputs)
+        if serialized_java is not None:
+            if isinstance(serialized_java, bytes):
+                comp_object = ComponentObject(serialized_java=serialized_java)
+                self.component_object = comp_object
+            else:
+                raise TypeError('serialized_java must be either bytes or None')
+        else:
+            if not full_class_name:
+                raise ValueError('full_class_name is required')
+            if args_list is None:
+                raise TypeError('args_list must not be None')
+            java_object = JavaObject(full_class_name=full_class_name,
+                                     args_list=args_list)
+            self.component_object = ComponentObject(java_object=java_object)
+
+
+class ShellComponentSpec(ComponentSpec):
+    def __init__(self, component_cls, name=None, command=None, script=None,
+                 inputs=None, parallelism=1, config=None, outputs=None):
+        super(ShellComponentSpec, self).__init__(component_cls=component_cls,
+                                                 name=name, inputs=inputs,
+                                                 parallelism=parallelism,
+                                                 config=config, outputs=outputs)
+        if not command:
+            raise ValueError('command is required')
+        if script is None:
+            raise TypeError('script must not be None')
+        shell_component = ShellComponent(execution_command=command,
+                                         script=script)
+        self.component_object = ComponentObject(shell=shell_component)

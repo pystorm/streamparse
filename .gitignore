@@ -1,6 +1,7 @@
 build/
 /build.sh
 .coverage
+.cache/
 dist/
 doc/_build/
 .DS_Store
