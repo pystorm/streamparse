@@ -15,6 +15,9 @@ from .thrift import storm_thrift
 
 
 class TopologyType(type):
+    """
+    Class to define a Storm topology in a Python DSL.
+    """
     def __new__(mcs, classname, bases, class_dict):
         specs = {}
         bolt_specs = {}
@@ -107,7 +110,14 @@ class Topology(object):
     """
     @classmethod
     def write(cls, stream):
-        """Writes the topology to a stream or file."""
+        """Write the topology to a stream or file.
+
+        Typically used to write to Nimbus.
+
+        .. note::
+            This will not save the `specs` attribute, as that is not part of
+            the Thrift output.
+        """
         def write_it(stream):
             transport_out = TMemoryBuffer()
             protocol_out = TBinaryProtocol(transport_out)
@@ -123,14 +133,23 @@ class Topology(object):
 
     @classmethod
     def read(cls, stream):
-        """Reads the topology from a stream or file."""
+        """Read a topology from a stream or file.
+
+        .. note::
+            This will not properly reconstruct the `specs` attribute, as that is
+            not included in the Thrift output.
+        """
         def read_it(stream):
             stream_bytes = stream.read()
             transport_in = TMemoryBuffer(stream_bytes)
             protocol_in = TBinaryProtocol(transport_in)
             topology = storm_thrift.StormTopology()
             topology.read(protocol_in)
-            return topology
+            cls._topology = topology
+            cls.thrift_bolts = topology.bolts
+            cls.thrift_spouts = topology.spouts
+            # Can't reconstruct Python specs from Thrift.
+            cls.specs = []
 
         if isinstance(stream, string_types):
             with open(stream, 'rb') as input_file:
