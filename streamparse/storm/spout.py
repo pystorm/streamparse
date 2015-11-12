@@ -22,7 +22,6 @@ class Spout(pystorm.spout.Spout, ShellSpout):
     @classmethod
     def spec(cls, name=None, parallelism=None, config=None):
         return ShellSpoutSpec(cls, command='python',
-                              script=('-m streamparse.runner {}'
-                                      .format(cls.__name__)),
+                              script='-m streamparse.run {}'.format(cls.__name__),
                               name=name, parallelism=parallelism, config=config,
                               outputs=cls.outputs)

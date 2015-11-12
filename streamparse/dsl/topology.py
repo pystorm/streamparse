@@ -4,13 +4,12 @@ Topology base class
 from __future__ import absolute_import
 
 from pystorm.component import Component
-from six import add_metaclass, iteritems, iterkeys, string_types
+from six import add_metaclass, iteritems, string_types
 from thriftpy.transport import TMemoryBuffer
 from thriftpy.protocol import TBinaryProtocol
 
 from .bolt import JavaBoltSpec, ShellBoltSpec
 from .component import ComponentSpec
-from .exceptions import TopologyError
 from .spout import JavaSpoutSpec, ShellSpoutSpec
 from .thrift import storm_thrift
 
@@ -20,39 +19,40 @@ class TopologyType(type):
         specs = {}
         bolt_specs = {}
         spout_specs = {}
-        # Set names first
+        # Set spec names first
         for name, spec in iteritems(class_dict):
             if isinstance(spec, ComponentSpec):
                 # Use the variable name as the specification name.
                 if spec.name is None:
                     spec.name = name
                 if spec.name in specs:
-                    raise TopologyError("Duplicate specification name: {}"
-                                        .format(spec.name))
+                    raise ValueError("Duplicate component name: {}"
+                                     .format(spec.name))
+                else:
+                    specs[spec.name] = spec
+
         # Perform other checks
         for name, spec in iteritems(class_dict):
             if isinstance(spec, ComponentSpec):
                 if isinstance(spec, (JavaBoltSpec, ShellBoltSpec)):
-                    specs[spec.name] = spec
                     if not spec.inputs:
-                        raise TopologyError('{} component "{}" requires at '
-                                            'least one input'
-                                            .format(spec.component_cls.__name__,
-                                                    spec.name))
+                        cls_name = spec.component_cls.__name__
+                        raise ValueError('{} "{}" requires at least one input, '
+                                         'because it is a Bolt.'
+                                         .format(cls_name, spec.name))
                     bolt_specs[spec.name] = storm_thrift.Bolt(
                         bolt_object=spec.component_object, common=spec.common)
                 elif isinstance(spec, (JavaSpoutSpec, ShellSpoutSpec)):
-                    specs[spec.name] = spec
                     if not spec.outputs:
-                        raise TopologyError('{} component "{}" requires at '
-                                            'least one output'
-                                            .format(spec.component_cls.__name__,
-                                                    spec.name))
+                        cls_name = spec.component_cls.__name__
+                        raise ValueError('{} "{}" requires at least one output,'
+                                         ' because it is a Spout'
+                                         .format(cls_name, spec.name))
                     spout_specs[spec.name] = storm_thrift.SpoutSpec(
                         spout_object=spec.component_object, common=spec.common)
                 else:
-                    raise TopologyError('Specifications should either be bolts '
-                                        'or spouts.  Given: {!r}'.format(spec))
+                    raise TypeError('Specifications should either be bolts or '
+                                    'spouts.  Given: {!r}'.format(spec))
                 # Clean up ComponentSpec componentIds in inputs
                 if spec.inputs is None:
                     spec.inputs = {}
@@ -64,14 +64,29 @@ class TopologyType(type):
                         spec.inputs[stream_id] = grouping
                     # This should never happen, but it's worth checking for
                     elif stream_id.componentId is None:
-                        raise TopologyError('GlobalStreamId.componentId should '
-                                            'not be None.')
-
+                        raise TypeError('GlobalStreamId.componentId should not '
+                                        'be None.')
+                    # Check for invalid fields grouping
+                    stream_comp = specs[stream_id.componentId]
+                    valid_fields = set(stream_comp.outputs[stream_id.streamId]
+                                       .output_fields)
+                    if grouping.fields is not None:
+                        for field in grouping.fields:
+                            if field not in valid_fields:
+                                raise ValueError('Field {!r} specified in '
+                                                 'grouping is not a valid '
+                                                 'output field for the {!r} '
+                                                 '{!r} stream.'
+                                                 .format(field,
+                                                         stream_comp.name,
+                                                         stream_id.streamId))
             elif isinstance(spec, Component):
-                raise TopologyError('Topology objects should only have '
-                                    'ComponentSpec attributes.  Did you forget '
-                                    'to call the spec class method for your '
-                                    'component?  Given: {!r}'.format(spec))
+                raise TypeError('Topology classes should only have '
+                                'ComponentSpec attributes.  Did you forget to '
+                                'call the spec class method for your component?'
+                                ' Given: {!r}'.format(spec))
+        if classname != 'Topology' and not spout_specs:
+            raise ValueError('A Topology requires at least one Spout')
         class_dict['thrift_bolts'] = bolt_specs
         class_dict['thrift_spouts'] = spout_specs
         class_dict['specs'] = list(specs.values())

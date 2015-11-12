@@ -17,6 +17,11 @@ from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
 
 
 class ComponentSpec(object):
+    """Describes the inputs, outputs, etc. for a Storm topology component.
+
+    Generates some of the Thrift data structures that are needed to build a
+    Storm topology.
+    """
     def __init__(self, component_cls, name=None, inputs=None, parallelism=1,
                  config=None, outputs=None):
         # Grab class attribute versions of args if necessary
@@ -112,7 +117,7 @@ class ComponentSpec(object):
         self.name = name
         self.parallelism = parallelism
         self.config = config
-        self.outputs = outputs
+        self.outputs = streams
         self.inputs = input_dict
         self.common = ComponentCommon(inputs=input_dict, streams=streams,
                                       parallelism_hint=parallelism,
@@ -140,6 +145,7 @@ class ComponentSpec(object):
 
 
 class JavaComponentSpec(ComponentSpec):
+    """ComponentSpec for JVM-based topology components."""
     def __init__(self, component_cls, name=None, serialized_java=None,
                  full_class_name=None, args_list=None, inputs=None,
                  parallelism=None, config=None, outputs=None):
@@ -164,6 +170,7 @@ class JavaComponentSpec(ComponentSpec):
 
 
 class ShellComponentSpec(ComponentSpec):
+    """ComponentSpec for shell-based topology components (like Python ones)."""
     def __init__(self, component_cls, name=None, command=None, script=None,
                  inputs=None, parallelism=1, config=None, outputs=None):
         super(ShellComponentSpec, self).__init__(component_cls=component_cls,

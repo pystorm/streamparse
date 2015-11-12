@@ -22,8 +22,7 @@ class Bolt(pystorm.bolt.Bolt, ShellBolt):
     @classmethod
     def spec(cls, name=None, inputs=None, parallelism=None, config=None):
         return ShellBoltSpec(cls, command='python',
-                             script=('-m streamparse.runner {}'
-                                     .format(cls.__name__)),
+                             script='-m streamparse.run {}'.format(cls.__name__),
                              name=name, inputs=inputs, parallelism=parallelism,
                              config=config, outputs=cls.outputs)
 

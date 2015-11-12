@@ -90,6 +90,8 @@ class Grouping(object):
             fields = fields[0]
         else:
             fields = list(fields)
+        if not fields:
+            raise ValueError('List cannot be empty for fields grouping')
         return storm_thrift.Grouping(fields=fields)
 
     @classmethod

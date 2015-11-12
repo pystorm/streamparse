@@ -10,7 +10,7 @@ import logging
 
 from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
                spout, storm)
-from .dsl import Grouping, Stream, Topology, TopologyError
+from .dsl import Grouping, Stream, Topology
 from .storm.bolt import BatchingBolt, Bolt, ShellBolt, TicklessBatchingBolt
 from .storm.spout import ShellSpout, Spout
 from .version import __version__, VERSION
@@ -38,7 +38,6 @@ __all__ = [
     'Stream',
     'TicklessBatchingBolt',
     'Topology',
-    'TopologyError',
 ]
 
 __license__ = """
