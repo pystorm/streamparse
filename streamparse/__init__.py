@@ -8,8 +8,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
-               spout, storm)
+from . import (bolt, cli, component, contextmanagers, decorators, dsl, spout,
+               storm)
 from .dsl import Grouping, Stream, Topology
 from .storm.bolt import BatchingBolt, Bolt, ShellBolt, TicklessBatchingBolt
 from .storm.spout import ShellSpout, Spout
@@ -26,7 +26,6 @@ __all__ = [
     'cli',
     'component',
     'contextmanagers',
-    'debug',
     'decorators',
     'dsl',
     'Grouping',
