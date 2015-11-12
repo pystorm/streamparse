@@ -30,7 +30,7 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(len(WordCount.specs), 2)
         self.assertEqual(list(WordCount.word_bolt.inputs.keys())[0],
                          WordCount.word_spout['default'])
-        self.assertEqual(WordCount.word_bolt[WordCount.word_spout['default']],
+        self.assertEqual(WordCount.word_bolt.inputs[WordCount.word_spout['default']],
                          Grouping.fields('word'))
 
     def test_bolt_before_source(self):

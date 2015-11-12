@@ -121,9 +121,11 @@ class ComponentSpec(object):
     def __getitem__(self, stream):
         if stream not in self.common.streams:
             raise KeyError('Invalid stream for {}: {!r}. Valid streams are: '
-                           '{!r}'.format(self.name, stream,
-                                         list(self.common.streams.keys())))
-        return GlobalStreamId(componentId=self.name, streamId=stream)
+                           '{}'.format(self.name, stream,
+                                       list(self.common.streams.keys())))
+        # If name is None, because it hasn't been set yet, use object instead
+        component_id = self.name or self
+        return GlobalStreamId(componentId=component_id, streamId=stream)
 
     def __repr__(self):
         """:returns: A string representation of the Specification. """
