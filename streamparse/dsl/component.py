@@ -22,19 +22,19 @@ class ComponentSpec(object):
     Generates some of the Thrift data structures that are needed to build a
     Storm topology.
     """
-    def __init__(self, component_cls, name=None, inputs=None, parallelism=1,
+    def __init__(self, component_cls, name=None, inputs=None, par=1,
                  config=None, outputs=None):
         # Grab class attribute versions of args if necessary
-        if parallelism is None:
-            parallelism = component_cls.parallelism
+        if par is None:
+            par = component_cls.par
         if config is None:
             config = component_cls.config
         if outputs is None:
             config = component_cls.outputs
         # Validate args
-        if not isinstance(parallelism, int):
+        if not isinstance(par, int):
             raise TypeError("Parallelism must be a integer greater than 0")
-        elif parallelism < 1:
+        elif par < 1:
             raise ValueError("Parallelism must be a integer greater than 0")
         # if not issubclass(component_cls, Component):
         #     raise TypeError("Invalid component: {}".format(component_cls))
@@ -115,12 +115,12 @@ class ComponentSpec(object):
         # Set validated/normalized arguments
         self.component_cls = component_cls
         self.name = name
-        self.parallelism = parallelism
+        self.par = par
         self.config = config
         self.outputs = streams
         self.inputs = input_dict
         self.common = ComponentCommon(inputs=input_dict, streams=streams,
-                                      parallelism_hint=parallelism,
+                                      parallelism_hint=par,
                                       json_conf=config)
 
     def __getitem__(self, stream):
@@ -148,11 +148,11 @@ class JavaComponentSpec(ComponentSpec):
     """ComponentSpec for JVM-based topology components."""
     def __init__(self, component_cls, name=None, serialized_java=None,
                  full_class_name=None, args_list=None, inputs=None,
-                 parallelism=None, config=None, outputs=None):
+                 par=None, config=None, outputs=None):
         super(JavaComponentSpec, self).__init__(component_cls=component_cls,
                                                 name=name, inputs=inputs,
-                                                parallelism=parallelism,
-                                                config=config, outputs=outputs)
+                                                par=par, config=config,
+                                                outputs=outputs)
         if serialized_java is not None:
             if isinstance(serialized_java, bytes):
                 comp_object = ComponentObject(serialized_java=serialized_java)
@@ -172,11 +172,11 @@ class JavaComponentSpec(ComponentSpec):
 class ShellComponentSpec(ComponentSpec):
     """ComponentSpec for shell-based topology components (like Python ones)."""
     def __init__(self, component_cls, name=None, command=None, script=None,
-                 inputs=None, parallelism=1, config=None, outputs=None):
+                 inputs=None, par=1, config=None, outputs=None):
         super(ShellComponentSpec, self).__init__(component_cls=component_cls,
                                                  name=name, inputs=inputs,
-                                                 parallelism=parallelism,
-                                                 config=config, outputs=outputs)
+                                                 par=par, config=config,
+                                                 outputs=outputs)
         if not command:
             raise ValueError('command is required')
         if script is None:

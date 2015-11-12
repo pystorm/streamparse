@@ -21,10 +21,10 @@ class WordCountBolt(Bolt):
 class TopologyTests(unittest.TestCase):
     def test_basic_spec(self):
         class WordCount(Topology):
-            word_spout = WordSpout.spec(parallelism=2)
+            word_spout = WordSpout.spec(par=2)
             word_bolt = WordCountBolt.spec(inputs={word_spout:
                                                    Grouping.fields("word")},
-                                           parallelism=8)
+                                           par=8)
 
         self.assertEqual(len(WordCount.specs), 2)
         self.assertEqual(list(WordCount.word_bolt.inputs.keys())[0],
@@ -42,10 +42,10 @@ class TopologyTests(unittest.TestCase):
             class WordCount(Topology):
                 word_bolt = WordCountBolt.spec()
 
-    def test_invalid_parallelism(self):
+    def test_invalid_par(self):
         with self.assertRaises(ValueError):
             class WordCount(Topology):
-                word_spout = WordSpout.spec(parallelism=0)
+                word_spout = WordSpout.spec(par=0)
 
     def test_invalid_bolt_group_field(self):
         with self.assertRaises(ValueError):

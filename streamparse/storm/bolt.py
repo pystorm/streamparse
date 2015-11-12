@@ -11,19 +11,19 @@ from ..dsl.bolt import ShellBoltSpec
 class ShellBolt(Component):
     @classmethod
     def spec(cls, name=None, command=None, script=None, inputs=None,
-             parallelism=None, config=None, outputs=None):
+             par=None, config=None, outputs=None):
         return ShellBoltSpec(cls, command=command, script=script, name=name,
-                             inputs=inputs, parallelism=parallelism,
+                             inputs=inputs, par=par,
                              config=config, outputs=outputs)
 
 
 class Bolt(pystorm.bolt.Bolt, ShellBolt):
     """pystorm Bolt with streamparse-specific additions"""
     @classmethod
-    def spec(cls, name=None, inputs=None, parallelism=None, config=None):
+    def spec(cls, name=None, inputs=None, par=None, config=None):
         return ShellBoltSpec(cls, command='python',
                              script='-m streamparse.run {}'.format(cls.__name__),
-                             name=name, inputs=inputs, parallelism=parallelism,
+                             name=name, inputs=inputs, par=par,
                              config=config, outputs=cls.outputs)
 
 

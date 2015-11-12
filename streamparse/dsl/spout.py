@@ -10,18 +10,18 @@ from .component import JavaComponentSpec, ShellComponentSpec
 
 class ShellSpoutSpec(ShellComponentSpec):
     def __init__(self, component_cls, name=None, command=None, script=None,
-                 parallelism=1, config=None, outputs=None):
+                 par=1, config=None, outputs=None):
         super(ShellSpoutSpec, self).__init__(component_cls=component_cls,
-                                             name=name, parallelism=parallelism,
+                                             name=name, par=par,
                                              config=config, outputs=outputs,
                                              command=command, script=script)
 
 
 class JavaSpoutSpec(JavaComponentSpec):
     def __init__(self, component_cls, name=None, full_class_name=None,
-                 args_list=None, parallelism=1, config=None, outputs=None):
+                 args_list=None, par=1, config=None, outputs=None):
         super(JavaSpoutSpec, self).__init__(component_cls=component_cls,
-                                            name=name, parallelism=parallelism,
+                                            name=name, par=par,
                                             config=config, outputs=outputs,
                                             full_class_name=full_class_name,
                                             args_list=args_list)
