@@ -10,8 +10,7 @@ import logging
 # For backward compatibility
 import pystorm as storm
 
-from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
-               spout)
+from . import bolt, cli, component, contextmanagers, decorators, dsl, spout
 from .version import __version__, VERSION
 
 # Enable default NullHandler to prevent "No handlers could be found for logger"
@@ -19,13 +18,10 @@ from .version import __version__, VERSION
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
-    'VERSION',
-    '__version__',
     'bolt',
     'cli',
     'component',
     'contextmanagers',
-    'debug',
     'decorators',
     'dsl',
     'spout',
