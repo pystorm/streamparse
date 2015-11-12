@@ -5,26 +5,26 @@ API
 Tuples
 ------
 
-.. autoclass:: streamparse.storm.component.Tuple
+.. autoclass:: pystorm.component.Tuple
 
 You should never have to instantiate an instance of a
-:class:`streamparse.storm.component.Tuple` yourself as streamparse handles this for you
-prior to, for example, a :class:`streamparse.storm.bolt.Bolt`'s ``process()`` method
+:class:`pystorm.component.Tuple` yourself as streamparse handles this for you
+prior to, for example, a :class:`pystorm.bolt.Bolt`'s ``process()`` method
 being called.
 
 None of the emit methods for bolts or spouts require that you pass a
-:class:`streamparse.storm.component.Tuple` instance.
+:class:`pystorm.component.Tuple` instance.
 
 
 Components
 ----------
 
-Both :class:`streamparse.storm.bolt.Bolt` and
-:class:`streamparse.storm.spout.Spout` inherit from a common base-class,
-:class:`streamparse.storm.component.Component`.  It handles the basic
-`Multi-Lang IPC between Storm and Python <https://storm.apache.org/documentation/Multilang-protocol.html>`__.
+Both :class:`pystorm.bolt.Bolt` and :class:`pystorm.spout.Spout` inherit from a
+common base-class, :class:`pystorm.component.Component`.  It handles the basic
+`Multi-Lang IPC between Storm and Python
+<https://storm.apache.org/documentation/Multilang-protocol.html>`__.
 
-.. autoclass:: streamparse.storm.component.Component
+.. autoclass:: pystorm.component.Component
     :inherited-members:
 
 Spouts
@@ -33,18 +33,18 @@ Spouts
 Spouts are data sources for topologies, they can read from any data source and
 emit tuples into streams.
 
-.. autoclass:: streamparse.storm.spout.Spout
+.. autoclass:: pystorm.spout.Spout
     :inherited-members:
     :show-inheritance:
 
 Bolts
 ^^^^^
 
-.. autoclass:: streamparse.storm.bolt.Bolt
+.. autoclass:: pystorm.bolt.Bolt
     :inherited-members:
     :show-inheritance:
 
 
-.. autoclass:: streamparse.storm.bolt.BatchingBolt
+.. autoclass:: pystorm.bolt.BatchingBolt
     :inherited-members:
     :show-inheritance:

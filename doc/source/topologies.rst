@@ -215,8 +215,8 @@ Streams
 ^^^^^^^
 
 Topologies support multiple streams when routing tuples between components. The
-:meth:`~streamparse.storm.component.Component.emit` method takes an optional
-`stream` argument to specify the stream ID. For example:
+:meth:`~pystorm.component.Component.emit` method takes an optional `stream`
+argument to specify the stream ID. For example:
 
 .. code-block:: python
 
@@ -291,16 +291,15 @@ according to your needs.
 Dealing With Errors
 ^^^^^^^^^^^^^^^^^^^
 
-When detecting an error, bolt code can call its
-:meth:`~streamparse.storm.bolt.Bolt.fail` method in order to have Storm call
-the respective spout's :meth:`~streamparse.storm.spout.Spout.fail`
-method. Known error/failure cases result in explicit callbacks to the spout
-using this approach.
+When detecting an error, bolt code can call its :meth:`~pystorm.bolt.Bolt.fail`
+method in order to have Storm call the respective spout's
+:meth:`~pystorm.spout.Spout.fail` method. Known error/failure cases result in
+explicit callbacks to the spout using this approach.
 
 Exceptions which propagate without being caught will cause the component to
 crash. On ``sparse run``, the entire topology will stop execution. On a running
 cluster (i.e. ``sparse submit``), Storm will auto-restart the crashed component
-and the spout will receive a :meth:`~streamparse.storm.spout.Spout.fail` call.
+and the spout will receive a :meth:`~pystorm.spout.Spout.fail` call.
 
 If the spout's fail handling logic is to hold back the tuple and not re-emit
 it, then things will keep going. If it re-emits it, then it may crash that

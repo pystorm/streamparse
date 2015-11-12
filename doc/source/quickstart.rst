@@ -134,8 +134,10 @@ Let's have a look at the definition file created by using the
       ]
     )
 
-The first block of code we encounter effectively states "import the
-Clojure DSL functions for Storm":
+The first block of code we encounter effectively states "import the Clojure DSL
+functions for Storm." By convention, use the same name for the namespace
+(``ns``) and function (``defn``) as the basename of the file ("wordcount"),
+though these are not strictly required.
 
 .. code-block:: clojure
 
@@ -172,7 +174,8 @@ function named "wordcount".
 It turns out, the name of the function doesn't matter much; we've used
 ``wordcount`` above, but it could just as easily be ``bananas``. What is
 important, is that **the function must return an array with only two
-dictionaries and take one argument**.
+dictionaries and take one argument**, and that the last function in the file is
+the DSL spec (i.e. do not add a ``defn`` below this function).
 
 The first dictionary holds a named mapping of all the spouts that exist in the
 topology, the second holds a named mapping of all the bolts. The ``options``
@@ -363,10 +366,10 @@ In the example above, we added the ability to fail a sentence tuple if it did
 not provide any words. What happens when we fail a tuple? Storm will send a
 "fail" message back to the spout where the tuple originated from (in this case
 ``SentenceSpout``) and streamparse calls the spout's
-:meth:`~streamparse.storm.spout.Spout.fail` method. It's then up to your spout
+:meth:`~pystorm.spout.Spout.fail` method. It's then up to your spout
 implementation to decide what to do. A spout could retry a failed tuple, send
-an error message, or kill the topology. See :ref:`dealing-with-errors` for
-more discussion.
+an error message, or kill the topology. See :ref:`dealing-with-errors` for more
+discussion.
 
 Bolt Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
