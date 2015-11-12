@@ -134,8 +134,10 @@ Let's have a look at the definition file created by using the
       ]
     )
 
-The first block of code we encounter effectively states "import the
-Clojure DSL functions for Storm":
+The first block of code we encounter effectively states "import the Clojure DSL
+functions for Storm." By convention, use the same name for the namespace
+(``ns``) and function (``defn``) as the basename of the file ("wordcount"),
+though these are not strictly required.
 
 .. code-block:: clojure
 
@@ -172,7 +174,8 @@ function named "wordcount".
 It turns out, the name of the function doesn't matter much; we've used
 ``wordcount`` above, but it could just as easily be ``bananas``. What is
 important, is that **the function must return an array with only two
-dictionaries and take one argument**.
+dictionaries and take one argument**, and that the last function in the file is
+the DSL spec (i.e. do not add a ``defn`` below this function).
 
 The first dictionary holds a named mapping of all the spouts that exist in the
 topology, the second holds a named mapping of all the bolts. The ``options``
