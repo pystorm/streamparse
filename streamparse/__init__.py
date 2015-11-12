@@ -10,6 +10,9 @@ import logging
 
 from . import (bolt, cli, component, contextmanagers, debug, decorators, dsl,
                spout, storm)
+from .dsl import Grouping, Stream, Topology, TopologyError
+from .storm.bolt import BatchingBolt, Bolt, ShellBolt, TicklessBatchingBolt
+from .storm.spout import ShellSpout, Spout
 from .version import __version__, VERSION
 
 # Enable default NullHandler to prevent "No handlers could be found for logger"
@@ -17,8 +20,8 @@ from .version import __version__, VERSION
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
-    'VERSION',
-    '__version__',
+    'BatchingBolt',
+    'Bolt',
     'bolt',
     'cli',
     'component',
@@ -26,8 +29,16 @@ __all__ = [
     'debug',
     'decorators',
     'dsl',
+    'Grouping',
+    'ShellBolt',
+    'ShellSpout',
+    'Spout',
     'spout',
-    'storm'
+    'storm',
+    'Stream',
+    'TicklessBatchingBolt',
+    'Topology',
+    'TopologyError',
 ]
 
 __license__ = """
