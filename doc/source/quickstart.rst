@@ -142,7 +142,7 @@ though these are not strictly required.
 .. code-block:: clojure
 
     (ns wordcount
-      (:use     [backtype.storm.clojure])
+      (:use     [streamparse.specs])
       (:gen-class))
 
 The next block of code actually defines the topology and stores it into a
