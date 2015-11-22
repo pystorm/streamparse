@@ -45,7 +45,7 @@ Topology Files
 --------------
 
 A topology file describes your topology in terms of Directed Acyclic Graph
-(DAC) of Storm components, namely `bolts` and `spouts`. It uses the `Clojure
+(DAG) of Storm components, namely `bolts` and `spouts`. It uses the `Clojure
 DSL`_ for this, along with some utility functions streamparse provides.
 
 Topology files are located in ``topologies`` in your streamparse project folder.
