@@ -139,7 +139,7 @@ def get_nimbus_host_port(env_config):
     return (host, port)
 
 
-def get_nimbus_client(env_config):
+def get_nimbus_client(env_config=None, host=None, port=None):
     """Get a Thrift RPC client for Nimbus given project's config file.
 
     :param env_config: The project's parsed config.
@@ -147,7 +147,8 @@ def get_nimbus_client(env_config):
 
     :returns: a ThriftPy RPC client to use to communicate with Nimbus
     """
-    host, port = get_nimbus_host_port(env_config)
+    if host is None:
+        host, port = get_nimbus_host_port(env_config)
     nimbus_client = make_client(storm_thrift.Nimbus, host=host, port=port,
                                 proto_factory=TBinaryProtocolFactory(),
                                 trans_factory=TFramedTransportFactory())
