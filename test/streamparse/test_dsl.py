@@ -69,3 +69,23 @@ class TopologyTests(unittest.TestCase):
             class WordCount(Topology):
                 word = WordSpout.spec()
                 word_ = WordCountBolt.spec(name='word', inputs=[word])
+
+    def test_no_input_bolt(self):
+        with self.assertRaises(ValueError):
+            class WordCount(Topology):
+                word_spout = WordSpout.spec()
+                word_bolt = WordCountBolt.spec(inputs=[])
+
+    def test_no_output_spout(self):
+        class PointlessSpout(Spout):
+            outputs = []
+        with self.assertRaises(ValueError):
+            class WordCount(Topology):
+                word_spout = PointlessSpout.spec()
+
+    def test_base_component_rejection(self):
+        class MyComponent(Component):
+            outputs = []
+        with self.assertRaises(TypeError):
+            class WordCount(Topology):
+                word_spout = MyComponent.spec()
