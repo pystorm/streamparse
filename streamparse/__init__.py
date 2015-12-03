@@ -11,8 +11,8 @@ import logging
 from . import (bolt, cli, component, contextmanagers, decorators, dsl, spout,
                storm)
 from .dsl import Grouping, Stream, Topology
-from .storm.bolt import BatchingBolt, Bolt, ShellBolt, TicklessBatchingBolt
-from .storm.spout import ShellSpout, Spout
+from .storm import (BatchingBolt, Bolt, JavaBolt, JavaSpout, ShellBolt,
+                    ShellSpout, Spout, TicklessBatchingBolt)
 from .version import __version__, VERSION
 
 # Enable default NullHandler to prevent "No handlers could be found for logger"
@@ -29,6 +29,8 @@ __all__ = [
     'decorators',
     'dsl',
     'Grouping',
+    'JavaBolt',
+    'JavaSpout',
     'ShellBolt',
     'ShellSpout',
     'Spout',

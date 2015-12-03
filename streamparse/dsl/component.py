@@ -10,8 +10,8 @@ from copy import deepcopy
 import simplejson as json
 from six import iteritems, string_types
 
+from ..thrift import storm_thrift
 from .stream import Grouping, Stream
-from .thrift import storm_thrift
 from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
                           JavaObject, ShellComponent, StreamInfo)
 
@@ -36,8 +36,6 @@ class ComponentSpec(object):
             raise TypeError("Parallelism must be a integer greater than 0")
         elif par < 1:
             raise ValueError("Parallelism must be a integer greater than 0")
-        # if not issubclass(component_cls, Component):
-        #     raise TypeError("Invalid component: {}".format(component_cls))
         if isinstance(inputs, dict):
             for key, val in list(iteritems(inputs)):
                 if not isinstance(key, GlobalStreamId):
@@ -149,7 +147,7 @@ class JavaComponentSpec(ComponentSpec):
     def __init__(self, component_cls, name=None, serialized_java=None,
                  full_class_name=None, args_list=None, inputs=None,
                  par=None, config=None, outputs=None):
-        super(JavaComponentSpec, self).__init__(component_cls=component_cls,
+        super(JavaComponentSpec, self).__init__(component_cls,
                                                 name=name, inputs=inputs,
                                                 par=par, config=config,
                                                 outputs=outputs)
@@ -173,7 +171,7 @@ class ShellComponentSpec(ComponentSpec):
     """ComponentSpec for shell-based topology components (like Python ones)."""
     def __init__(self, component_cls, name=None, command=None, script=None,
                  inputs=None, par=1, config=None, outputs=None):
-        super(ShellComponentSpec, self).__init__(component_cls=component_cls,
+        super(ShellComponentSpec, self).__init__(component_cls,
                                                  name=name, inputs=inputs,
                                                  par=par, config=config,
                                                  outputs=outputs)

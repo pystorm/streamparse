@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from six import text_type
 
-from .thrift import storm_thrift
+from ..thrift import storm_thrift
 
 
 def to_java_arg(arg):

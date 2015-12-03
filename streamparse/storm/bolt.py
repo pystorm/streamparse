@@ -4,8 +4,18 @@ Module to add streamparse-specific extensions to pystorm Bolt classes
 
 import pystorm
 
+from ..dsl.bolt import JavaBoltSpec, ShellBoltSpec
 from .component import Component
-from ..dsl.bolt import ShellBoltSpec
+
+
+class JavaBolt(Component):
+    @classmethod
+    def spec(cls, name=None, serialized_java=None, full_class_name=None,
+             args_list=None, inputs=None, par=1, config=None, outputs=None):
+        return JavaBoltSpec(cls, name=name, serialized_java=serialized_java,
+                            full_class_name=full_class_name,
+                            args_list=args_list, inputs=inputs, par=par,
+                            config=config, outputs=outputs)
 
 
 class ShellBolt(Component):

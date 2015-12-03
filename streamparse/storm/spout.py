@@ -4,8 +4,18 @@ Module to add streamparse-specific extensions to pystorm Spout class
 
 import pystorm
 
+from ..dsl.spout import JavaSpoutSpec, ShellSpoutSpec
 from .component import Component
-from ..dsl.spout import ShellSpoutSpec
+
+
+class JavaSpout(Component):
+    @classmethod
+    def spec(cls, name=None, serialized_java=None, full_class_name=None,
+             args_list=None, par=1, config=None, outputs=None):
+        return JavaSpoutSpec(cls, name=name, serialized_java=serialized_java,
+                            full_class_name=full_class_name,
+                            args_list=args_list, par=par,
+                            config=config, outputs=outputs)
 
 
 class ShellSpout(Component):

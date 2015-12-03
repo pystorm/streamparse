@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 from six import string_types
 
-from .thrift import storm_thrift
+from ..thrift import storm_thrift
 from .util import to_java_arg
 from storm_thrift import NullStruct
 

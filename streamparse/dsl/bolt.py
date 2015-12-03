@@ -11,7 +11,7 @@ from .component import JavaComponentSpec, ShellComponentSpec
 class ShellBoltSpec(ShellComponentSpec):
     def __init__(self, component_cls, name=None, command=None, script=None,
                  inputs=None, par=1, config=None, outputs=None):
-        super(ShellBoltSpec, self).__init__(component_cls=component_cls,
+        super(ShellBoltSpec, self).__init__(component_cls,
                                             name=name,
                                             inputs=inputs,
                                             par=par,
@@ -25,7 +25,7 @@ class JavaBoltSpec(JavaComponentSpec):
     def __init__(self, component_cls, name=None, serialized_java=None,
                  full_class_name=None, args_list=None, inputs=None,
                  par=1, config=None, outputs=None):
-            super(JavaBoltSpec, self).__init__(component_cls=component_cls,
+            super(JavaBoltSpec, self).__init__(component_cls,
                                                name=name,
                                                serialized_java=serialized_java,
                                                inputs=inputs,

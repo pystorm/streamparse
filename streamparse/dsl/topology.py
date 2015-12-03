@@ -8,10 +8,10 @@ from six import add_metaclass, iteritems, string_types
 from thriftpy.transport import TMemoryBuffer
 from thriftpy.protocol import TBinaryProtocol
 
+from ..thrift import storm_thrift
 from .bolt import JavaBoltSpec, ShellBoltSpec
 from .component import ComponentSpec
 from .spout import JavaSpoutSpec, ShellSpoutSpec
-from .thrift import storm_thrift
 
 
 class TopologyType(type):

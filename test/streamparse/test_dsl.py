@@ -1,10 +1,13 @@
-import unittest
-import logging
+"""
+Tests for Topology DSL
+"""
 
-from streamparse.dsl.stream import Grouping
-from streamparse.dsl.topology import Topology
-from streamparse.storm.bolt import Bolt
-from streamparse.storm.spout import Spout
+import logging
+import unittest
+
+from streamparse.dsl import Grouping, Topology
+from streamparse.storm import (Bolt, Component, JavaBolt, JavaSpout, ShellBolt,
+                               ShellSpout, Spout)
 
 
 log = logging.getLogger(__name__)
