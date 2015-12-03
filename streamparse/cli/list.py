@@ -4,37 +4,28 @@ List the currently running Storm topologies.
 
 from __future__ import absolute_import
 
-from invoke import run
-
+from ..util import get_env_config, get_nimbus_client, print_stats_table
+from ..thrift import storm_thrift
 from .common import add_environment
-from ..util import (get_env_config, get_nimbus_for_env_config,
-                        is_ssh_for_nimbus)
-from ..contextmanagers import ssh_tunnel
 
 
-def _list_topologies(host=None, port=None, run_args=None, run_kwargs=None):
-    if run_args is None:
-        run_args = []
-    if run_kwargs is None:
-        run_kwargs = {}
-    run_kwargs['pty'] = True
-    cmd = ["lein",
-           "run -m streamparse.commands.list/-main"]
-    if host:
-        cmd.append("--host {}".format(host))
-    if port:
-        cmd.append("--port {}".format(port))
-    return run(" ".join(cmd), *run_args, **run_kwargs)
+def _list_topologies(nimbus_client):
+    """:returns: A list of running Storm topologies"""
+    cluster_summary = nimbus_client.getClusterInfo()
+    return cluster_summary.topologies
 
 
 def list_topologies(env_name):
+    """Prints out all running Storm topologies"""
     env_name, env_config = get_env_config(env_name)
-    host, port = get_nimbus_for_env_config(env_config)
-
-    if is_ssh_for_nimbus(env_config):
-        with ssh_tunnel(env_config.get("user"), host, 6627, port):
-            return _list_topologies()
-    return _list_topologies(host=host, port=port)
+    nimbus_client = get_nimbus_client(env_config)
+    topologies = _list_topologies(nimbus_client)
+    if not topologies:
+        print('No topologies found.')
+    else:
+        columns = [field for field, default in
+                   storm_thrift.TopologySummary.default_spec]
+        print_stats_table('Topologies', topologies, columns, 'l')
 
 
 def subparser_hook(subparsers):
