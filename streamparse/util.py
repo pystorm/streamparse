@@ -5,6 +5,7 @@ import re
 import shutil
 import sys
 from glob import glob
+from os.path import join
 from random import shuffle
 
 import requests
@@ -67,13 +68,13 @@ def get_topology_definition(topology_name=None):
     one, otherwise we'll die to avoid ambiguity.
 
     :param topology_name: a `str`, the topology_name of the topology (without
-                          .clj extension).
-    :returns: a `tuple` containing (topology_topology_name, topology_file).
+                          .py extension).
+    :returns: a `tuple` containing (topology_name, topology_file).
     """
     config = get_config()
     topology_path = config["topology_specs"]
     if topology_name is None:
-        topology_files = glob("{}/*.clj".format(topology_path))
+        topology_files = glob("{}/*.py".format(topology_path))
         if not topology_files:
             die("No topology definitions are defined in {}."
                 .format(topology_path))
@@ -83,11 +84,11 @@ def get_topology_definition(topology_name=None):
                 "explicitly specify the topology by name using the -n or "
                 "--name flags.".format(specs_dir=topology_path))
         topology_file = topology_files[0]
-        topology_name = re.sub(r'(^{}|\.clj$)'.format(topology_path), '',
+        topology_name = re.sub(r'(^{}|\.py$)'.format(topology_path), '',
                                topology_file)
     else:
-        topology_file = "{}.clj".format(os.path.join(topology_path,
-                                                     topology_name))
+        topology_file = "{}.py".format(os.path.join(topology_path,
+                                                    topology_name))
         if not os.path.exists(topology_file):
             die("Topology definition file not found {}. You need to "
                 "create a topology definition file first."
@@ -219,9 +220,10 @@ def prepare_topology():
     """Prepare a topology for running locally or deployment to a remote
     cluster.
     """
-    if os.path.isdir("_resources/resources"):
-        shutil.rmtree("_resources/resources")
-    shutil.copytree("src", "_resources/resources")
+    resources_dir = join("_resources", "resources")
+    if os.path.isdir(resources_dir):
+        shutil.rmtree(resources_dir)
+    shutil.copytree("src", resources_dir)
 
 
 def _get_file_names_command(path, patterns):

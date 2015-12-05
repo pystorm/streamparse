@@ -4,19 +4,18 @@ Submit a Storm topology to Nimbus.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import importlib
 import os
-import re
 import sys
 import time
 
-from invoke import run
-from six import string_types
+import simplejson as json
+from six import itervalues, string_types
 
-from ..contextmanagers import ssh_tunnel
-from ..thrift import storm_thrift
+from ..dsl.topology import Topology, TopologyType
 from ..util import (activate_env, get_config, get_env_config,
-                    get_nimbus_client, get_topology_definition,
-                    is_ssh_for_nimbus)
+                    get_nimbus_host_port, get_nimbus_client,
+                    get_topology_definition)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_par, add_simple_jar, add_wait,
                      add_workers, resolve_ackers_workers)
@@ -24,6 +23,9 @@ from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
 from .update_virtualenv import create_or_update_virtualenvs
+
+
+THRIFT_CHUNK_SIZE = 307200
 
 
 def get_user_tasks():
@@ -69,14 +71,9 @@ def _kill_existing_topology(topology_name, force, wait, nimbus_client):
         sys.stdout.flush()
 
 
-def _submit_topology(topology_name, topology_file, topology_jar, env_config,
+def _submit_topology(topology_name, topology_file, uploaded_jar, env_config,
                      workers, ackers, nimbus_client, options=None, debug=False):
-    jvm_opts = [
-        "-Dstorm.jar={}".format(topology_jar),
-        "-Dstorm.options=",
-        "-Dstorm.conf.file=",
-    ]
-    os.environ["JVM_OPTS"] = " ".join(jvm_opts)
+    host, port = get_nimbus_host_port(env_config)
     storm_options = {'topology.workers': workers,
                      'topology.acker.executors': ackers,
                      'topology.debug': debug}
@@ -104,13 +101,28 @@ def _submit_topology(topology_name, topology_file, topology_jar, env_config,
         options = []
     for option in options:
         key, val = option.split("=", 1)
-        option[key] = val
-    print("Submitting topology to nimbus:")
+        storm_options[key] = val
+
+    print("Submitting {} topology to nimbus...".format(topology_name), end='')
     sys.stdout.flush()
-    run()
-    nimbus_client.beginFileUpload()
-    nimbus_client.beginFileUpload()
-    nimbus_client.submit_topology(topology_name, )
+    topology_dir, mod_name = os.path.split(topology_file)
+    # Remove .py extension before trying to import
+    mod_name = mod_name[:-3]
+    sys.path.append(os.path.join(topology_dir, '..', 'src'))
+    sys.path.append(topology_dir)
+    mod = importlib.import_module(mod_name)
+    for attr in mod.__dict__.values():
+        if isinstance(attr, TopologyType) and attr != Topology:
+            topology_class = attr
+            break
+    else:
+        raise ValueError('Could not find topology subclass in topology module.')
+    nimbus_client.submitTopology(name=topology_name,
+                                 uploadedJarLocation=uploaded_jar,
+                                 jsonConf=json.dumps(storm_options),
+                                 topology=topology_class._topology)
+    print('done')
+
 
 def _pre_submit_hooks(topology_name, env_name, env_config):
     """Pre-submit hooks for invoke and fabric."""
@@ -132,6 +144,29 @@ def _post_submit_hooks(topology_name, env_name, env_config):
     post_submit_fabric = getattr(user_fabric, "post_submit", None)
     if callable(post_submit_fabric):
         post_submit_fabric(topology_name, env_name, env_config)
+
+
+def _upload_jar(nimbus_client, local_path):
+    upload_location = nimbus_client.beginFileUpload()
+    print("Uploading topology jar {} to assigned location: {}"
+          .format(local_path, upload_location))
+    total_bytes = os.path.getsize(local_path)
+    bytes_uploaded = 0
+    with open(local_path, 'rb') as local_jar:
+        while True:
+            print("Uploaded {}/{} bytes".format(bytes_uploaded, total_bytes),
+                  end='\r')
+            sys.stdout.flush()
+            curr_chunk = local_jar.read(THRIFT_CHUNK_SIZE)
+            if not curr_chunk:
+                break
+            nimbus_client.uploadChunk(upload_location, curr_chunk)
+            bytes_uploaded += THRIFT_CHUNK_SIZE
+        nimbus_client.finishFileUpload(upload_location)
+        print("Uploaded {}/{} bytes".format(min(total_bytes, bytes_uploaded),
+                                            total_bytes))
+        sys.stdout.flush()
+    return upload_location
 
 
 def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
@@ -164,7 +199,8 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     print('Deploying "{}" topology...'.format(name))
     sys.stdout.flush()
     _kill_existing_topology(name, force, wait, nimbus_client)
-    _submit_topology(name, topology_file, topology_jar, env_config, workers,
+    uploaded_jar = _upload_jar(nimbus_client, topology_jar)
+    _submit_topology(name, topology_file, uploaded_jar, env_config, workers,
                      ackers, nimbus_client, options=options, debug=debug)
     _post_submit_hooks(name, env_name, env_config)
 
