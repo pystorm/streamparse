@@ -3,6 +3,7 @@ from streamparse.bolt import Bolt
 
 
 class PixelDeserializerBolt(Bolt):
+    outputs = ['ip', 'ts', 'url']
 
     def process(self, tup):
         # Exceptions are automatically caught and reported

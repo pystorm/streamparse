@@ -1,5 +1,5 @@
 (defproject streamparse-kafka-sample "0.0.1-SNAPSHOT"
-  :source-paths ["src/clj" "topologies"]
+  :source-paths ["src/clj"]
   :aot :all
   :resource-paths ["_resources"]
   :target-path "_build"
