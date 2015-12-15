@@ -1,7 +1,10 @@
 (ns pixelcount.spouts.pixel_spout
   (:import [storm.kafka SpoutConfig KafkaSpout KafkaConfig KafkaConfig
                         StringScheme ZkHosts]
-           [backtype.storm.spout SchemeAsMultiScheme]))
+           [backtype.storm.spout SchemeAsMultiScheme])
+  (:gen-class
+    :init init
+    :extends storm.kafka.KafkaSpout))
 
 
 ;; Config spelled out below here to get the reader more comfortable with
@@ -35,4 +38,6 @@
                   (set! (. cfg forceFromStart) true)
                   cfg))
 
-(def spout (KafkaSpout. spout-config))
+(defn -init
+  []
+  [[spout-config] "foo"])
