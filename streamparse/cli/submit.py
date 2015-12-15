@@ -161,10 +161,9 @@ def _upload_jar(nimbus_client, local_path):
             if not curr_chunk:
                 break
             nimbus_client.uploadChunk(upload_location, curr_chunk)
-            bytes_uploaded += THRIFT_CHUNK_SIZE
+            bytes_uploaded += len(curr_chunk)
         nimbus_client.finishFileUpload(upload_location)
-        print("Uploaded {}/{} bytes".format(min(total_bytes, bytes_uploaded),
-                                            total_bytes))
+        print("Uploaded {}/{} bytes".format(bytes_uploaded, total_bytes))
         sys.stdout.flush()
     return upload_location
 
