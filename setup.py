@@ -33,7 +33,7 @@ def readme():
 
 install_requires = [
     'invoke>=0.8',
-    'fabric',
+    'fabric3',
     'jinja2',
     'requests',
     'prettytable',
