@@ -109,6 +109,10 @@ class ComponentSpec(object):
                     raise TypeError('Outputs must either be a list of strings '
                                     'or a list of Streams.  Invalid entry: {!r}'
                                     .format(output))
+        else:
+            raise TypeError('Outputs must either be a list of strings or a list'
+                            ' of Streams.  Given: {!r}'.format(outputs))
+
 
         # Set validated/normalized arguments
         self.component_cls = component_cls
