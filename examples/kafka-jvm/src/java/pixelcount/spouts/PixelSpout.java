@@ -17,9 +17,10 @@ public class PixelSpout extends KafkaSpout {
 	}
 
 	public static SpoutConfig defaultSpoutConfig() {
-		ZkHosts hosts = new ZkHosts("streamparse-box:2181");
+		ZkHosts hosts = new ZkHosts("streamparse-box:2181", "/brokers");
 		SpoutConfig spoutConf = new SpoutConfig(hosts, "pixels", "/kafka_storm", "pixel_reader");
 		spoutConf.scheme = new SchemeAsMultiScheme(new StringScheme());
+		spoutConf.forceFromStart = true;
 		return spoutConf;
 	}
 }
