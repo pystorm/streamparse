@@ -10,15 +10,16 @@ import sys
 import time
 
 import simplejson as json
-from six import itervalues, string_types
+from six import string_types
 
+from ..dsl.component import JavaComponentSpec
 from ..dsl.topology import Topology, TopologyType
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_host_port, get_nimbus_client,
                     get_topology_definition)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_par, add_simple_jar, add_wait,
-                     add_workers, resolve_ackers_workers)
+                     add_options, add_par, add_wait, add_workers,
+                     resolve_ackers_workers)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -71,7 +72,26 @@ def _kill_existing_topology(topology_name, force, wait, nimbus_client):
         sys.stdout.flush()
 
 
-def _submit_topology(topology_name, topology_file, uploaded_jar, env_config,
+def _get_topology_from_file(topology_file):
+    """
+    Given a filename for a topology, import the topology and return the class
+    """
+    topology_dir, mod_name = os.path.split(topology_file)
+    # Remove .py extension before trying to import
+    mod_name = mod_name[:-3]
+    sys.path.append(os.path.join(topology_dir, '..', 'src'))
+    sys.path.append(topology_dir)
+    mod = importlib.import_module(mod_name)
+    for attr in mod.__dict__.values():
+        if isinstance(attr, TopologyType) and attr != Topology:
+            topology_class = attr
+            break
+    else:
+        raise ValueError('Could not find topology subclass in topology module.')
+    return topology_class
+
+
+def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
                      workers, ackers, nimbus_client, options=None, debug=False):
     host, port = get_nimbus_host_port(env_config)
     storm_options = {'topology.workers': workers,
@@ -105,18 +125,6 @@ def _submit_topology(topology_name, topology_file, uploaded_jar, env_config,
 
     print("Submitting {} topology to nimbus...".format(topology_name), end='')
     sys.stdout.flush()
-    topology_dir, mod_name = os.path.split(topology_file)
-    # Remove .py extension before trying to import
-    mod_name = mod_name[:-3]
-    sys.path.append(os.path.join(topology_dir, '..', 'src'))
-    sys.path.append(topology_dir)
-    mod = importlib.import_module(mod_name)
-    for attr in mod.__dict__.values():
-        if isinstance(attr, TopologyType) and attr != Topology:
-            topology_class = attr
-            break
-    else:
-        raise ValueError('Could not find topology subclass in topology module.')
     nimbus_client.submitTopology(name=topology_name,
                                  uploadedJarLocation=uploaded_jar,
                                  jsonConf=json.dumps(storm_options),
@@ -169,13 +177,13 @@ def _upload_jar(nimbus_client, local_path):
 
 
 def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
-                    options=None, force=False, debug=False, wait=None,
-                    simple_jar=False):
+                    options=None, force=False, debug=False, wait=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
     nimbus_client = get_nimbus_client(env_config)
+    topology_class = _get_topology_from_file(topology_file)
 
     # Check if we need to maintain virtualenv during the process
     use_venv = env_config.get('use_virtualenv', True)
@@ -191,6 +199,9 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
             name,
             "{}/{}.txt".format(config["virtualenv_specs"], name),
             virtualenv_flags=env_config.get('virtualenv_flags'))
+    # Check topology for JVM stuff to see if we need to create uber-jar
+    simple_jar = not any(isinstance(spec, JavaComponentSpec)
+                         for spec in topology_class.specs)
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy(simple_jar=simple_jar)
@@ -199,7 +210,7 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     sys.stdout.flush()
     _kill_existing_topology(name, force, wait, nimbus_client)
     uploaded_jar = _upload_jar(nimbus_client, topology_jar)
-    _submit_topology(name, topology_file, uploaded_jar, env_config, workers,
+    _submit_topology(name, topology_class, uploaded_jar, env_config, workers,
                      ackers, nimbus_client, options=options, debug=debug)
     _post_submit_hooks(name, env_name, env_config)
 
@@ -221,7 +232,6 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_par(subparser)
-    add_simple_jar(subparser)
     add_wait(subparser)
     add_workers(subparser)
 
@@ -232,4 +242,4 @@ def main(args):
     submit_topology(name=args.name, env_name=args.environment,
                     workers=args.workers, ackers=args.ackers,
                     options=args.options, force=args.force, debug=args.debug,
-                    wait=args.wait, simple_jar=args.simple_jar)
+                    wait=args.wait)
