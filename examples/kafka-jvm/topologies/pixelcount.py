@@ -10,7 +10,7 @@ from bolts.pixel_deserializer import PixelDeserializerBolt
 
 class PixelCount(Topology):
     pixel_spout = JavaSpout.spec(name="pixel-spout",
-                                 full_class_name="pixelcount.spouts.pixel_spout",
+                                 full_class_name="pixelcount.spouts.PixelSpout",
                                  args_list=[],
                                  outputs=["pixel"])
     pixel_deserializer = PixelDeserializerBolt.spec(name='pixel-deserializer-bolt',
