@@ -54,17 +54,18 @@ Vagrant.configure("2") do |config|
           :group => "storm"
         },
         :nimbus => {
-          :host => "localhost",
+          :host => "streamparse-box",
           :childopts => "-Xmx128m"
         },
         :supervisor => {
-          :hosts => ["localhost"],
+          :hosts => ["streamparse-box"],
           :childopts => "-Xmx128m"
         },
         :worker => {
           :childopts => "-Xmx128m"
         },
         :ui => {
+          :host => "streamparse-box",
           :childopts => "-Xmx128m"
         }
       },
