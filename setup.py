@@ -75,7 +75,8 @@ setup(
     entry_points={
         'console_scripts': [
             'sparse = streamparse.cli.sparse:main',
-            'streamparse = streamparse.cli.sparse:main'
+            'streamparse = streamparse.cli.sparse:main',
+            'streamparse_run = streamparse.run:main'
         ]
     },
     install_requires=install_requires,

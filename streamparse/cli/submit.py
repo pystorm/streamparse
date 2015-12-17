@@ -10,10 +10,12 @@ import sys
 import time
 
 import simplejson as json
-from six import string_types
+from fabric.api import env
+from six import itervalues, string_types
 
 from ..dsl.component import JavaComponentSpec
 from ..dsl.topology import Topology, TopologyType
+from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_host_port, get_nimbus_client,
                     get_topology_definition)
@@ -24,6 +26,8 @@ from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
 from .update_virtualenv import create_or_update_virtualenvs
+from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
+                          JavaObject, ShellComponent, StreamInfo)
 
 
 THRIFT_CHUNK_SIZE = 307200
@@ -192,6 +196,7 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     # Run pre_submit actions provided by project
     _pre_submit_hooks(name, env_name, env_config)
 
+    # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
         config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
         create_or_update_virtualenvs(
@@ -199,6 +204,19 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
             name,
             "{}/{}.txt".format(config["virtualenv_specs"], name),
             virtualenv_flags=env_config.get('virtualenv_flags'))
+        streamparse_run_path = '/'.join([env.virtualenv_root, name, 'bin',
+                                         'streamparse_run'])
+        # Update python paths in bolts
+        for thrift_bolt in itervalues(topology_class.thrift_bolts):
+            inner_shell = thrift_bolt.bolt_object.shell
+            if isinstance(inner_shell, ShellComponent):
+                inner_shell.execution_command = streamparse_run_path
+        # Update python paths in spouts
+        for thrift_spout in itervalues(topology_class.thrift_spouts):
+            inner_shell = thrift_spout.spout_object.shell
+            if isinstance(inner_shell, ShellComponent):
+                inner_shell.execution_command = streamparse_run_path
+
     # Check topology for JVM stuff to see if we need to create uber-jar
     simple_jar = not any(isinstance(spec, JavaComponentSpec)
                          for spec in topology_class.specs)

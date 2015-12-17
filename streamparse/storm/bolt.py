@@ -31,8 +31,9 @@ class Bolt(pystorm.bolt.Bolt, ShellBolt):
     """pystorm Bolt with streamparse-specific additions"""
     @classmethod
     def spec(cls, name=None, inputs=None, par=None, config=None):
-        return ShellBoltSpec(cls, command='python',
-                             script='-m streamparse.run {}'.format(cls.__name__),
+        return ShellBoltSpec(cls, command='streamparse_run',
+                             script='{}.{}'.format(cls.__module__,
+                                                   cls.__name__),
                              name=name, inputs=inputs, par=par,
                              config=config, outputs=cls.outputs)
 

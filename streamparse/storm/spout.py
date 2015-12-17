@@ -30,7 +30,8 @@ class Spout(pystorm.spout.Spout, ShellSpout):
     """pystorm Spout with streamparse-specific additions"""
     @classmethod
     def spec(cls, name=None, par=None, config=None):
-        return ShellSpoutSpec(cls, command='python',
-                              script='-m streamparse.run {}'.format(cls.__name__),
+        return ShellSpoutSpec(cls, command='streamparse_run',
+                              script='{}.{}'.format(cls.__module__,
+                                                    cls.__name__),
                               name=name, par=par, config=config,
                               outputs=cls.outputs)
