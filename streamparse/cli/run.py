@@ -37,7 +37,7 @@ def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
     log_path = os.path.join(os.getcwd(), "logs")
     print("Routing Python logging to {}.".format(log_path))
     sys.stdout.flush()
-    cmd.append("--option 'streamparse.log.path=\"{}\"'"
+    cmd.append("--option 'pystorm.log.path=\"{}\"'"
                .format(log_path))
     cmd.append("--option 'streamparse.log.level=\"debug\"'")
 

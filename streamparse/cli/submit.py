@@ -113,7 +113,7 @@ def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
     print("Routing Python logging to {}.".format(log_path))
     sys.stdout.flush()
     if log_path:
-        storm_options['streamparse.log.path'] = log_path
+        storm_options['pystorm.log.path'] = log_path
     if isinstance(log_config.get("max_bytes"), int):
         storm_options['streamparse.log.max_bytes'] = log_config["max_bytes"]
     if isinstance(log_config.get("backup_count"), int):
