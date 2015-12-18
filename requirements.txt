@@ -1,6 +1,5 @@
 jinja2
 fabric3
-invoke>=0.8
 six>=1.5
 requests
 prettytable

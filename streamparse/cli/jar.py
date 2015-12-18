@@ -6,10 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 
-from invoke import run
+from fabric.api import hide, local, settings
 
-from .common import add_simple_jar
 from ..util import prepare_topology
+from .common import add_simple_jar
 
 
 def jar_for_deploy(simple_jar=False):
@@ -20,17 +20,21 @@ def jar_for_deploy(simple_jar=False):
     jar_type = "JAR" if simple_jar else "Uber-JAR"
     print("Cleaning from prior builds...")
     sys.stdout.flush()
-    res = run("lein clean", hide="stdout")
-    if not res.ok:
+    with hide('running', 'stdout'):
+        res = local("lein clean")
+    if not res.succeeded:
         raise RuntimeError("Unable to run 'lein clean'!\nSTDOUT:\n{}"
                            "\nSTDERR:\n{}".format(res.stdout, res.stderr))
     print("Creating topology {}...".format(jar_type))
     sys.stdout.flush()
     cmd = "lein jar" if simple_jar else "lein uberjar"
-    res = run(cmd, hide="stdout")
-    if not res.ok:
-        raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
-                           "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr))
+    with hide('running'), settings(warn_only=True):
+        res = local(cmd, capture=True)
+        if not res.succeeded:
+            raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
+                               "\nSTDERR:\n{}".format(cmd, res.stdout,
+                                                      res.stderr))
+        res = local(cmd, capture=True)
     # XXX: This will fail if more than one JAR is built
     lines = res.stdout.splitlines()
     for line in lines:

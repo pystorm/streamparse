@@ -10,9 +10,8 @@ from random import shuffle
 
 import requests
 import simplejson as json
-from fabric.api import env
+from fabric.api import env, hide, local, settings
 from fabric.colors import red
-from invoke import run
 from pkg_resources import parse_version
 from prettytable import PrettyTable
 from six import iteritems
@@ -177,7 +176,14 @@ def storm_lib_version():
     :returns: The Storm library version specified in project.clj
     :rtype: pkg_resources.Version
     """
-    deps_tree = run("lein deps :tree", hide=True).stdout
+    with hide('running'), settings(warn_only=True):
+        cmd = 'lein deps :tree'
+        res = local(cmd, capture=True)
+        if not res.succeeded:
+            raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
+                               "\nSTDERR:\n{}".format(cmd, res.stdout,
+                                                      res.stderr))
+    deps_tree = res.stdout
     pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
     versions = set(re.findall(pattern, deps_tree))
 
@@ -232,7 +238,10 @@ def prepare_topology():
     resources_dir = join("_resources", "resources")
     if os.path.isdir(resources_dir):
         shutil.rmtree(resources_dir)
-    shutil.copytree("src", resources_dir)
+    if os.path.exists('src'):
+        shutil.copytree("src", resources_dir)
+    else:
+        raise FileNotFoundError('Your project must have a "src" directory.')
 
 
 def _get_file_names_command(path, patterns):
