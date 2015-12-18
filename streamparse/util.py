@@ -140,11 +140,20 @@ def get_nimbus_host_port(env_config):
     return (host, port)
 
 
-def get_nimbus_client(env_config=None, host=None, port=None):
+def get_nimbus_client(env_config=None, host=None, port=None, timeout=7000):
     """Get a Thrift RPC client for Nimbus given project's config file.
 
     :param env_config: The project's parsed config.
     :type env_config: `dict`
+    :param host: The host to use for Nimbus.  If specified, `env_config` will
+                 not be consulted.
+    :type host: `str`
+    :param port: The port to use for Nimbus.  If specified, `env_config` will
+                 not be consulted.
+    :type port: `int`
+    :param timeout: The time to wait (in milliseconds) for a response from
+                    Nimbus.
+    :param timeout: `int`
 
     :returns: a ThriftPy RPC client to use to communicate with Nimbus
     """
@@ -152,7 +161,8 @@ def get_nimbus_client(env_config=None, host=None, port=None):
         host, port = get_nimbus_host_port(env_config)
     nimbus_client = make_client(storm_thrift.Nimbus, host=host, port=port,
                                 proto_factory=TBinaryProtocolFactory(),
-                                trans_factory=TFramedTransportFactory())
+                                trans_factory=TFramedTransportFactory(),
+                                timeout=timeout)
     return nimbus_client
 
 
