@@ -108,12 +108,11 @@ def get_env_config(env_name=None):
     if env_name is None and len(config["envs"]) == 1:
         env_name = list(config["envs"].keys())[0]
     elif env_name is None and len(config["envs"]) > 1:
-        die("Found more than one environment in config.json. "
-            "When more than one environment exists, you must "
-            "explicitly specify the environment name via the "
-            "-e or --environment flags.")
+        die('Found more than one environment in config.json.  When more than '
+            'one environment exists, you must explicitly specify the '
+            'environment name via the -e or --environment flags.')
     if env_name not in config["envs"]:
-        die("Could not find a \"{}\" in config.json, have you specified one?"
+        die('Could not find a "{}" in config.json, have you specified one?'
             .format(env_name))
 
     return (env_name, config["envs"][env_name])
