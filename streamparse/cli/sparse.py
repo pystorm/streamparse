@@ -51,12 +51,11 @@ def main():
     load_subparsers(subparsers)
     args = parser.parse_args()
 
-    ### http://grokbase.com/t/python/python-bugs-list/12arsq9ayf/issue16308-undocumented-behaviour-change-in-argparse-from-3-2-3-to-3-3-0
-    try:
-        getattr(args, "func")
+    # http://grokbase.com/t/python/python-bugs-list/12arsq9ayf/issue16308-undocumented-behaviour-change-in-argparse-from-3-2-3-to-3-3-0
+    if hasattr(args, 'func'):
         args.func(args)
     # python3.3+ argparse changes
-    except AttributeError:
+    else:
         parser.print_help()
         sys.exit(1)
 
