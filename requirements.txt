@@ -1,5 +1,5 @@
 jinja2
--e git+https://github.com/pashinin/fabric@p33#egg=fabric
+fabric3
 invoke>=0.8
 six>=1.5
 requests
@@ -7,3 +7,4 @@ prettytable
 setuptools
 simplejson
 pystorm
+thriftpy>=0.3.2

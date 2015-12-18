@@ -366,10 +366,10 @@ In the example above, we added the ability to fail a sentence tuple if it did
 not provide any words. What happens when we fail a tuple? Storm will send a
 "fail" message back to the spout where the tuple originated from (in this case
 ``SentenceSpout``) and streamparse calls the spout's
-:meth:`~pystorm.spout.Spout.fail` method. It's then up to your spout
+:meth:`~streamparse.storm.spout.Spout.fail` method. It's then up to your spout
 implementation to decide what to do. A spout could retry a failed tuple, send
-an error message, or kill the topology. See :ref:`dealing-with-errors` for more
-discussion.
+an error message, or kill the topology. See :ref:`dealing-with-errors` for
+more discussion.
 
 Bolt Configuration Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

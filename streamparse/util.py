@@ -5,6 +5,7 @@ import re
 import shutil
 import sys
 from glob import glob
+from os.path import join
 from random import shuffle
 
 import requests
@@ -13,9 +14,15 @@ from fabric.api import env
 from fabric.colors import red
 from invoke import run
 from pkg_resources import parse_version
+from prettytable import PrettyTable
+from six import iteritems
+from thriftpy.protocol import TBinaryProtocolFactory
+from thriftpy.rpc import make_client
+from thriftpy.transport import TFramedTransportFactory
 
 from .contextmanagers import ssh_tunnel
 from .decorators import memoized
+from .thrift import storm_thrift
 
 
 def activate_env(env_name=None):
@@ -61,13 +68,13 @@ def get_topology_definition(topology_name=None):
     one, otherwise we'll die to avoid ambiguity.
 
     :param topology_name: a `str`, the topology_name of the topology (without
-                          .clj extension).
-    :returns: a `tuple` containing (topology_topology_name, topology_file).
+                          .py extension).
+    :returns: a `tuple` containing (topology_name, topology_file).
     """
     config = get_config()
     topology_path = config["topology_specs"]
     if topology_name is None:
-        topology_files = glob("{}/*.clj".format(topology_path))
+        topology_files = glob("{}/*.py".format(topology_path))
         if not topology_files:
             die("No topology definitions are defined in {}."
                 .format(topology_path))
@@ -77,11 +84,11 @@ def get_topology_definition(topology_name=None):
                 "explicitly specify the topology by name using the -n or "
                 "--name flags.".format(specs_dir=topology_path))
         topology_file = topology_files[0]
-        topology_name = re.sub(r'(^{}|\.clj$)'.format(topology_path), '',
+        topology_name = re.sub(r'(^{}|\.py$)'.format(topology_path), '',
                                topology_file)
     else:
-        topology_file = "{}.clj".format(os.path.join(topology_path,
-                                                     topology_name))
+        topology_file = "{}.py".format(os.path.join(topology_path,
+                                                    topology_name))
         if not os.path.exists(topology_file):
             die("Topology definition file not found {}. You need to "
                 "create a topology definition file first."
@@ -112,9 +119,14 @@ def get_env_config(env_name=None):
     return (env_name, config["envs"][env_name])
 
 
-def get_nimbus_for_env_config(env_config):
+def get_nimbus_host_port(env_config):
     """Get the Nimbus server's hostname and port from a streamparse project's
     config file.
+
+    :param env_config: The project's parsed config.
+    :type env_config: `dict`
+
+    :returns: (host, port)
     """
     if not env_config["nimbus"]:
         die("No Nimbus server configured in config.json.")
@@ -125,8 +137,33 @@ def get_nimbus_for_env_config(env_config):
     else:
         host = env_config["nimbus"]
         port = 6627
-
     return (host, port)
+
+
+def get_nimbus_client(env_config=None, host=None, port=None, timeout=7000):
+    """Get a Thrift RPC client for Nimbus given project's config file.
+
+    :param env_config: The project's parsed config.
+    :type env_config: `dict`
+    :param host: The host to use for Nimbus.  If specified, `env_config` will
+                 not be consulted.
+    :type host: `str`
+    :param port: The port to use for Nimbus.  If specified, `env_config` will
+                 not be consulted.
+    :type port: `int`
+    :param timeout: The time to wait (in milliseconds) for a response from
+                    Nimbus.
+    :param timeout: `int`
+
+    :returns: a ThriftPy RPC client to use to communicate with Nimbus
+    """
+    if host is None:
+        host, port = get_nimbus_host_port(env_config)
+    nimbus_client = make_client(storm_thrift.Nimbus, host=host, port=port,
+                                proto_factory=TBinaryProtocolFactory(),
+                                trans_factory=TFramedTransportFactory(),
+                                timeout=timeout)
+    return nimbus_client
 
 
 def is_ssh_for_nimbus(env_config):
@@ -159,7 +196,7 @@ def get_ui_jsons(env_name, api_paths):
     be a list of strings like '/api/v1/topology/summary'
     """
     _, env_config = get_env_config(env_name)
-    host, _ = get_nimbus_for_env_config(env_config)
+    host, _ = get_nimbus_host_port(env_config)
     # TODO: Get remote_ui_port from storm?
     remote_ui_port = 8080
     # SSH tunnel can take a while to close. Check multiples if necessary.
@@ -193,14 +230,15 @@ def prepare_topology():
     """Prepare a topology for running locally or deployment to a remote
     cluster.
     """
-    if os.path.isdir("_resources/resources"):
-        shutil.rmtree("_resources/resources")
-    shutil.copytree("src", "_resources/resources")
+    resources_dir = join("_resources", "resources")
+    if os.path.isdir(resources_dir):
+        shutil.rmtree(resources_dir)
+    shutil.copytree("src", resources_dir)
 
 
 def _get_file_names_command(path, patterns):
     """Given a list of bash `find` patterns, return a string for the
-    bash command that will find those streamparse log files
+    bash command that will find those pystorm log files
     """
     patterns = "' -o -name '".join(patterns)
     return ("cd {path} && "
@@ -220,3 +258,31 @@ def get_logfiles_cmd(topology_name=None, pattern=None):
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
     return ls_cmd
+
+
+def print_stats_table(header, data, columns, default_alignment='l',
+                      custom_alignment=None):
+    """Print out a list of dictionaries (or objects) as a table.
+
+    If given a list of objects, will print out the contents of objects'
+    `__dict__` attributes.
+
+    :param header: Header that will be printed above table.
+    :type header:  `str`
+    :param data:   List of dictionaries (or objects )
+    """
+    print("# %s" % header)
+    table = PrettyTable(columns)
+    table.align = default_alignment
+    if not isinstance(data, list):
+        data = [data]
+    for row in data:
+        # Treat all objects like dicts to make life easier
+        if not isinstance(row, dict):
+            row = row.__dict__
+        table.add_row([row.get(key, "MISSING") for key in columns])
+    if custom_alignment:
+        for column, alignment in iteritems(custom_alignment):
+            table.align[column] = alignment
+    print(table)
+

@@ -4,6 +4,7 @@ from streamparse.bolt import BatchingBolt
 
 
 class PixelCounterBolt(BatchingBolt):
+    outputs = []
 
     def initialize(self, conf, ctx):
         self.counts = Counter()

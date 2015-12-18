@@ -8,13 +8,12 @@ import sys
 from itertools import chain
 
 from pkg_resources import parse_version
-from prettytable import PrettyTable
-from six import iteritems
+from six import iteritems, string_types
 from six.moves import map, zip
 
-from .common import add_environment, add_name
 from ..util import (get_env_config, get_ui_json, get_ui_jsons,
-                        storm_lib_version)
+                    print_stats_table, storm_lib_version)
+from .common import add_environment, add_name
 
 
 
@@ -39,17 +38,17 @@ def _print_cluster_status(env_name):
     ui_cluster_summary = jsons["/api/v1/cluster/summary"]
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
                'slotsUsed', 'slotsFree', 'executorsTotal', 'tasksTotal']
-    _print_stats_dict("Cluster summary", ui_cluster_summary, columns, 'r')
+    print_stats_table("Cluster summary", ui_cluster_summary, columns, 'r')
     # Print Topologies Summary
     ui_topologies_summary = jsons["/api/v1/topology/summary"]
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
-    _print_stats_dict("Topology summary", ui_topologies_summary['topologies'],
+    print_stats_table("Topology summary", ui_topologies_summary['topologies'],
                       columns, 'r')
     # Print Supervisor Summary
     ui_supervisor_summary = jsons["/api/v1/supervisor/summary"]
     columns = ['id', 'host', 'uptime', 'slotsTotal', 'slotsUsed']
-    _print_stats_dict("Supervisor summary",
+    print_stats_table("Supervisor summary",
                       ui_supervisor_summary['supervisors'], columns, 'r',
                       {'host': 'l', 'uptime': 'l'})
 
@@ -67,28 +66,28 @@ def _print_topology_status(env_name, topology_name):
     # Print topology summary
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
-    _print_stats_dict("Topology summary", ui_detail, columns, 'r')
+    print_stats_table("Topology summary", ui_detail, columns, 'r')
     # Print topology stats
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
                'acked', 'failed']
-    _print_stats_dict("Topology stats", ui_detail['topologyStats'], columns,
+    print_stats_table("Topology stats", ui_detail['topologyStats'], columns,
                       'r')
     # Print spouts
     if ui_detail.get('spouts'):
         columns = ['spoutId', 'emitted', 'transferred', 'completeLatency',
                    'acked', 'failed']
-        _print_stats_dict("Spouts (All time)", ui_detail['spouts'], columns,
+        print_stats_table("Spouts (All time)", ui_detail['spouts'], columns,
                           'r', {'spoutId': 'l'})
 
     columns = ['boltId', 'executors', 'tasks', 'emitted', 'transferred',
                'capacity', 'executeLatency', 'executed', 'processLatency',
                'acked', 'failed', 'lastError']
-    _print_stats_dict("Bolt (All time)", ui_detail['bolts'], columns, 'r',
+    print_stats_table("Bolt (All time)", ui_detail['bolts'], columns, 'r',
                       {'boltId': 'l'})
 
 
 def _get_component_ui_detail(env_name, topology_name, component_names):
-    if isinstance(component_names, basestring):
+    if isinstance(component_names, string_types):
         component_names = [component_names]
     env_name = get_env_config(env_name)[0]
     topology_id = _get_topology_id(env_name, topology_name)
@@ -135,14 +134,14 @@ def _print_component_status(env_name, topology_name, component_name,
 
 def _print_component_summary(ui_detail):
     columns = ['id', 'name', 'executors', 'tasks']
-    _print_stats_dict("Component summary", ui_detail, columns, 'r')
+    print_stats_table("Component summary", ui_detail, columns, 'r')
 
 
 def _print_bolt_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred', 'executeLatency',
                'executed', 'processLatency', 'acked', 'failed']
 
-    _print_stats_dict("Bolt stats", ui_detail['boltStats'], columns, 'r',
+    print_stats_table("Bolt stats", ui_detail['boltStats'], columns, 'r',
                       {'windowPretty': 'l'})
 
 
@@ -150,14 +149,14 @@ def _print_input_stats(ui_detail):
     columns = ['component', 'stream', 'executeLatency', 'processLatency',
                'executed', 'acked', 'failed']
     if ui_detail['inputStats']:
-        _print_stats_dict("Input stats (All time)", ui_detail['inputStats'],
+        print_stats_table("Input stats (All time)", ui_detail['inputStats'],
                           columns, 'r', {'component': 'l'})
 
 
 def _print_bolt_output_stats(ui_detail):
     if ui_detail['outputStats']:
         columns = ['stream', 'emitted', 'transferred']
-        _print_stats_dict("Output stats (All time)", ui_detail['outputStats'],
+        print_stats_table("Output stats (All time)", ui_detail['outputStats'],
                           columns, 'r', {'stream': 'l'})
 
 
@@ -165,37 +164,21 @@ def _print_spout_stats(ui_detail):
     columns = ['windowPretty', 'emitted', 'transferred', 'completeLatency',
                'acked', 'failed']
     data = ui_detail['spoutSummary'][-1].copy()
-    _print_stats_dict("Spout stats", data, columns, 'r', {'windowPretty': 'l'})
+    print_stats_table("Spout stats", data, columns, 'r', {'windowPretty': 'l'})
 
 
 def _print_spout_output_stats(ui_detail):
     columns = ['stream', 'emitted', 'transferred', 'completeLatency',
                'acked', 'failed']
-    _print_stats_dict("Output stats (All time)", ui_detail['outputStats'],
+    print_stats_table("Output stats (All time)", ui_detail['outputStats'],
                       columns, 'r', {'stream': 'l'})
 
 
 def _print_spout_executors(ui_detail):
     columns = ['id', 'uptime', 'host', 'port', 'emitted',
                'transferred', 'completeLatency', 'acked', 'failed']
-    _print_stats_dict("Executors (All time)", ui_detail['executorStats'],
+    print_stats_table("Executors (All time)", ui_detail['executorStats'],
                       columns, 'r', {'host': 'l'})
-
-
-def _print_stats_dict(header, data, columns, default_alignment,
-                     custom_alignment=None):
-    print("# %s" % header)
-    table = PrettyTable(columns)
-    table.align = default_alignment
-    if isinstance(data, list):
-        for row in data:
-            table.add_row([row.get(key, "MISSING") for key in columns])
-    else:
-        table.add_row([data.get(key, "MISSING") for key in columns])
-    if custom_alignment:
-        for column, alignment in iteritems(custom_alignment):
-            table.align[column] = alignment
-    print(table)
 
 
 def _get_topology_id(env_name, topology_name):

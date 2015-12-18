@@ -7,10 +7,12 @@ This package makes it easier to work with Storm and Python.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-# For backward compatibility
-import pystorm as storm
 
-from . import bolt, cli, component, contextmanagers, decorators, dsl, spout
+from . import (bolt, cli, component, contextmanagers, decorators, dsl, spout,
+               storm)
+from .dsl import Grouping, Stream, Topology
+from .storm import (BatchingBolt, Bolt, JavaBolt, JavaSpout, ShellBolt,
+                    ShellSpout, Spout, TicklessBatchingBolt)
 from .version import __version__, VERSION
 
 # Enable default NullHandler to prevent "No handlers could be found for logger"
@@ -18,14 +20,25 @@ from .version import __version__, VERSION
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
+    'BatchingBolt',
+    'Bolt',
     'bolt',
     'cli',
     'component',
     'contextmanagers',
     'decorators',
     'dsl',
+    'Grouping',
+    'JavaBolt',
+    'JavaSpout',
+    'ShellBolt',
+    'ShellSpout',
+    'Spout',
     'spout',
-    'storm'
+    'storm',
+    'Stream',
+    'TicklessBatchingBolt',
+    'Topology',
 ]
 
 __license__ = """
