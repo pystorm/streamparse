@@ -115,11 +115,11 @@ def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
     if log_path:
         storm_options['pystorm.log.path'] = log_path
     if isinstance(log_config.get("max_bytes"), int):
-        storm_options['streamparse.log.max_bytes'] = log_config["max_bytes"]
+        storm_options['pystorm.log.max_bytes'] = log_config["max_bytes"]
     if isinstance(log_config.get("backup_count"), int):
-        storm_options['streamparse.log.backup_count'] = log_config["backup_count"]
+        storm_options['pystorm.log.backup_count'] = log_config["backup_count"]
     if isinstance(log_config.get("level"), string_types):
-        storm_options['streamparse.log.level'] = log_config["level"].lower()
+        storm_options['pystorm.log.level'] = log_config["level"].lower()
 
     if options is None:
         options = []

@@ -238,7 +238,7 @@ def prepare_topology():
 
 def _get_file_names_command(path, patterns):
     """Given a list of bash `find` patterns, return a string for the
-    bash command that will find those streamparse log files
+    bash command that will find those pystorm log files
     """
     patterns = "' -o -name '".join(patterns)
     return ("cd {path} && "
