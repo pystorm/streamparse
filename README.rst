@@ -48,6 +48,12 @@ Alphabetical, by last name:
 -  Cody Wilbourn (`@codywilbourn <https://github.com/codywilbourn>`__)
 -  Curtis Vogt (`@omus <https://github.com/omus>`__)
 
+Changelog
+---------
+
+See the `releases <https://github.com/Parsely/streamparse/releases>`__ page on
+GitHub.
+
 Roadmap
 -------
 
