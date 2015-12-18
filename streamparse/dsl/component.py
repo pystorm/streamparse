@@ -24,18 +24,28 @@ class ComponentSpec(object):
     """
     def __init__(self, component_cls, name=None, inputs=None, par=1,
                  config=None, outputs=None):
-        # Grab class attribute versions of args if necessary
+        self.component_cls = component_cls
+        self.name = name
+        self.par = self._sanitize_par(component_cls, par)
+        self.config = self._sanitize_config(component_cls, config)
+        self.outputs = self._sanitize_outputs(component_cls, outputs)
+        self.inputs = self._sanitize_inputs(inputs)
+        self.common = ComponentCommon(inputs=self.inputs, streams=self.outputs,
+                                      parallelism_hint=par, json_conf=config)
+
+    @staticmethod
+    def _sanitize_par(component_cls, par):
+        """ Raises exceptions if `par` value is not a positive integer. """
         if par is None:
             par = component_cls.par
-        if config is None:
-            config = component_cls.config
-        if outputs is None:
-            config = component_cls.outputs
-        # Validate args
         if not isinstance(par, int):
             raise TypeError("Parallelism must be a integer greater than 0")
         elif par < 1:
             raise ValueError("Parallelism must be a integer greater than 0")
+        return par
+
+    @staticmethod
+    def _sanitize_inputs(inputs):
         if isinstance(inputs, dict):
             for key, val in list(iteritems(inputs)):
                 if not isinstance(key, GlobalStreamId):
@@ -51,9 +61,8 @@ class ComponentSpec(object):
                 if not isinstance(val, storm_thrift.Grouping):
                     raise TypeError('If inputs is a dict, it is expected to map'
                                     ' from GlobalStreamId or ComponentSpec '
-                                    'objects to Grouping objects.  '
-                                    'Given key: {!r}; Given value: {!r}'
-                                    .format(key, val))
+                                    'objects to Grouping objects.  Given key: '
+                                    '{!r}; Given value: {!r}'.format(key, val))
             input_dict = inputs
         else:
             if isinstance(inputs, ComponentSpec):
@@ -84,6 +93,12 @@ class ComponentSpec(object):
             else:
                 raise TypeError('Inputs must either be a list, dict, or None.  '
                                 'Given: {!r}'.format(inputs))
+        return input_dict
+
+    @staticmethod
+    def _sanitize_config(component_cls, config):
+        if config is None:
+            config = component_cls.config
         if isinstance(config, dict):
             config = json.dumps(config)
         elif config is None:
@@ -91,6 +106,12 @@ class ComponentSpec(object):
         else:
             raise TypeError('Config must either be a dict or None.  Given: {!r}'
                             .format(config))
+        return config
+
+    @staticmethod
+    def _sanitize_outputs(component_cls, outputs):
+        if outputs is None:
+            outputs = component_cls.outputs
         if outputs is None:
             outputs = []
         if isinstance(outputs, (list, tuple)):
@@ -112,18 +133,7 @@ class ComponentSpec(object):
         else:
             raise TypeError('Outputs must either be a list of strings or a list'
                             ' of Streams.  Given: {!r}'.format(outputs))
-
-
-        # Set validated/normalized arguments
-        self.component_cls = component_cls
-        self.name = name
-        self.par = par
-        self.config = config
-        self.outputs = streams
-        self.inputs = input_dict
-        self.common = ComponentCommon(inputs=input_dict, streams=streams,
-                                      parallelism_hint=par,
-                                      json_conf=config)
+        return streams
 
     def __getitem__(self, stream):
         if stream not in self.common.streams:
