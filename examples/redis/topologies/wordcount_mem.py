@@ -4,7 +4,8 @@ Word count topology (in memory)
 
 from streamparse import Grouping, Topology
 
-from wordcount_mem import WordCountBolt, WordSpout
+from bolts import WordCountBolt
+from spouts import WordSpout
 
 
 class WordCount(Topology):
