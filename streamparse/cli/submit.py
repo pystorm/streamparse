@@ -52,14 +52,9 @@ def get_user_tasks():
 
 
 def is_safe_to_submit(topology_name, nimbus_client):
-    """Is topology not running or deactivated?"""
+    """Is topology not in list of current topologies?"""
     topologies = _list_topologies(nimbus_client)
-    safe = True
-    for topology in topologies:
-        if topology.name == topology_name:
-            # Only safe if topology isn't running or is deactivated
-            safe = topology.status.upper() not in ('ACTIVE', 'KILLED')
-            break
+    safe = not any(topology.name == topology_name for topology in topologies)
     return safe
 
 
