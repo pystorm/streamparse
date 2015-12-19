@@ -30,8 +30,10 @@ class ComponentSpec(object):
         self.config = self._sanitize_config(component_cls, config)
         self.outputs = self._sanitize_outputs(component_cls, outputs)
         self.inputs = self._sanitize_inputs(inputs)
-        self.common = ComponentCommon(inputs=self.inputs, streams=self.outputs,
-                                      parallelism_hint=par, json_conf=config)
+        self.common = ComponentCommon(inputs=self.inputs,
+                                      streams=self.outputs,
+                                      parallelism_hint=self.par,
+                                      json_conf=self.config)
 
     @staticmethod
     def _sanitize_par(component_cls, par):
