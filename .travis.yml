@@ -24,4 +24,4 @@ script:
 
 # Calculate coverage on success
 after_success:
-  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then coveralls --config_file .coveragerc; fi
+  - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then coveralls; fi
