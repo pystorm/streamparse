@@ -4,6 +4,8 @@ Create a JAR that can be used to deploy a topology to Storm.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import shutil
 import sys
 
 from fabric.api import hide, local, settings
@@ -51,6 +53,12 @@ def jar_for_deploy(simple_jar=False):
                            "STDERR:\n{}".format(cmd, res.stdout, res.stderr))
     print("{} created: {}".format(jar_type, jar))
     sys.stdout.flush()
+    print('Removing _resources temporary directory...', end='')
+    sys.stdout.flush()
+    resources_dir = os.path.join("_resources", "resources")
+    if os.path.isdir(resources_dir):
+        shutil.rmtree(resources_dir)
+    print('done')
     return jar
 
 
