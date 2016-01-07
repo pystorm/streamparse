@@ -395,6 +395,32 @@ adding class variables set to false for: ``auto_ack``, ``auto_anchor`` or
             if error:
               self.fail(tup)  # perform failure manually
             self.ack(tup)  # perform acknowledgement manually
+            
+
+How Acking Tuples Works
+^^^^^^^^^^^^^^^^^^^^^^^
+
+To get the knowledge about acking/failing/anchoring, please read http://storm.apache.org/documentation/Guaranteeing-message-processing.html first. Below is only basic information to get things working.
+
+The basic idea behind guaranteeing messages is confirmation that the whole "tuple tree" was processed. And that means few things.
+
+**Emitting message**:
+
+First you have to send the tuple from spout with custom message id (tup_id) parameter.
+
+    self.emit([data], tup_id=5)
+
+This will add **your** custom identifier to the released Tuple. This tup_id you receive as parameter in ``ack(tup_id)`` or ``fail(tup_id)`` in the spout that has sent the Tuple. (Behind the scenes the Apache Storm will add custom ID to the message - so you don't have to worry about uniqueness of your tup_id)
+
+**Acking message**:
+
+Then you will have to send self.ack(tup) in every Bolt that is processing this tuple (eg. "tuple tree"). The Bolt implementation is doing this automaticaly after the ``process()`` method. You can change this behavior by changing ``auto_ack`` in Bolt class (See :ref:`bolt-configuration-options` above).
+
+After all bolts in the way call "ack". The respective ``ack()`` method from spout that generated the first tuple is called.
+
+Even if one bolt in the "tuple tree" calls ``fail()`` the tuple is considered failed and spout's ``fail()`` method is called. 
+
+There is also a timer (defined in Apache Storm) that will fail the tuple after certain time. So if you can't send ack() in the timer period, there will be ``fail()`` sent. The timer can be changed.
 
 Handling Tick Tuples
 ^^^^^^^^^^^^^^^^^^^^
