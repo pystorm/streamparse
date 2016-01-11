@@ -21,5 +21,5 @@ in one place. Based on the suggestion `here. <http://bit.ly/16LbuJF>`_
 :organization: Parsely
 '''
 
-__version__ = '2.1.3'
+__version__ = '2.1.4'
 VERSION = tuple(int(x) for x in __version__.split('.'))
