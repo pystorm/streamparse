@@ -203,7 +203,7 @@ def get_ui_jsons(env_name, api_paths):
     _, env_config = get_env_config(env_name)
     host, _ = get_nimbus_host_port(env_config)
     # TODO: Get remote_ui_port from storm?
-    remote_ui_port = 8080
+    remote_ui_port = env_config.get('ui.port', 8080)
     # SSH tunnel can take a while to close. Check multiples if necessary.
     local_ports = list(range(8081, 8090))
     shuffle(local_ports)
