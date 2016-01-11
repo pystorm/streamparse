@@ -63,7 +63,7 @@ def display_slot_usage(env_name):
 
 
 def main(args):
-    """ Display uptime for Storm workers. """
+    """ Display slots used by every topology on the cluster. """
     storm_version = storm_lib_version()
     if storm_version >= parse_version('0.9.2-incubating'):
         display_slot_usage(args.environment)
