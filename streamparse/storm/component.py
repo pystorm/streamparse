@@ -2,9 +2,9 @@
 Module to add streamparse-specific extensions to pystorm Component classes
 """
 import pystorm
+from pystorm.component import StormHandler
 
 from ..dsl.component import ComponentSpec
-
 
 class Component(pystorm.component.Component):
     """pystorm Component with streamparse-specific additions"""

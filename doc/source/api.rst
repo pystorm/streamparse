@@ -5,27 +5,24 @@ API
 Tuples
 ------
 
-.. autoclass:: streamparse.storm.component.Tuple
+.. autoclass:: streamparse.Tuple
 
 You should never have to instantiate an instance of a
-:class:`streamparse.storm.component.Tuple` yourself as streamparse handles this for you
-prior to, for example, a :class:`streamparse.storm.bolt.Bolt`'s ``process()`` method
+:class:`streamparse.Tuple` yourself as streamparse handles this for you
+prior to, for example, a :class:`streamparse.Bolt`'s ``process()`` method
 being called.
 
 None of the emit methods for bolts or spouts require that you pass a
-:class:`streamparse.storm.component.Tuple` instance.
+:class:`streamparse.Tuple` instance.
 
 
 Components
 ----------
 
-Both :class:`streamparse.storm.bolt.Bolt` and
-:class:`streamparse.storm.spout.Spout` inherit from a common base-class,
-:class:`streamparse.storm.component.Component`.  It handles the basic
-`Multi-Lang IPC between Storm and Python <https://storm.apache.org/documentation/Multilang-protocol.html>`__.
-
-.. autoclass:: streamparse.storm.component.Component
-    :inherited-members:
+Both :class:`streamparse.Bolt` and :class:`streamparse.Spout` inherit from a
+common base-class, :class:`streamparse.storm.component.Component`.  It extends
+pystorm's code for handling `Multi-Lang IPC between Storm and Python <https://storm.apache.org/documentation/Multilang-protocol.html>`__
+and adds suport for our Python Topology DSL.
 
 Spouts
 ^^^^^^
@@ -33,18 +30,25 @@ Spouts
 Spouts are data sources for topologies, they can read from any data source and
 emit tuples into streams.
 
-.. autoclass:: streamparse.storm.spout.Spout
+.. autoclass:: streamparse.Spout
     :inherited-members:
     :show-inheritance:
 
 Bolts
 ^^^^^
 
-.. autoclass:: streamparse.storm.bolt.Bolt
+.. autoclass:: streamparse.Bolt
     :inherited-members:
     :show-inheritance:
 
 
-.. autoclass:: streamparse.storm.bolt.BatchingBolt
+.. autoclass:: streamparse.BatchingBolt
     :inherited-members:
     :show-inheritance:
+
+
+Logging
+-------
+
+.. autoclass:: streamparse.StormHandler
+    :inherited-members:
