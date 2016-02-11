@@ -44,7 +44,7 @@ def activate_env(env_name=None):
     env.forward_agent = True
     env.use_ssh_config = True
     # fix for config file load issue 
-    if env_config.get("ssh_password") != "":
+    if env_config.get("ssh_password"):
         env.password = env_config.get("ssh_password")
 
 def die(msg, error_code=1):
