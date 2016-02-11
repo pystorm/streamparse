@@ -5,6 +5,7 @@
     "envs": {
         "prod": {
             "user": "",
+	    "ssh_password": "",
             "nimbus": "",
             "workers": [],
             "log": {
