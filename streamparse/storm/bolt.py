@@ -22,6 +22,40 @@ class ShellBolt(Component):
     @classmethod
     def spec(cls, name=None, command=None, script=None, inputs=None,
              par=None, config=None, outputs=None):
+        """Create a :class:`~streamparse.dsl.bolt.ShellBoltSpec`.
+
+        This spec represents this Component in a :class:`~streamparse.Topology`.
+
+        :param component_cls:  Class this ShellBoltSpec represents.
+        :type component_cls:   `class`
+        :param name:   Name of this component.  Defaults to name of class.
+        :type name:    `str`
+        :param command:  Path to command the Storm will execute.
+        :type command: `str`
+        :param script: Arguments to `command`.  Multiple arguments should just
+                       be separated by spaces.
+        :type command: `str`
+        :param inputs: Streams that feed into this Component. Only makes sense
+                       for :class:`~streamparse.Bolt`, as
+                       :class:`~streamparse.Spout` instances do not receive
+                       tuples.
+
+                       Two forms of this are acceptable:
+
+                       1.  A `dict` mapping from
+                           :class:`~streamparse.dsl.component.ComponentSpec` to
+                           :class:`~streamparse.Grouping`.
+                       2.  A `list` of :class:`~streamparse.Stream` or
+                           :class:`~streamparse.dsl.component.ComponentSpec`.
+        :param par:    Parallelism hint for this Component.  For Python
+                       Components, this works out to be the number of Python
+                       processes running it in the the topology (across all
+                       machines).  See :ref:`parallelism`.
+        :type par:     `int`
+        :param config: Component-specific config settings to pass to Storm.
+        :type config:  `dict`
+        :param outputs: Outputs this
+        """
         return ShellBoltSpec(cls, command=command, script=script, name=name,
                              inputs=inputs, par=par,
                              config=config, outputs=outputs)

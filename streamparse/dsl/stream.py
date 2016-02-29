@@ -15,6 +15,15 @@ class Stream(storm_thrift.StreamInfo):
     A Storm output stream
     """
     def __init__(self, fields=None, name='default', direct=False):
+        """
+        :param fields: Field names for this stream.
+        :type fields:  `list` or `tuple` of `str`
+        :param name:   Name of stream.  Defaults to ``default``.
+        :type name:    `str`
+        :param direct: Whether or not this stream is direct.  Default is `False`.
+                       See :attr:`~streamparse.dsl.stream.Grouping.DIRECT`.
+        :type direct:  `bool`
+        """
         if fields is None:
             fields = []
         elif isinstance(fields, (list, tuple)):

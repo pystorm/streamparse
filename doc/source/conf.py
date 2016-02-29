@@ -100,6 +100,11 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+# Add classes' __init__ method docstring to class doc output
+autoclass_content = 'both'
+
+# Cut down on a ton of repetition in our docs:
+autodoc_default_flags = ['members', 'inherited-members']
 
 # -- Options for HTML output ----------------------------------------------
 

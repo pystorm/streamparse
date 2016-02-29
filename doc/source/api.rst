@@ -6,6 +6,8 @@ Tuples
 ------
 
 .. autoclass:: streamparse.Tuple
+    :no-members:
+    :no-inherited-members:
 
 You should never have to instantiate an instance of a
 :class:`streamparse.Tuple` yourself as streamparse handles this for you
@@ -31,22 +33,16 @@ Spouts are data sources for topologies, they can read from any data source and
 emit tuples into streams.
 
 .. autoclass:: streamparse.Spout
-    :members:
-    :inherited-members:
     :show-inheritance:
 
 Bolts
 ^^^^^
 
 .. autoclass:: streamparse.Bolt
-    :members:
-    :inherited-members:
     :show-inheritance:
 
 
 .. autoclass:: streamparse.BatchingBolt
-    :members:
-    :inherited-members:
     :show-inheritance:
 
 
@@ -54,14 +50,31 @@ Logging
 -------
 
 .. autoclass:: streamparse.StormHandler
-    :members:
-    :inherited-members:
 
 
-Topology
---------
+Topology DSL
+------------
 
 .. autoclass:: streamparse.Topology
-    :members:
-    :inherited-members:
-    :show-inheritance:
+    :no-members:
+    :no-inherited-members:
+
+.. autoclass:: streamparse.Grouping
+
+.. autoclass:: streamparse.Stream
+
+.. autoclass:: streamparse.JavaBolt
+    :members: spec
+    :no-inherited-members:
+
+.. autoclass:: streamparse.JavaSpout
+    :members: spec
+    :no-inherited-members:
+
+.. autoclass:: streamparse.ShellBolt
+    :members: spec
+    :no-inherited-members:
+
+.. autoclass:: streamparse.ShellSpout
+    :members: spec
+    :no-inherited-members:
