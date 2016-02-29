@@ -6,25 +6,6 @@ Lein
 
 Install Leiningen according to the instructions in the quickstart.
 
-
-Using Local Clojure Interop Library
-------------------------------------
-
-You can tell ``lein`` to point directly at streamparse's Clojure repo and use the
-code there for all of the interop commands, so that you can test changes while
-developing.
-
-To do this, add a directory called ``checkouts`` and symlink it up::
-
-    mkdir checkouts
-    cd checkouts
-    ln -s ../../../streamparse/jvm streamparse
-    cd ..
-
-Now, comment out the ``com.parsely/streamparse`` dependency in ``project.clj``.
-It will now pick up the Clojure commands from your local repo. So, now you can
-tweak and change them!
-
 Local pip installation
 ----------------------
 
@@ -51,7 +32,7 @@ You can clone Storm from Github here::
 
 There are tags available for releases, e.g.::
 
-    git checkout v0.9.2-incubating
+    git checkout v0.10.0
 
 To build a local Storm release, use::
 
