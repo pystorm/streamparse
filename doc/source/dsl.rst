@@ -1,4 +1,4 @@
-.. versionadded:: 3.0
+.. versionadded:: 3.0.0
 
 Topology DSL
 ============
@@ -9,8 +9,13 @@ It lets you specify topologies as complex as those you can in `Java <https://git
 or `Clojure <https://github.com/apache/storm/blob/07629c1f898ebb0cedcc19e15e4813692b6a9345/examples/storm-starter/src/clj/org/apache/storm/starter/clj/word_count.clj>`__,
 but in concise, readable Python.
 
+Creating a Topology in Python
+-----------------------------
 
-Topology
---------
+1.  Create a Python module with the name of your topology (e.g., ``wordcount.py``) inside your projects ``topologies`` directory.
+2.	Add a class that inherits from :class:`streamparse.Topology` to your file that specifies the bolts and spouts in your topology and their connections.
 
-.. autoclass:: streamparse.Topology
+  	.. literalinclude:: ../../examples/redis/topologies/wordcount_mem.py
+  		:language: python
+
+
