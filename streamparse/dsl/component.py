@@ -81,7 +81,8 @@ class ComponentSpec(object):
                         # direct when given a ComponentSpec.  If
                         # GlobalStreamId, we're out of luck.
                         # TODO: Document this.
-                        if input_spec.common.streams['default'].direct:
+                        default_stream = input_spec.common.streams.get('default')
+                        if default_stream is not None and default_stream.direct:
                             grouping = Grouping.DIRECT
                     elif isinstance(input_spec, GlobalStreamId):
                         stream_id = input_spec

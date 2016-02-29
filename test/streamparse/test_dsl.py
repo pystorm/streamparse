@@ -117,7 +117,15 @@ class TopologyTests(unittest.TestCase):
                 word_spout = WordSpout.spec()
                 word_bolt = WordCountBolt.spec(inputs=[])
 
-    def test_no_output_spout(self):
+    def test_no_outputs_spout_empty(self):
+        # All spouts must have output fields
+        class PointlessSpout(Spout):
+            outputs = []
+        with self.assertRaises(ValueError):
+            class WordCount(Topology):
+                word_spout = PointlessSpout.spec()
+
+    def test_no_outputs_spout(self):
         # All spouts must have output fields
         class PointlessSpout(Spout):
             outputs = []
