@@ -57,9 +57,8 @@ the command-line tool, ``sparse``::
         create    wordcount/src/spouts/
         create    wordcount/src/spouts/__init__.py
         create    wordcount/src/spouts/words.py
-        create    wordcount/tasks.py
         create    wordcount/topologies
-        create    wordcount/topologies/wordcount.clj
+        create    wordcount/topologies/wordcount.py
         create    wordcount/virtualenvs
         create    wordcount/virtualenvs/wordcount.txt
     Done.
