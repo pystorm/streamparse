@@ -21,7 +21,7 @@ Integrates with Apache Storm.
    develop
    faq
 
-.. image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif
+.. image:: images/quickstart.gif
 
 .. raw:: html
 
@@ -37,4 +37,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/streamparse-logo.png
+.. |logo| image:: images/streamparse-logo.png

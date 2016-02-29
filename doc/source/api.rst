@@ -6,9 +6,6 @@ Tuples
 ------
 
 .. autoclass:: streamparse.Tuple
-    :members:
-    :inherited-members:
-    :show-inheritance:
 
 You should never have to instantiate an instance of a
 :class:`streamparse.Tuple` yourself as streamparse handles this for you
