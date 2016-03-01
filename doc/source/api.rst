@@ -24,7 +24,7 @@ Components
 Both :class:`streamparse.Bolt` and :class:`streamparse.Spout` inherit from a
 common base-class, :class:`streamparse.storm.component.Component`.  It extends
 pystorm's code for handling `Multi-Lang IPC between Storm and Python <https://storm.apache.org/documentation/Multilang-protocol.html>`__
-and adds suport for our Python Topology DSL.
+and adds suport for our Python :ref:`topology_dsl`.
 
 Spouts
 ^^^^^^
