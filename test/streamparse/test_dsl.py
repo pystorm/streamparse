@@ -6,7 +6,7 @@ import logging
 import unittest
 from io import BytesIO
 
-from streamparse.dsl import Grouping, Topology
+from streamparse.dsl import Grouping, Stream, Topology
 from streamparse.storm import (Bolt, Component, JavaBolt, JavaSpout, ShellBolt,
                                ShellSpout, Spout)
 
@@ -22,6 +22,15 @@ class WordCountBolt(Bolt):
     outputs = ["word", "count"]
 
 
+class MultiStreamWordCountBolt(Bolt):
+    outputs = [Stream(fields=['word', 'count']),
+               Stream(fields=['all_word_count'], name='sum')]
+
+
+class DatabaseDumperBolt(Bolt):
+    outputs = []
+
+
 class TopologyTests(unittest.TestCase):
     def test_basic_spec(self):
         class WordCount(Topology):
@@ -33,6 +42,10 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(len(WordCount.specs), 2)
         self.assertEqual(list(WordCount.word_bolt.inputs.keys())[0],
                          WordCount.word_spout['default'])
+        self.assertEqual(WordCount.thrift_spouts['word_spout'].common.parallelism_hint,
+                         2)
+        self.assertEqual(WordCount.thrift_bolts['word_bolt'].common.parallelism_hint,
+                         8)
         self.assertEqual(WordCount.word_bolt.inputs[WordCount.word_spout['default']],
                          Grouping.fields('word'))
 
@@ -43,10 +56,31 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(len(WordCount.specs), 2)
         self.assertEqual(len(WordCount.thrift_spouts), 1)
         self.assertEqual(len(WordCount.thrift_bolts), 1)
-        self.assertEqual(list(WordCount.word_bolt.inputs.keys())[0],
-                         WordCount.word_spout['default'])
+        self.assertEqual(list(WordCount.word_bolt.inputs.keys()),
+                         [WordCount.word_spout['default']])
         self.assertEqual(WordCount.word_bolt.inputs[WordCount.word_spout['default']],
                          Grouping.SHUFFLE)
+
+    def test_multi_stream_bolt(self):
+        class WordCount(Topology):
+            word_spout = WordSpout.spec(par=2)
+            word_bolt = MultiStreamWordCountBolt.spec(inputs=[word_spout],
+                                                      par=8)
+            db_dumper_bolt = DatabaseDumperBolt.spec(par=4,
+                                                     inputs=[word_bolt['sum'],
+                                                             word_bolt['default']])
+        self.assertEqual(len(WordCount.specs), 3)
+        self.assertEqual(len(WordCount.thrift_spouts), 1)
+        self.assertEqual(len(WordCount.thrift_bolts), 2)
+        self.assertEqual(list(WordCount.word_bolt.inputs.keys()),
+                         [WordCount.word_spout['default']])
+        self.assertEqual(WordCount.word_bolt.inputs[WordCount.word_spout['default']],
+                         Grouping.SHUFFLE)
+        db_dumper_bolt_input_set = set(WordCount.db_dumper_bolt.inputs.keys())
+        self.assertEqual(len(WordCount.db_dumper_bolt.inputs.keys()),
+                         len(db_dumper_bolt_input_set))
+        self.assertEqual(db_dumper_bolt_input_set,
+                         {WordCount.word_bolt['sum'], WordCount.word_bolt['default']})
 
     def test_long_chain_spec(self):
         class WordCount(Topology):
