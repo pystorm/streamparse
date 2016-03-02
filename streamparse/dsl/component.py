@@ -215,7 +215,9 @@ class ShellComponentSpec(ComponentSpec):
         if not command:
             raise ValueError('command is required')
         if script is None:
-            raise TypeError('script must not be None')
+            raise TypeError('script must not be None.  If your command does not'
+                            ' take arguments, specify the empty string for '
+                            'script.')
         shell_component = ShellComponent(execution_command=command,
                                          script=script)
         self.component_object = ComponentObject(shell=shell_component)
