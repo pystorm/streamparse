@@ -9,7 +9,8 @@ from io import BytesIO
 from streamparse.dsl import Grouping, Stream, Topology
 from streamparse.storm import (Bolt, Component, JavaBolt, JavaSpout, ShellBolt,
                                ShellSpout, Spout)
-
+from streamparse.thrift import storm_thrift
+from storm_thrift import JavaObjectArg
 
 log = logging.getLogger(__name__)
 
@@ -40,8 +41,8 @@ class TopologyTests(unittest.TestCase):
                                            par=8)
 
         self.assertEqual(len(WordCount.specs), 2)
-        self.assertEqual(list(WordCount.word_bolt.inputs.keys())[0],
-                         WordCount.word_spout['default'])
+        self.assertEqual(list(WordCount.word_bolt.inputs.keys()),
+                         [WordCount.word_spout['default']])
         self.assertEqual(WordCount.thrift_spouts['word_spout'].common.parallelism_hint,
                          2)
         self.assertEqual(WordCount.thrift_bolts['word_bolt'].common.parallelism_hint,
@@ -260,3 +261,159 @@ class TopologyTests(unittest.TestCase):
             class WordCount(Topology):
                 word_spout = WordSpout.spec()
                 word_bolt = WordCountBolt.spec(inputs=[word_spout['word']])
+
+    def test_perl_bolt(self):
+        # Make sure ShellBolt.spec works
+        class PerlWordCount(Topology):
+            word_spout = WordSpout.spec(par=2)
+            word_bolt = ShellBolt.spec(command='perl', script='count_words.pl',
+                                       inputs={word_spout: Grouping.fields("word")},
+                                       par=8, outputs=['word', 'count'])
+
+        self.assertEqual(len(PerlWordCount.specs), 2)
+        self.assertEqual(list(PerlWordCount.word_bolt.inputs.keys()),
+                         [PerlWordCount.word_spout['default']])
+        self.assertEqual(PerlWordCount.thrift_spouts['word_spout'].common.parallelism_hint,
+                         2)
+        self.assertEqual(PerlWordCount.thrift_bolts['word_bolt'].common.parallelism_hint,
+                         8)
+        self.assertEqual(PerlWordCount.word_bolt.inputs[PerlWordCount.word_spout['default']],
+                         Grouping.fields('word'))
+
+    def test_shell_bolt_no_command(self):
+        # Should raise ValueError if command is None
+        with self.assertRaises(ValueError):
+            class PerlWordCount(Topology):
+                word_spout = WordSpout.spec(par=2)
+                word_bolt = ShellBolt.spec(script='count_words.pl',
+                                           inputs={word_spout: Grouping.fields("word")},
+                                           par=8, outputs=['word', 'count'])
+
+    def test_shell_bolt_no_script(self):
+        # Should raise TypeError if script is None
+        with self.assertRaises(TypeError):
+            class PerlWordCount(Topology):
+                word_spout = WordSpout.spec(par=2)
+                word_bolt = ShellBolt.spec(command='perl',
+                                           inputs={word_spout: Grouping.fields("word")},
+                                           par=8, outputs=['word', 'count'])
+
+    def test_java_bolt_valid_arg_list(self):
+        # JavaBolt should work fine when given basic data types
+        class JavaWordCount(Topology):
+            word_spout = WordSpout.spec(par=2)
+            word_bolt = JavaBolt.spec(full_class_name='com.bar.foo.counter.WordCountBolt',
+                                      args_list=[u'foo', 1, b'\x09\x10', True,
+                                                 3.14159],
+                                      inputs={word_spout: Grouping.fields("word")},
+                                      par=8, outputs=['word', 'count'])
+        java_object = JavaWordCount.thrift_bolts['word_bolt'].bolt_object.java_object
+        self.assertEqual(java_object.full_class_name, 'com.bar.foo.counter.WordCountBolt')
+        self.assertEqual(java_object.args_list,
+                         [JavaObjectArg(string_arg=u'foo'),
+                          JavaObjectArg(long_arg=1),
+                          JavaObjectArg(binary_arg=b'\x09\x10'),
+                          JavaObjectArg(bool_arg=True),
+                          JavaObjectArg(double_arg=3.14159)])
+        self.assertIsNone(JavaWordCount.thrift_bolts['word_bolt'].bolt_object.serialized_java)
+        self.assertIsNone(JavaWordCount.thrift_bolts['word_bolt'].bolt_object.shell)
+
+    def test_java_bolt_invalid_arg_list(self):
+        # JavaBolt should raise TypeError when given something other than basic data types
+        with self.assertRaises(TypeError):
+            class JavaWordCount(Topology):
+                word_spout = WordSpout.spec(par=2)
+                word_bolt = JavaBolt.spec(full_class_name='com.bar.foo.counter.WordCountBolt',
+                                          args_list=[{'foo': 'bar'}, 1],
+                                          inputs={word_spout: Grouping.fields("word")},
+                                          par=8, outputs=['word', 'count'])
+
+    def test_java_bolt_valid_serialized_java(self):
+        # JavaBolt should work fine when given a byte string for serialized_java
+        serialized_java = b'\x01\x02\x03\x04\x05'
+        class JavaWordCount(Topology):
+            word_spout = WordSpout.spec(par=2)
+            word_bolt = JavaBolt.spec(serialized_java=serialized_java,
+                                      inputs={word_spout: Grouping.fields("word")},
+                                      par=8, outputs=['word', 'count'])
+        self.assertEqual(JavaWordCount.thrift_bolts['word_bolt'].bolt_object.serialized_java, serialized_java)
+        self.assertIsNone(JavaWordCount.thrift_bolts['word_bolt'].bolt_object.java_object)
+        self.assertIsNone(JavaWordCount.thrift_bolts['word_bolt'].bolt_object.shell)
+
+    def test_perl_spout(self):
+        # Make sure ShellBolt.spec works
+        class PerlWordCount(Topology):
+            word_spout = ShellSpout.spec(command='perl',
+                                         script='count_words.pl', par=2,
+                                         outputs=['word'])
+            word_bolt = WordCountBolt.spec(inputs={word_spout: Grouping.fields("word")},
+                                           par=8)
+        self.assertEqual(len(PerlWordCount.specs), 2)
+        self.assertEqual(list(PerlWordCount.word_bolt.inputs.keys()),
+                         [PerlWordCount.word_spout['default']])
+        self.assertEqual(PerlWordCount.thrift_spouts['word_spout'].common.parallelism_hint,
+                         2)
+        self.assertEqual(PerlWordCount.thrift_bolts['word_bolt'].common.parallelism_hint,
+                         8)
+        self.assertEqual(PerlWordCount.word_bolt.inputs[PerlWordCount.word_spout['default']],
+                         Grouping.fields('word'))
+
+    def test_shell_spout_no_command(self):
+        # Should raise ValueError if command is None
+        with self.assertRaises(ValueError):
+            class PerlWordCount(Topology):
+                word_spout = ShellSpout.spec(script='count_words.pl', par=8,
+                                             outputs=['word'])
+                word_bolt = WordCountBolt.spec(inputs={word_spout: Grouping.fields("word")},
+                                               par=8)
+
+    def test_shell_spout_no_script(self):
+        # Should raise TypeError if script is None
+        with self.assertRaises(TypeError):
+            class PerlWordCount(Topology):
+                word_spout = ShellSpout.spec(command='perl', par=8,
+                                             outputs=['word'])
+                word_bolt = WordCountBolt.spec(inputs={word_spout: Grouping.fields("word")},
+                                               par=8)
+
+    def test_java_spout_valid_arg_list(self):
+        # JavaSpout should work fine when given basic data types
+        class JavaWordCount(Topology):
+            word_spout = JavaSpout.spec(full_class_name='com.bar.foo.counter.WordSpout',
+                                        args_list=[u'foo', 1, b'\x09\x10', True,
+                                                   3.14159],
+                                        par=8, outputs=['word'])
+            word_bolt = WordCountBolt.spec(inputs={word_spout: Grouping.fields("word")},
+                                           par=8)
+        java_object = JavaWordCount.thrift_spouts['word_spout'].spout_object.java_object
+        self.assertEqual(java_object.full_class_name, 'com.bar.foo.counter.WordSpout')
+        self.assertEqual(java_object.args_list,
+                         [JavaObjectArg(string_arg=u'foo'),
+                          JavaObjectArg(long_arg=1),
+                          JavaObjectArg(binary_arg=b'\x09\x10'),
+                          JavaObjectArg(bool_arg=True),
+                          JavaObjectArg(double_arg=3.14159)])
+        self.assertIsNone(JavaWordCount.thrift_spouts['word_spout'].spout_object.serialized_java)
+        self.assertIsNone(JavaWordCount.thrift_spouts['word_spout'].spout_object.shell)
+
+    def test_java_spout_invalid_arg_list(self):
+        # JavaSpout should raise TypeError when given something other than basic data types
+        with self.assertRaises(TypeError):
+            class JavaWordCount(Topology):
+                word_spout = JavaSpout.spec(full_class_name='com.bar.foo.counter.WordSpout',
+                                            args_list=[{'foo': 'bar'}, 1],
+                                            par=8, outputs=['word'])
+                word_bolt = WordCountBolt.spec(inputs={word_spout: Grouping.fields("word")},
+                                               par=8)
+
+    def test_java_spout_valid_serialized_java(self):
+        # JavaSpout should work fine when given a byte string for serialized_java
+        serialized_java = b'\x01\x02\x03\x04\x05'
+        class JavaWordCount(Topology):
+            word_spout = JavaSpout.spec(serialized_java=serialized_java,
+                                        par=8, outputs=['word'])
+            word_bolt = WordCountBolt.spec(inputs={word_spout: Grouping.fields("word")},
+                                           par=8)
+        self.assertEqual(JavaWordCount.thrift_spouts['word_spout'].spout_object.serialized_java, serialized_java)
+        self.assertIsNone(JavaWordCount.thrift_spouts['word_spout'].spout_object.java_object)
+        self.assertIsNone(JavaWordCount.thrift_spouts['word_spout'].spout_object.shell)
