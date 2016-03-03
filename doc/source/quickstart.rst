@@ -89,7 +89,7 @@ streamparse projects expect to have the following directory layout:
     "project.clj","leiningen project file, can be used to add external JVM dependencies."
     "src/","Python source files (bolts/spouts/etc.) for topologies."
     "tasks.py","Optional custom invoke tasks."
-    "topologies/","Contains topology definitions written using the `Clojure DSL <http://storm.apache.org/documentation/Clojure-DSL.html>`_ for Storm."
+    "topologies/","Contains topology definitions written using the :ref:`topology_dsl`.
     "virtualenvs/","Contains pip requirements files in order to install dependencies on remote Storm servers."
 
 
@@ -97,184 +97,32 @@ Defining Topologies
 -------------------
 
 Storm's services are Thrift-based and although it is possible to define a
-topology in pure Python using Thrift, it introduces a host of additional
-dependencies which are less than trivial to setup for local development. In
-addition, it turns out that using Clojure to define topologies, still feels
-fairly Pythonic, so the authors of streamparse decided this was a good
-compromise.
+topology in pure Python using Thrift.  For details see :ref:`topology_dsl`.
 
 Let's have a look at the definition file created by using the
 ``sparse quickstart`` command.
 
-.. code-block:: clojure
+.. literalinclude:: ../../streamparse/bootstrap/project/topologies/wordcount.py
+    :language: python
 
-    (ns wordcount
-      (:use     [streamparse.specs])
-      (:gen-class))
-
-    (defn wordcount [options]
-       [
-        ;; spout configuration
-        {"word-spout" (python-spout-spec
-              options
-              "spouts.words.WordSpout"
-              ["word"]
-              )
-        }
-        ;; bolt configuration
-        {"count-bolt" (python-bolt-spec
-              options
-              {"word-spout" :shuffle}
-              "bolts.wordcount.WordCounter"
-              ["word" "count"]
-              :p 2
-              )
-        }
-      ]
-    )
-
-The first block of code we encounter effectively states "import the Clojure DSL
-functions for Storm." By convention, use the same name for the namespace
-(``ns``) and function (``defn``) as the basename of the file ("wordcount"),
-though these are not strictly required.
-
-.. code-block:: clojure
-
-    (ns wordcount
-      (:use     [streamparse.specs])
-      (:gen-class))
-
-The next block of code actually defines the topology and stores it into a
-function named "wordcount".
-
-.. code-block:: clojure
-
-    (defn wordcount [options]
-       [
-        ;; spout configuration
-        {"word-spout" (python-spout-spec
-              options
-              "spouts.words.WordSpout"
-              ["word"]
-              )
-        }
-        ;; bolt configuration
-        {"count-bolt" (python-bolt-spec
-              options
-              {"word-spout" :shuffle}
-              "bolts.wordcount.WordCounter"
-              ["word" "count"]
-              :p 2
-              )
-        }
-      ]
-    )
-
-It turns out, the name of the function doesn't matter much; we've used
-``wordcount`` above, but it could just as easily be ``bananas``. What is
-important, is that **the function must return an array with only two
-dictionaries and take one argument**, and that the last function in the file is
-the DSL spec (i.e. do not add a ``defn`` below this function).
-
-The first dictionary holds a named mapping of all the spouts that exist in the
-topology, the second holds a named mapping of all the bolts. The ``options``
-argument contains a mapping of topology settings.
-
-An additional benefit of defining topologies in Clojure is that we're able to
-mix and match the types of spouts and bolts.  In most cases, you may want to
-use a pure Python topology, but you could easily use JVM-based spouts and bolts
-or even spouts and bolts written in other languages like Ruby, Go, etc.
-
-Since you'll most often define spouts and bolts in Python however, we'll look
-at two important functions provided by streamparse: ``python-spout-spec``
-and ``python-bolt-spec``.
-
-When creating a Python-based spout, we provide a name for the spout and a
-definition of that spout via ``python-spout-spec``:
-
-.. code-block:: clojure
-
-    {"sentence-spout-1" (python-spout-spec
-                         ;; topology options passed in
-                         options
-                         ;; name of the python class to ``run``
-                         "spouts.SentenceSpout"
-                         ;; output specification, what named fields will this spout emit?
-                         ["sentence"]
-                         ;; configuration parameters, can specify multiple
-                         :p 2)
-     "sentence-spout-2" (shell-spout-spec
-                         options
-                         "spouts.OtherSentenceSpout"
-                         ["sentence"])}
-
-In the example above, we've defined two spouts in our topology:
-``sentence-spout-1`` and ``sentence-spout-2`` and told Storm to run these
-components. ``python-spout-spec`` will use the ``options`` mapping to get
-the path to the python executable that Storm will use and streamparse will
-run the class provided.  We've also let Storm know exactly what these spouts
-will be emitting, namely a single field called ``sentence``.
-
-You'll notice that in ``sentence-spout-1``, we've passed an optional map of
-configuration parameters ``:p 2``, which sets the spout to have 2 Python
-processes. This is discussed in :ref:`parallelism`.
-
-Creating bolts is very similar and uses the ``python-bolt-spec`` function:
-
-.. code-block:: clojure
-
-    {"sentence-splitter" (python-bolt-spec
-                          ;; topology options passed in
-                          options
-                          ;; inputs, where does this bolt recieve it's tuples from?
-                          {"sentence-spout-1" :shuffle
-                           "sentence-spout-2" :shuffle}
-                          ;; class to run
-                          "bolts.SentenceSplitter"
-                          ;; output spec, what tuples does this bolt emit?
-                          ["word"]
-                          ;; configuration parameters
-                          :p 2)
-     "word-counter" (python-bolt-spec
-                     options
-                     ;; recieves tuples from "sentence-splitter", grouped by word
-                     {"sentence-splitter" ["word"]}
-                     "bolts.WordCounter"
-                     ["word" "count"])
-     "word-count-saver" (python-bolt-spec
-                         ;; topology options passed in
-                         options
-                         {"word-counter" :shuffle}
-                         "bolts.WordSaver"
-                         ;; does not emit any fields
-                         [])}
-
-In the example above, we define 3 bolts by name ``sentence-splitter``,
-``word-counter`` and ``word-count-saver``. Since bolts are generally supposed
-to process some input and optionally produce some output, we have to tell Storm
-where a bolts inputs come from and whether or not we'd like Storm to use any
-stream grouping on the tuples from the input source.
-
-In the ``sentence-splitter`` bolt, you'll notice that we define two input
-sources for the bolt. It's completely fine to add multiple sources to any bolts.
-
-In the ``word-counter`` bolt, we've told Storm that we'd like the stream of
+In the ``count_bolt`` bolt, we've told Storm that we'd like the stream of
 input tuples to be grouped by the named field ``word``. Storm offers
-comprehensive options for `stream groupings
-<http://storm.apache.org/documentation/Concepts.html#stream-groupings>`_,
+comprehensive options for
+`stream groupings <http://storm.apache.org/documentation/Concepts.html#stream-groupings>`_,
 but you will most commonly use a **shuffle** or **fields** grouping:
 
 * **Shuffle grouping**: Tuples are randomly distributed across the bolt’s tasks
   in a way such that each bolt is guaranteed to get an equal number of tuples.
+  This is the default grouping if no other is specified.
 * **Fields grouping**: The stream is partitioned by the fields specified in the
   grouping. For example, if the stream is grouped by the "user-id" field,
   tuples with the same "user-id" will always go to the same task, but tuples
   with different "user-id"’s may go to different tasks.
 
 There are more options to configure with spouts and bolts, we'd encourage you
-to refer to `Storm's Concepts
-<http://storm.apache.org/documentation/Concepts.html>`_ for more
-information.
+to refer to our :ref:`topology_dsl` docs or
+`Storm's Concepts <http://storm.apache.org/documentation/Concepts.html>`_ for
+more information.
 
 Spouts and Bolts
 ----------------
@@ -292,6 +140,7 @@ Let's create a spout that emits sentences until the end of time:
 
 
     class SentenceSpout(Spout):
+        outputs = ['sentence']
 
         def initialize(self, stormconf, context):
             self.sentences = [
@@ -328,6 +177,7 @@ Now let's create a bolt that takes in sentences, and spits out words:
     from streamparse.bolt import Bolt
 
     class SentenceSplitterBolt(Bolt):
+        outputs = ['word']
 
         def process(self, tup):
             sentence = tup.values[0]  # extract the sentence
@@ -428,6 +278,8 @@ option and value as in the following example:
 .. code-block:: bash
 
     $ sparse run -o "topology.tick.tuple.freq.secs=2" ...
+
+.. _remote_deployment:
 
 Remote Deployment
 -----------------
