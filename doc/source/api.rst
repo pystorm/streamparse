@@ -50,7 +50,8 @@ Logging
 -------
 
 .. autoclass:: streamparse.StormHandler
-
+    :show-inheritance:
+    :no-inherited-members:
 
 Topology DSL
 ------------

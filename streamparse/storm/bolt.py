@@ -140,14 +140,14 @@ class Bolt(pystorm.bolt.Bolt, ShellBolt):
                        machines).  See :ref:`parallelism`.
 
                        .. note::
-                           This can also be specified as an attribute to your
+                           This can also be specified as an attribute of your
                            :class:`~Bolt` subclass.
 
         :type par:     `int`
         :param config: Component-specific config settings to pass to Storm.
 
                        .. note::
-                           This can also be specified as an attribute to your
+                           This can also be specified as an attribute of your
                            :class:`~Bolt` subclass.
 
         :type config:  `dict`

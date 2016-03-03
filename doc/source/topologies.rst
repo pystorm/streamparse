@@ -1,9 +1,16 @@
 .. versionadded:: 3.0.0
 
+
+Topologies
+==========
+
+Storm topologies are described as a Directed Acyclic Graph (DAG) of Storm
+components, namely `bolts` and `spouts`.
+
 .. _topology_dsl:
 
 Topology DSL
-============
+------------
 
 To simplify the process of creating Storm topologies, streamparse features a
 Python Topology `DSL <https://en.wikipedia.org/wiki/Domain-specific_language>`_.
@@ -11,29 +18,78 @@ It lets you specify topologies as complex as those you can in `Java <https://git
 or `Clojure <https://github.com/apache/storm/blob/07629c1f898ebb0cedcc19e15e4813692b6a9345/examples/storm-starter/src/clj/org/apache/storm/starter/clj/word_count.clj>`_,
 but in concise, readable Python.
 
-Topology Files
---------------
-
-A topology file describes your topology in terms of Directed Acyclic Graph
-(DAG) of Storm components, namely `bolts` and `spouts`.
-
 Topology files are located in ``topologies`` in your streamparse project folder.
 There can be any number of topology files for your project in this directory.
 
 * ``topologies/my_topology.py``
 * ``topologies/my_other_topology.py``
 * ``topologies/my_third_topology.py``
+* ...
 
-So on and so forth.
+A valid :class:`~streamparse.Topology` may only have :class:`~streamparse.Bolt`
+and :class:`~streamparse.Spout` attributes.
 
-Creating a Topology in Python
------------------------------
 
-1.  Create a Python module with the name of your topology (e.g., ``wordcount.py``) inside your projects ``topologies`` directory.
-2.	Add a class that inherits from :class:`streamparse.Topology` to your file that specifies the bolts and spouts in your topology and their connections.
+Simple Python Example
+^^^^^^^^^^^^^^^^^^^^^
 
-  	.. literalinclude:: ../../examples/redis/topologies/wordcount_mem.py
-  		:language: python
+The first step to putting together a topology, is creating the bolts and spouts,
+so let's assume we have the following bolt and spout:
+
+.. literalinclude:: ../../examples/redis/src/bolts.py
+    :language: python
+    :lines: 1-28
+
+.. literalinclude:: ../../examples/redis/src/spouts.py
+    :language: python
+
+One important thing to note is that we have added an ``outputs`` attribute to
+these classes, which specify the names of the output fields that will be
+produced on their ``default`` streams.  If we wanted to specify multiple
+streams, we could do that by specifying a list of :class:`~streamparse.Stream`
+objects.
+
+Now let's hook up the bolt to read from the spout:
+
+.. literalinclude:: ../../examples/redis/topologies/wordcount_mem.py
+    :language: python
+
+.. note::
+    Your project's ``src`` directory gets added to ``sys.path`` before your
+    topology is imported, so you should use absolute imports based on that.
+
+As you can see, :meth:`streamparse.Bolt.spec` and
+:meth:`streamparse.Spout.spec` methods allow us to specify information about
+the components in your topology and how they connect to each other.  Their
+respective docstrings outline all of the possible ways they can be used.
+
+Java Components
+^^^^^^^^^^^^^^^
+
+The topology DSL fully supports JVM-based bolts and spouts via the
+:class:`~streamparse.JavaBolt` and :class:`~streamparse.JavaSpout` classes.
+
+Here's an example of how we would use the
+`Storm Kafka Spout <http://storm.apache.org/documentation/storm-kafka.html>`_:
+
+.. literalinclude:: ../../examples/kafka-jvm/topologies/pixelcount.py
+    :language: python
+
+One limitation of the Thrift interface we use to send the topology to Storm is
+that the constructors for Java components can only be passed basic Python data
+types: `bool`, `bytes`, `float`, `int`,  and `str`.
+
+Components in Other Languages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have components that are written in languages other than Java or Python,
+you can have those as part of your topology as well—assuming you're using the
+corresponding multi-lang library for that language.
+
+To do that you just need to use the :meth:`streamparse.ShellBolt.spec` and
+:meth:`streamparse.ShellSpout.spec` methods.  They take ``command`` and
+``script`` arguments to specify a binary to run and its string-separated
+arguments.
 
 
 Running Topologies
@@ -46,7 +102,7 @@ When you run a topology either locally or by submitting to a cluster,
 streamparse will
 
 1. Bundle all of your code into a JAR
-2. Build a Thrift Topology struct our of your Python topology definition.
+2. Build a Thrift Topology struct out of your Python topology definition.
 3. Pass the Thrift Topology struct to Nimbus on your Storm cluster.
 
 If you invoked streamparse with ``sparse run``, your code is executed directly
