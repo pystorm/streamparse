@@ -16,8 +16,7 @@ from six import itervalues, string_types
 from ..dsl.component import JavaComponentSpec
 from ..dsl.topology import Topology, TopologyType
 from ..thrift import storm_thrift
-from ..util import (activate_env, get_config, get_env_config,
-                    get_nimbus_host_port, get_nimbus_client,
+from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
                     get_topology_definition)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_par, add_wait, add_workers,
@@ -26,8 +25,7 @@ from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
 from .update_virtualenv import create_or_update_virtualenvs
-from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
-                          JavaObject, ShellComponent, StreamInfo)
+from storm_thrift import ShellComponent
 
 
 THRIFT_CHUNK_SIZE = 307200
@@ -92,7 +90,6 @@ def _get_topology_from_file(topology_file):
 
 def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
                      workers, ackers, nimbus_client, options=None, debug=False):
-    host, port = get_nimbus_host_port(env_config)
     storm_options = {'topology.workers': workers,
                      'topology.acker.executors': ackers,
                      'topology.debug': debug}

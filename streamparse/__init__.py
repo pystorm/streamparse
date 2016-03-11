@@ -12,7 +12,8 @@ from . import (bolt, cli, component, contextmanagers, decorators, dsl, spout,
                storm)
 from .dsl import Grouping, Stream, Topology
 from .storm import (BatchingBolt, Bolt, JavaBolt, JavaSpout, ShellBolt,
-                    ShellSpout, Spout, StormHandler, TicklessBatchingBolt)
+                    ShellSpout, Spout, StormHandler, TicklessBatchingBolt,
+                    Tuple)
 from .version import __version__, VERSION
 
 # Enable default NullHandler to prevent "No handlers could be found for logger"
@@ -40,6 +41,7 @@ __all__ = [
     'Stream',
     'TicklessBatchingBolt',
     'Topology',
+    'Tuple'
 ]
 
 __license__ = """

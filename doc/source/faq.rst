@@ -87,8 +87,7 @@ How should I install streamparse on the cluster nodes?
 streamparse assumes your Storm servers have Python, pip, and virtualenv
 installed.  After that, the installation of all required dependencies (including
 streamparse itself) is taken care of via the `config.json` file for the
-streamparse project and the sparse submit command. See :ref:`Remote Deployment`
-for more information.
+streamparse project and the ``sparse submit`` command.
 
 Should I install Clojure?
 ~~~~~~~~~~~~~~~~~~~~~~~~~

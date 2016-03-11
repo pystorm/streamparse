@@ -12,3 +12,4 @@ _release/
 _resources/
 *.sw*
 .tox/
+.python-version

@@ -8,12 +8,12 @@ from __future__ import absolute_import
 from copy import deepcopy
 
 import simplejson as json
-from six import iteritems, string_types
+from six import integer_types, iteritems, string_types, text_type
 
 from ..thrift import storm_thrift
 from .stream import Grouping, Stream
 from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
-                          JavaObject, ShellComponent, StreamInfo)
+                          JavaObject, JavaObjectArg, ShellComponent, StreamInfo)
 
 
 class ComponentSpec(object):
@@ -81,7 +81,8 @@ class ComponentSpec(object):
                         # direct when given a ComponentSpec.  If
                         # GlobalStreamId, we're out of luck.
                         # TODO: Document this.
-                        if input_spec.common.streams['default'].direct:
+                        default_stream = input_spec.common.streams.get('default')
+                        if default_stream is not None and default_stream.direct:
                             grouping = Grouping.DIRECT
                     elif isinstance(input_spec, GlobalStreamId):
                         stream_id = input_spec
@@ -178,6 +179,26 @@ class JavaComponentSpec(ComponentSpec):
                 raise ValueError('full_class_name is required')
             if args_list is None:
                 raise TypeError('args_list must not be None')
+            else:
+                # Convert arguments to JavaObjectArgs
+                for i, arg in enumerate(args_list):
+                    if isinstance(arg, bool):
+                        args_list[i] = JavaObjectArg(bool_arg=arg)
+                    elif isinstance(arg, integer_types):
+                        # Just use long all the time since Python 3 doesn't
+                        # distinguish between long and int
+                        args_list[i] = JavaObjectArg(long_arg=arg)
+                    elif isinstance(arg, bytes):
+                        args_list[i] = JavaObjectArg(binary_arg=arg)
+                    elif isinstance(arg, text_type):
+                        args_list[i] = JavaObjectArg(string_arg=arg)
+                    elif isinstance(arg, float):
+                        args_list[i] = JavaObjectArg(double_arg=arg)
+                    else:
+                        raise TypeError('Only basic data types can be specified'
+                                        ' as arguments to JavaObject '
+                                        'constructors.  Given: {!r}'
+                                        .format(arg))
             java_object = JavaObject(full_class_name=full_class_name,
                                      args_list=args_list)
             self.component_object = ComponentObject(java_object=java_object)
@@ -194,7 +215,9 @@ class ShellComponentSpec(ComponentSpec):
         if not command:
             raise ValueError('command is required')
         if script is None:
-            raise TypeError('script must not be None')
+            raise TypeError('script must not be None.  If your command does not'
+                            ' take arguments, specify the empty string for '
+                            'script.')
         shell_component = ShellComponent(execution_command=command,
                                          script=script)
         self.component_object = ComponentObject(shell=shell_component)

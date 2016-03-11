@@ -15,6 +15,15 @@ class Stream(storm_thrift.StreamInfo):
     A Storm output stream
     """
     def __init__(self, fields=None, name='default', direct=False):
+        """
+        :param fields: Field names for this stream.
+        :type fields:  `list` or `tuple` of `str`
+        :param name:   Name of stream.  Defaults to ``default``.
+        :type name:    `str`
+        :param direct: Whether or not this stream is direct.  Default is `False`.
+                       See :attr:`~streamparse.dsl.stream.Grouping.DIRECT`.
+        :type direct:  `bool`
+        """
         if fields is None:
             fields = []
         elif isinstance(fields, (list, tuple)):
@@ -57,7 +66,9 @@ class Grouping(object):
                   consumer will receive this Tuple. Direct groupings can only be
                   declared on streams that have been declared as direct streams.
                   Tuples emitted to a direct stream must be emitted using the
-                  the `emit_direct` method.
+                  the `direct_task` parameter to the
+                  :meth:`streamparse.Bolt.emit` and
+                  :meth:`streamparse.Spout.emit` methods.
     :ivar ALL: The stream is replicated across all the Bolt's tasks. Use this
                grouping with care.
     :ivar NONE: This grouping specifies that you don't care how the stream is

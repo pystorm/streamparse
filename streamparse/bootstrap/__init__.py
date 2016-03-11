@@ -8,10 +8,10 @@ import os
 import sys
 import shutil
 
+import pkg_resources
 from fabric.colors import green, red, blue
 from jinja2 import Environment, FileSystemLoader
 
-import pkg_resources
 
 _path_prefixes = []
 _path_prefix = ''
@@ -89,17 +89,18 @@ def quickstart(project_name):
         with _cd('src'):
             _mkdir('bolts')
             with _cd('bolts'):
-                _cp(_here('project', 'src', 'bolts', '__init__.py'), '__init__.py')
-                _cp(_here('project', 'src', 'bolts', 'wordcount.py'), 'wordcount.py')
+                _cp(_here('project', 'src', 'bolts', '__init__.py'),
+                    '__init__.py')
+                _cp(_here('project', 'src', 'bolts', 'wordcount.py'),
+                    'wordcount.py')
             _mkdir('spouts')
             with _cd('spouts'):
-                _cp(_here('project', 'src', 'spouts', '__init__.py'), '__init__.py')
+                _cp(_here('project', 'src', 'spouts', '__init__.py'),
+                    '__init__.py')
                 _cp(_here('project', 'src', 'spouts', 'words.py'), 'words.py')
-        _cp(_here('project', 'tasks.py'), 'tasks.py')
         _mkdir('topologies')
         with _cd('topologies'):
-            _cp(_here('project', 'topologies', 'wordcount.clj'),
-                'wordcount.clj')
+            _cp(_here('project', 'topologies', 'wordcount.py'), 'wordcount.py')
         _mkdir('virtualenvs')
         with _cd('virtualenvs'):
             _cp(_here('project', 'virtualenvs', 'wordcount.txt'),

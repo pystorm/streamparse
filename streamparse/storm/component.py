@@ -2,17 +2,21 @@
 Module to add streamparse-specific extensions to pystorm Component classes
 """
 import pystorm
-from pystorm.component import StormHandler
+from pystorm.component import StormHandler  # This is used by other code
 
-from ..dsl.component import ComponentSpec
 
 class Component(pystorm.component.Component):
-    """pystorm Component with streamparse-specific additions"""
+    """pystorm Component with streamparse-specific additions
+
+    :ivar outputs: The outputs
+    :ivar config: Component-specific config settings to pass to Storm.
+    """
     outputs = None
     par = 1
     config = None
 
     @classmethod
-    def spec(cls, name=None, inputs=None, par=None, config=None):
-        return ComponentSpec(cls, name=name, inputs=inputs, par=par,
-                             config=config, outputs=cls.outputs)
+    def spec(cls, *args, **kwargs):
+        """This method exists only to give a more informative error message."""
+        raise TypeError('Specifications should either be bolts or spouts. '
+                        'Given: {!r}'.format(cls))
