@@ -27,7 +27,8 @@ class JavaBolt(Component):
                                  You must either specify this, or
                                  both ``full_class_name`` and ``args_list``.
         :type serialized_java: `bytes`
-        :param full_class_name: Full name of Java class, including namespaces.
+        :param full_class_name: Fully qualified class name (including the
+                                package name)
         :type full_class_name: `str`
         :param args_list: A list of arguments to be passed to the constructor of
                           this class.
