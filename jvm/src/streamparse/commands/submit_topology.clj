@@ -46,7 +46,7 @@
 
 (defn -parse-topo-option [val-str]
   "Parse topology --option in option.key=val form."
-  (let [[key val] (string/split val-str #"=")
+  (let [[key val] (string/split val-str #"=" 2)
        parsed-val (smart-read-str val)]
        {key parsed-val}))
 
