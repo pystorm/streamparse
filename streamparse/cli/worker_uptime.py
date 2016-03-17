@@ -25,11 +25,10 @@ def display_worker_uptime(env_name):
     topology_summary_path = '/api/v1/topology/summary'
     topology_detail_path = '/api/v1/topology/{topology}'
     component_path = '/api/v1/topology/{topology}/component/{component}'
-    topo_summary_json = get_ui_jsons(env_name, topology_summary_path)
+    topo_summary_json = get_ui_json(env_name, topology_summary_path)
     topology_ids = [x['id'] for x in topo_summary_json['topologies']]
     topology_components = dict()
     worker_stats = []
-
     topology_detail_jsons = get_ui_jsons(env_name,
                                          (topology_detail_path.format(topology=topology)
                                           for topology in topology_ids))
