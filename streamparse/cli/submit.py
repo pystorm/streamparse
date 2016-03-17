@@ -9,6 +9,7 @@ import os
 import sys
 import time
 
+import fabric
 import simplejson as json
 from fabric.api import env
 from six import itervalues, string_types
@@ -17,7 +18,7 @@ from ..dsl.component import JavaComponentSpec
 from ..dsl.topology import Topology, TopologyType
 from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
-                    get_topology_definition, is_ssh_for_nimbus, ssh_tunnel)
+                    get_topology_definition, ssh_tunnel)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_par, add_wait, add_workers,
                      resolve_ackers_workers)
@@ -117,6 +118,13 @@ def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
         options = []
     for option in options:
         key, val = option.split("=", 1)
+        try:
+            val = int(val)
+        except ValueError:
+            try:
+                val = float(val)
+            except ValueError:
+                pass
         storm_options[key] = val
 
     print("Submitting {} topology to nimbus...".format(topology_name), end='')
@@ -218,8 +226,8 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     print('Deploying "{}" topology...'.format(name))
     sys.stdout.flush()
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
-    with ssh_tunnel(env_config):
-        nimbus_client = get_nimbus_client(env_config)
+    with ssh_tunnel(env_config) as (host, port):
+        nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         _kill_existing_topology(name, force, wait, nimbus_client)
         uploaded_jar = _upload_jar(nimbus_client, topology_jar)
         _submit_topology(name, topology_class, uploaded_jar, env_config, workers,

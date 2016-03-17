@@ -11,7 +11,7 @@ from prettytable import PrettyTable
 from six import iteritems
 
 from .common import add_environment
-from ..util import get_ui_json, storm_lib_version
+from ..util import get_ui_json, get_ui_jsons, storm_lib_version
 
 
 def subparser_hook(subparsers):
@@ -25,29 +25,39 @@ def subparser_hook(subparsers):
 
 def display_slot_usage(env_name):
     print('Querying Storm UI REST service for slot usage stats (this can take a while)...')
-    topology_summary = '/api/v1/topology/summary'
-    topology_detail = '/api/v1/topology/{topology}'
-    component = '/api/v1/topology/{topology}/component/{component}'
-    topo_summary_json = get_ui_json(env_name, topology_summary)
+    topology_summary_path = '/api/v1/topology/summary'
+    topology_detail_path = '/api/v1/topology/{topology}'
+    component_path = '/api/v1/topology/{topology}/component/{component}'
+    topo_summary_json = get_ui_json(env_name, topology_summary_path)
     topology_ids = [x['id'] for x in topo_summary_json['topologies']]
     # Keep track of the number of workers used by each topology on each machine
     topology_worker_ports = defaultdict(lambda: defaultdict(set))
     topology_executor_counts = defaultdict(Counter)
     topology_names = set()
+    topology_components = dict()
+    topology_detail_jsons = get_ui_jsons(env_name,
+                                         (topology_detail_path.format(topology=topology)
+                                          for topology in topology_ids))
 
     for topology in topology_ids:
-        topology_detail_json = get_ui_json(env_name,
-                                           topology_detail.format(topology=topology))
+        topology_detail_json = topology_detail_jsons[topology_detail_path.format(topology=topology)]
         spouts = [x['spoutId'] for x in topology_detail_json['spouts']]
         bolts = [x['boltId'] for x in topology_detail_json['bolts']]
-        for comp in spouts + bolts:
-            comp_detail = get_ui_json(env_name,
-                                      component.format(topology=topology,
-                                                       component=comp))
-            for worker in comp_detail['executorStats']:
-                topology_worker_ports[worker['host']][topology_detail_json['name']].add(worker['port'])
-                topology_executor_counts[worker['host']][topology_detail_json['name']] += 1
-                topology_names.add(topology_detail_json['name'])
+        topology_components[topology] = spouts + bolts
+
+    comp_details = get_ui_jsons(env_name,
+                                (component_path.format(topology=topology,
+                                                       component=comp)
+                                 for topology, comp_list in iteritems(topology_components)
+                                 for comp in comp_list))
+
+    for request_url, comp_detail in iteritems(comp_details):
+        topology = request_url.split('/')[4]
+        topology_detail_json = topology_detail_jsons[topology_detail_path.format(topology=topology)]
+        for worker in comp_detail['executorStats']:
+            topology_worker_ports[worker['host']][topology_detail_json['name']].add(worker['port'])
+            topology_executor_counts[worker['host']][topology_detail_json['name']] += 1
+            topology_names.add(topology_detail_json['name'])
 
     print("# Slot (and Executor) Counts by Topology")
     topology_names = sorted(topology_names)

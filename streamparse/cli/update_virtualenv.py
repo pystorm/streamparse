@@ -9,7 +9,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 
-from fabric.api import env, execute, parallel, prefix, put, puts, run
+import fabric
+from fabric.api import env, execute, parallel, prefix, put, puts, run, show
 from fabric.contrib.files import exists
 
 from .common import add_environment, add_name
@@ -21,23 +22,24 @@ def _create_or_update_virtualenv(virtualenv_root,
                                  virtualenv_name,
                                  requirements_file,
                                  virtualenv_flags=None):
-    virtualenv_path = os.path.join(virtualenv_root, virtualenv_name)
-    if not exists(virtualenv_path):
-        if virtualenv_flags is None:
-            virtualenv_flags = ''
-        puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-        run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
+    with show('output'):
+        virtualenv_path = os.path.join(virtualenv_root, virtualenv_name)
+        if not exists(virtualenv_path):
+            if virtualenv_flags is None:
+                virtualenv_flags = ''
+            puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
+            run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
 
-    puts("Uploading requirements.txt to temporary file.")
-    tmpfile = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
-    put(requirements_file, tmpfile)
+        puts("Uploading requirements.txt to temporary file.")
+        tmpfile = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
+        put(requirements_file, tmpfile)
 
-    puts("Updating virtualenv: {}".format(virtualenv_name))
-    cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
-    with prefix(cmd):
-        run("pip install -r {} --exists-action w".format(tmpfile))
+        puts("Updating virtualenv: {}".format(virtualenv_name))
+        cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
+        with prefix(cmd):
+            run("pip install -r {} --exists-action w".format(tmpfile))
 
-    run("rm {}".format(tmpfile))
+        run("rm {}".format(tmpfile))
 
 
 def create_or_update_virtualenvs(env_name, topology_name, requirements_file,

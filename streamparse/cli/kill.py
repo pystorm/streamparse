@@ -19,8 +19,8 @@ def kill_topology(topology_name=None, env_name=None, wait=None):
     topology_name = get_topology_definition(topology_name)[0]
     env_name, env_config = get_env_config(env_name)
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
-    with ssh_tunnel(env_config):
-        nimbus_client = get_nimbus_client(env_config)
+    with ssh_tunnel(env_config) as (host, port):
+        nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         return _kill_topology(topology_name, nimbus_client, wait=wait)
 
 

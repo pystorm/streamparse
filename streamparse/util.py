@@ -45,19 +45,28 @@ def _port_in_use(port, server_type="tcp"):
     return False
 
 
+_active_tunnel = None
+
+
 @contextmanager
-def ssh_tunnel(env_config, local_port=6627, remote_port=None):
+def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
     """Setup an optional ssh_tunnel to Nimbus.
 
     If use_ssh_for_nimbus is False, no tunnel will be created.
     """
+    host, nimbus_port = get_nimbus_host_port(env_config)
+    if remote_port is None:
+        remote_port = nimbus_port
     if env_config.get('use_ssh_for_nimbus', True):
-        host, nimbus_port = get_nimbus_host_port(env_config)
-        if remote_port is None:
-            remote_port = nimbus_port
+        global _active_tunnel
         if _port_in_use(local_port):
-            raise IOError("Local port: {} already in use, unable to open ssh "
-                          "tunnel to {}:{}.".format(local_port, host, remote_port))
+            if local_port == _active_tunnel:
+                yield 'localhost', local_port
+            else:
+                raise IOError("Local port: {} already in use, unable to open "
+                              "ssh tunnel to {}:{}.".format(local_port,
+                                                            host,
+                                                            remote_port))
 
         user = env_config.get("user")
         if user:
@@ -80,14 +89,16 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None):
                               .format(" ".join(ssh_cmd)))
             time.sleep(0.2)
         try:
-            print("ssh tunnel to Nimbus {}:{} established.".format(host,
-                                                                   remote_port))
-            yield
+            if not quiet:
+                print("ssh tunnel to Nimbus {}:{} established."
+                      .format(host, remote_port))
+            _active_tunnel = local_port
+            yield 'localhost', local_port
         finally:
             ssh_proc.kill()
     # Do nothing if we're not supposed to use ssh
     else:
-        yield
+        yield host, remote_port
 
 
 def activate_env(env_name=None):
@@ -278,11 +289,12 @@ def get_ui_jsons(env_name, api_paths):
     for local_port in local_ports:
         try:
             data = {}
-            with ssh_tunnel(env_config.get("user"), host, local_port,
-                            remote_ui_port):
+            with ssh_tunnel(env_config, local_port=local_port,
+                            remote_port=remote_ui_port) as (host, local_port):
                 for api_path in api_paths:
-                    r = requests.get('http://127.0.0.1:%s%s' % (local_port,
-                                                                api_path))
+                    r = requests.get('http://{}:{}{}'.format(host,
+                                                             local_port,
+                                                             api_path))
                     data[api_path] = r.json()
             return data
         except Exception as e:
