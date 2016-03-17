@@ -5,7 +5,8 @@ Kill the specified Storm topology.
 from __future__ import absolute_import
 
 from ..thrift import storm_thrift
-from ..util import get_topology_definition, get_env_config, get_nimbus_client
+from ..util import (get_topology_definition, get_env_config, get_nimbus_client,
+                    ssh_tunnel)
 from .common import add_environment, add_name, add_wait
 
 
@@ -17,8 +18,10 @@ def _kill_topology(topology_name, nimbus_client, wait=None):
 def kill_topology(topology_name=None, env_name=None, wait=None):
     topology_name = get_topology_definition(topology_name)[0]
     env_name, env_config = get_env_config(env_name)
-    nimbus_client = get_nimbus_client(env_config)
-    return _kill_topology(topology_name, nimbus_client, wait=wait)
+    # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
+    with ssh_tunnel(env_config):
+        nimbus_client = get_nimbus_client(env_config)
+        return _kill_topology(topology_name, nimbus_client, wait=wait)
 
 
 def subparser_hook(subparsers):

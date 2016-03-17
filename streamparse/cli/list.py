@@ -4,7 +4,8 @@ List the currently running Storm topologies.
 
 from __future__ import absolute_import
 
-from ..util import get_env_config, get_nimbus_client, print_stats_table
+from ..util import (get_env_config, get_nimbus_client, print_stats_table,
+                    ssh_tunnel)
 from ..thrift import storm_thrift
 from .common import add_environment
 
@@ -18,8 +19,10 @@ def _list_topologies(nimbus_client):
 def list_topologies(env_name):
     """Prints out all running Storm topologies"""
     env_name, env_config = get_env_config(env_name)
-    nimbus_client = get_nimbus_client(env_config)
-    topologies = _list_topologies(nimbus_client)
+    # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
+    with ssh_tunnel(env_config):
+        nimbus_client = get_nimbus_client(env_config)
+        topologies = _list_topologies(nimbus_client)
     if not topologies:
         print('No topologies found.')
     else:

@@ -17,7 +17,7 @@ from ..dsl.component import JavaComponentSpec
 from ..dsl.topology import Topology, TopologyType
 from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
-                    get_topology_definition)
+                    get_topology_definition, is_ssh_for_nimbus, ssh_tunnel)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_par, add_wait, add_workers,
                      resolve_ackers_workers)
@@ -178,7 +178,6 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     config = get_config()
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
-    nimbus_client = get_nimbus_client(env_config)
     topology_class = _get_topology_from_file(topology_file)
 
     # Check if we need to maintain virtualenv during the process
@@ -218,10 +217,13 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 
     print('Deploying "{}" topology...'.format(name))
     sys.stdout.flush()
-    _kill_existing_topology(name, force, wait, nimbus_client)
-    uploaded_jar = _upload_jar(nimbus_client, topology_jar)
-    _submit_topology(name, topology_class, uploaded_jar, env_config, workers,
-                     ackers, nimbus_client, options=options, debug=debug)
+    # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
+    with ssh_tunnel(env_config):
+        nimbus_client = get_nimbus_client(env_config)
+        _kill_existing_topology(name, force, wait, nimbus_client)
+        uploaded_jar = _upload_jar(nimbus_client, topology_jar)
+        _submit_topology(name, topology_class, uploaded_jar, env_config, workers,
+                         ackers, nimbus_client, options=options, debug=debug)
     _post_submit_hooks(name, env_name, env_config)
 
 
