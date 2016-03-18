@@ -341,7 +341,7 @@ def get_logfiles_cmd(topology_name=None, pattern=None):
     """
     # list log files found
     log_name_patterns = ["worker*", "supervisor*", "access*", "metrics*",
-                         "streamparse_{topo_name}*".format(topo_name=topology_name)]
+                         "pystorm_{topo_name}*".format(topo_name=topology_name)]
     ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
