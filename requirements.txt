@@ -5,5 +5,5 @@ requests
 prettytable
 setuptools
 simplejson
-pystorm
+pystorm>=2.0.1
 thriftpy>=0.3.2

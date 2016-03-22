@@ -38,7 +38,7 @@ install_requires = [
     'prettytable',
     'six>=1.5',
     'simplejson',
-    'pystorm',
+    'pystorm>=2.0.1',
     'thriftpy>=0.3.2'
 ]
 
