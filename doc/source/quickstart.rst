@@ -321,6 +321,7 @@ in our ``config.json`` file:
                 ],
                 "log": {
                     "path": "/var/log/storm/streamparse",
+                    "file": "pystorm_{topology_name}_{component_name}_{task_id}_{pid}.log",
                     "max_bytes": 100000,
                     "backup_count": 10,
                     "level": "info"
@@ -398,17 +399,18 @@ Logging
 The Storm supervisor needs to have access to the ``log.path`` directory for
 logging to work (in the example above, ``/var/log/storm/streamparse``). If you
 have properly configured the ``log.path`` option in your config, streamparse
-will automatically set up a log files on each Storm worker in this path using
-the following filename convention::
+will use the value for the ``log.file`` option to set up log files for each
+Storm worker in this path. The filename can be customized further by using
+certain named placeholders. The default filename is set to::
 
-    streamparse_<topology_name>_<component_name>_<task_id>_<process_id>.log
+    pystorm_{topology_name}_{component_name}_{task_id}_{pid}.log
 
 Where:
 
 * ``topology_name``: is the ``topology.name`` variable set in Storm
 * ``component_name``: is the name of the currently executing component as defined in your topology definition file (.clj file)
 * ``task_id``: is the task ID running this component in the topology
-* ``process_id``: is the process ID of the Python process
+* ``pid``: is the process ID of the Python process
 
 streamparse uses Python's ``logging.handlers.RotatingFileHandler`` and by
 default will only save 10 1 MB log files (10 MB in total), but this can be
