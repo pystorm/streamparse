@@ -221,6 +221,21 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
 
+    serializer = env_config.get('serializer', 'json')
+    # Set serializer arg in bolts
+    for thrift_bolt in itervalues(topology_class.thrift_bolts):
+        inner_shell = thrift_bolt.bolt_object.shell
+        if isinstance(inner_shell, ShellComponent):
+            inner_shell.script = '-s {} {}'.format(serializer,
+                                                   inner_shell.script)
+    # Set serializer arg in spouts
+    for thrift_spout in itervalues(topology_class.thrift_spouts):
+        inner_shell = thrift_spout.spout_object.shell
+        if isinstance(inner_shell, ShellComponent):
+            inner_shell.script = '-s {} {}'.format(serializer,
+                                                   inner_shell.script)
+
+
     # Check topology for JVM stuff to see if we need to create uber-jar
     simple_jar = not any(isinstance(spec, JavaComponentSpec)
                          for spec in topology_class.specs)

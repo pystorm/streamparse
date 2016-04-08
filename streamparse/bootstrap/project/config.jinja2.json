@@ -1,11 +1,11 @@
 {
-    "library": "",
+    "serializer": "json",
     "topology_specs": "topologies/",
     "virtualenv_specs": "virtualenvs/",
     "envs": {
         "prod": {
             "user": "",
-	    "ssh_password": "",
+            "ssh_password": "",
             "nimbus": "",
             "workers": [],
             "log": {
