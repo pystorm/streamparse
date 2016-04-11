@@ -307,7 +307,7 @@ in our ``config.json`` file:
 .. code-block:: json
 
     {
-        "library": "",
+        "serializer": "json",
         "topology_specs": "topologies/",
         "virtualenv_specs": "virtualenvs/",
         "envs": {
