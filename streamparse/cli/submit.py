@@ -184,7 +184,8 @@ def _upload_jar(nimbus_client, local_path):
 
 
 def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
-                    options=None, force=False, debug=False, wait=None):
+                    options=None, force=False, debug=False, wait=None,
+                    simple_jar=True):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
@@ -237,8 +238,9 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 
 
     # Check topology for JVM stuff to see if we need to create uber-jar
-    simple_jar = not any(isinstance(spec, JavaComponentSpec)
-                         for spec in topology_class.specs)
+    if simple_jar:
+        simple_jar = not any(isinstance(spec, JavaComponentSpec)
+                             for spec in topology_class.specs)
 
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy(simple_jar=simple_jar)
@@ -272,6 +274,11 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_par(subparser)
+    subparser.add_argument('-u', '--uber_jar',
+                           help='Build an Uber-JAR even if you have no Java '
+                                'components in your topology.  Useful if you '
+                                'are providing your own seriailzer class.',
+                           dest='simple_jar', action='store_false')
     add_wait(subparser)
     add_workers(subparser)
 
@@ -282,4 +289,4 @@ def main(args):
     submit_topology(name=args.name, env_name=args.environment,
                     workers=args.workers, ackers=args.ackers,
                     options=args.options, force=args.force, debug=args.debug,
-                    wait=args.wait)
+                    wait=args.wait, simple_jar=args.simple_jar)
