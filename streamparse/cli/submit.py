@@ -222,7 +222,7 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
 
-    serializer = env_config.get('serializer', 'json')
+    serializer = env_config.get('serializer', config.get('serializer', 'json'))
     # Set serializer arg in bolts
     for thrift_bolt in itervalues(topology_class.thrift_bolts):
         inner_shell = thrift_bolt.bolt_object.shell
