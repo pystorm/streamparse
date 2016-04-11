@@ -23,6 +23,9 @@ def main():
                              'Storm.',
                         choices=_SERIALIZERS.keys(),
                         default='json')
+    # Storm sends everything as one string, which is not great
+    if len(sys.argv) == 2:
+        sys.argv = [sys.argv[0]] + sys.argv[1].split()
     args = parser.parse_args()
     # Add current directory to sys.path so imports will work
     sys.path.append(os.getcwd())
