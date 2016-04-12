@@ -6,7 +6,8 @@ def add_ackers(parser):
     """ Add --ackers option to parser """
     parser.add_argument('-a', '--ackers',
                         help='Set number of acker bolts. Takes precedence over '
-                             '--par if both set.')
+                             '--par if both set.',
+                        type=int)
 
 
 def add_debug(parser):
