@@ -1,6 +1,46 @@
 """
 Functions for adding common CLI arguments to argparse sub-commands.
 """
+import argparse
+import copy
+
+
+class _StoreDictAction(argparse.Action):
+    """Action for storing key=val option strings as a single dict."""
+    def __init__(self, option_strings, dest, nargs=None, const=None,
+                 default=None, type=None, choices=None, required=False,
+                 help=None, metavar=None):
+        if nargs == 0:
+            raise ValueError('nargs for store_dict actions must be > 0')
+        if const is not None and nargs != '?':
+            raise ValueError('nargs must be "?" to supply const')
+        super(_StoreDictAction, self).__init__(option_strings=option_strings,
+                                               dest=dest,
+                                               nargs=nargs,
+                                               const=const,
+                                               default=default,
+                                               type=type,
+                                               choices=choices,
+                                               required=required,
+                                               help=help,
+                                               metavar=metavar)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if getattr(namespace, self.dest, None) is None:
+            setattr(namespace, self.dest, {})
+        # Only doing a copy here because that's what _AppendAction does
+        items = copy.copy(getattr(namespace, self.dest))
+        key, val = values.split("=", 1)
+        try:
+            val = int(val)
+        except ValueError:
+            try:
+                val = float(val)
+            except ValueError:
+                pass
+        items[key] = val
+        setattr(namespace, self.dest, items)
+
 
 def add_ackers(parser):
     """ Add --ackers option to parser """
@@ -40,8 +80,8 @@ def add_options(parser):
     """ Add --option options to parser """
     parser.add_argument('-o', '--option',
                         dest='options',
-                        action='append',
-                        help='Topology option to use upon submit.  For example,'
+                        action=_StoreDictAction,
+                        help='Topology option to pass on to Storm. For example,'
                              ' "-o topology.debug=true" is equivalent to '
                              '"--debug".  May be repeated multiple for multiple'
                              ' options.')

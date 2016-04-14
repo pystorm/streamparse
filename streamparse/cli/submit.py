@@ -4,21 +4,18 @@ Submit a Storm topology to Nimbus.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import importlib
 import os
 import sys
 import time
 
-import fabric
 import simplejson as json
 from fabric.api import env
 from six import itervalues, string_types
 
 from ..dsl.component import JavaComponentSpec
-from ..dsl.topology import Topology, TopologyType
 from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
-                    get_topology_definition, ssh_tunnel)
+                    get_topology_definition, get_topology_from_file, ssh_tunnel)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_par, add_wait, add_workers,
                      resolve_ackers_workers)
@@ -70,27 +67,9 @@ def _kill_existing_topology(topology_name, force, wait, nimbus_client):
         sys.stdout.flush()
 
 
-def _get_topology_from_file(topology_file):
-    """
-    Given a filename for a topology, import the topology and return the class
-    """
-    topology_dir, mod_name = os.path.split(topology_file)
-    # Remove .py extension before trying to import
-    mod_name = mod_name[:-3]
-    sys.path.append(os.path.join(topology_dir, '..', 'src'))
-    sys.path.append(topology_dir)
-    mod = importlib.import_module(mod_name)
-    for attr in mod.__dict__.values():
-        if isinstance(attr, TopologyType) and attr != Topology:
-            topology_class = attr
-            break
-    else:
-        raise ValueError('Could not find topology subclass in topology module.')
-    return topology_class
-
-
-def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
-                     workers, ackers, nimbus_client, options=None, debug=False):
+def _submit_topology(topology_name, topology_class, uploaded_jar, config,
+                     env_config, workers, ackers, nimbus_client, options=None,
+                     debug=False):
     storm_options = {'topology.workers': workers,
                      'topology.acker.executors': ackers,
                      'topology.debug': debug}
@@ -117,25 +96,30 @@ def _submit_topology(topology_name, topology_class, uploaded_jar, env_config,
     if isinstance(log_config.get("level"), string_types):
         storm_options['pystorm.log.level'] = log_config["level"].lower()
 
-    if options is None:
-        options = []
-    for option in options:
-        key, val = option.split("=", 1)
-        try:
-            val = int(val)
-        except ValueError:
-            try:
-                val = float(val)
-            except ValueError:
-                pass
-        storm_options[key] = val
+    if options is not None:
+        storm_options.update(options)
+
+    serializer = env_config.get('serializer', config.get('serializer', None))
+    if serializer is not None:
+        # Set serializer arg in bolts
+        for thrift_bolt in itervalues(topology_class.thrift_bolts):
+            inner_shell = thrift_bolt.bolt_object.shell
+            if inner_shell is not None:
+                inner_shell.script = '-s {} {}'.format(serializer,
+                                                       inner_shell.script)
+        # Set serializer arg in spouts
+        for thrift_spout in itervalues(topology_class.thrift_spouts):
+            inner_shell = thrift_spout.spout_object.shell
+            if inner_shell is not None:
+                inner_shell.script = '-s {} {}'.format(serializer,
+                                                       inner_shell.script)
 
     print("Submitting {} topology to nimbus...".format(topology_name), end='')
     sys.stdout.flush()
     nimbus_client.submitTopology(name=topology_name,
                                  uploadedJarLocation=uploaded_jar,
                                  jsonConf=json.dumps(storm_options),
-                                 topology=topology_class._topology)
+                                 topology=topology_class.thrift_topology)
     print('done')
 
 
@@ -190,7 +174,7 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     config = get_config()
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
-    topology_class = _get_topology_from_file(topology_file)
+    topology_class = get_topology_from_file(topology_file)
 
     # Check if we need to maintain virtualenv during the process
     use_venv = env_config.get('use_virtualenv', True)
@@ -222,21 +206,6 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
 
-    serializer = env_config.get('serializer', config.get('serializer', None))
-    if serializer is not None:
-        # Set serializer arg in bolts
-        for thrift_bolt in itervalues(topology_class.thrift_bolts):
-            inner_shell = thrift_bolt.bolt_object.shell
-            if isinstance(inner_shell, ShellComponent):
-                inner_shell.script = '-s {} {}'.format(serializer,
-                                                       inner_shell.script)
-        # Set serializer arg in spouts
-        for thrift_spout in itervalues(topology_class.thrift_spouts):
-            inner_shell = thrift_spout.spout_object.shell
-            if isinstance(inner_shell, ShellComponent):
-                inner_shell.script = '-s {} {}'.format(serializer,
-                                                       inner_shell.script)
-
     # Check topology for JVM stuff to see if we need to create uber-jar
     if simple_jar:
         simple_jar = not any(isinstance(spec, JavaComponentSpec)
@@ -250,10 +219,12 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
+        import pdb; pdb.set_trace()
         _kill_existing_topology(name, force, wait, nimbus_client)
         uploaded_jar = _upload_jar(nimbus_client, topology_jar)
-        _submit_topology(name, topology_class, uploaded_jar, env_config, workers,
-                         ackers, nimbus_client, options=options, debug=debug)
+        _submit_topology(name, topology_class, uploaded_jar, config, env_config,
+                         workers, ackers, nimbus_client, options=options,
+                         debug=debug)
     _post_submit_hooks(name, env_name, env_config)
 
 

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+import importlib
 import os
 import re
 import shutil
@@ -26,6 +27,7 @@ from thriftpy.rpc import make_client
 from thriftpy.transport import TFramedTransportFactory
 
 from .decorators import memoized
+from .dsl.topology import Topology, TopologyType
 from .thrift import storm_thrift
 
 
@@ -251,8 +253,43 @@ def is_ssh_for_nimbus(env_config):
     return env_config.get('use_ssh_for_nimbus', True)
 
 
+def local_storm_version():
+    """Get the Storm version available on the users PATH.
+
+    :returns: The Storm library available on the users PATH
+    :rtype: pkg_resources.Version
+    """
+    with hide('running'), settings(warn_only=True):
+        cmd = 'storm version'
+        res = local(cmd, capture=True)
+        if not res.succeeded:
+            raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
+                               "\nSTDERR:\n{}".format(cmd, res.stdout,
+                                                      res.stderr))
+
+    pattern = r'^Storm ([0-9.]+)'
+    return parse_version(re.findall(pattern, res.stdout)[0])
+
+
+def nimbus_storm_version(nimbus_client):
+    """Get the Storm version that Nimbus is reporting, if it's reporting it.
+
+    :returns: Storm version that Nimbus is reporting, if it's reporting it.
+              Will return `LegacyVersion('')` if it's not reporting anything.
+    :rtype: pkg_resources.Version
+    """
+    version = parse_version('')
+    nimbuses = nimbus_client.getClusterInfo().nimbuses
+    if nimbuses is not None:
+        for nimbus in nimbuses:
+            if nimbus.version != 'VERSION_NOT_PROVIDED':
+                version = parse_version(nimbus.version)
+                break
+    return version
+
+
 def storm_lib_version():
-    """Get the Storm library version being used by Leiningen and Streamparse.
+    """Get the Storm library version being used by Leiningen.
 
     :returns: The Storm library version specified in project.clj
     :rtype: pkg_resources.Version
@@ -314,9 +351,7 @@ def get_ui_json(env_name, api_path):
 
 
 def prepare_topology():
-    """Prepare a topology for running locally or deployment to a remote
-    cluster.
-    """
+    """Prepare a topology for JAR creation"""
     resources_dir = join("_resources", "resources")
     if os.path.isdir(resources_dir):
         shutil.rmtree(resources_dir)
@@ -376,3 +411,21 @@ def print_stats_table(header, data, columns, default_alignment='l',
             table.align[column] = alignment
     print(table)
 
+
+def get_topology_from_file(topology_file):
+    """
+    Given a filename for a topology, import the topology and return the class
+    """
+    topology_dir, mod_name = os.path.split(topology_file)
+    # Remove .py extension before trying to import
+    mod_name = mod_name[:-3]
+    sys.path.append(os.path.join(topology_dir, '..', 'src'))
+    sys.path.append(topology_dir)
+    mod = importlib.import_module(mod_name)
+    for attr in mod.__dict__.values():
+        if isinstance(attr, TopologyType) and attr != Topology:
+            topology_class = attr
+            break
+    else:
+        raise ValueError('Could not find topology subclass in topology module.')
+    return topology_class

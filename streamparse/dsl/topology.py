@@ -3,6 +3,8 @@ Topology base class
 """
 from __future__ import absolute_import
 
+from collections import defaultdict
+
 from pystorm.component import Component
 from six import add_metaclass, iteritems, itervalues, string_types
 from thriftpy.transport import TMemoryBuffer
@@ -10,8 +12,9 @@ from thriftpy.protocol import TBinaryProtocol
 
 from ..thrift import storm_thrift
 from .bolt import JavaBoltSpec, ShellBoltSpec
-from .component import ComponentSpec
+from .component import ComponentSpec, ShellComponentSpec
 from .spout import JavaSpoutSpec, ShellSpoutSpec
+from .util import to_python_arg_list
 
 
 class TopologyType(type):
@@ -38,9 +41,9 @@ class TopologyType(type):
         class_dict['thrift_bolts'] = bolt_specs
         class_dict['thrift_spouts'] = spout_specs
         class_dict['specs'] = list(specs.values())
-        class_dict['_topology'] = storm_thrift.StormTopology(spouts=spout_specs,
-                                                             bolts=bolt_specs,
-                                                             state_spouts={})
+        class_dict['thrift_topology'] = storm_thrift.StormTopology(spouts=spout_specs,
+                                                                   bolts=bolt_specs,
+                                                                   state_spouts={})
         return type.__new__(mcs, classname, bases, class_dict)
 
     @classmethod
@@ -178,3 +181,79 @@ class Topology(object):
                 return read_it(input_file)
         else:
             return read_it(stream)
+
+    @staticmethod
+    def _spec_to_flux_dict(spec):
+        """Convert a ComponentSpec into a dict as expected by Flux"""
+        flux_dict = {'id': spec.name,
+                     'constructorArgs': []}
+        if isinstance(spec, ShellComponentSpec):
+            if isinstance(spec, ShellBoltSpec):
+                flux_dict['className'] = 'org.apache.storm.flux.wrappers.bolts.FluxShellBolt'
+            else:
+                flux_dict['className'] = 'org.apache.storm.flux.wrappers.spouts.FluxShellSpout'
+            shell_object = spec.component_object.shell
+            flux_dict['constructorArgs'].append([shell_object.execution_command,
+                                                 shell_object.script])
+            output_fields = ['NONE_BUT_FLUX_WANTS_SOMETHING_HERE']
+            if 'default' in spec.outputs:
+                output_fields = spec.outputs['default'].output_fields
+            flux_dict['constructorArgs'].append(output_fields)
+            if set(spec.outputs.keys()) - {'default'}:
+                raise TypeError('Flux does not currently support ShellBolts '
+                                'with multiple streams. Given: {!r}'
+                                .format(spec))
+        else:
+            if spec.component_object.serialized_java is not None:
+                raise TypeError('Flux does not support specifying serialized '
+                                'Java objects.  Given: {!r}'.format(spec))
+            java_object = spec.component_object.java_object
+            flux_dict['className'] = java_object.full_class_name
+            # Convert JavaObjectArg instances into basic data types
+            flux_dict['constructorArgs'] = to_python_arg_list(java_object.args_list)
+        return flux_dict
+
+    @staticmethod
+    def _stream_to_flux_dict(spec, global_stream, grouping):
+        """Convert a GlobalStreamId into a dict as expected by Flux"""
+        flux_dict = {'from': global_stream.componentId,
+                     'to': spec.name}
+        grouping_dict = {'streamId': global_stream.streamId}
+        for key, val in grouping.__dict__.items():
+            if val is not None:
+                grouping_dict['type'] = key.upper()
+                if key == 'fields':
+                    if val:
+                        grouping_dict['args'] = val
+                    else:
+                        grouping_dict['type'] = 'GLOBAL'
+                elif key == 'custom_object':
+                    grouping_dict['type'] = 'CUSTOM'
+                    class_dict = {'className': val.full_class_name,
+                                  'args': to_python_arg_list(val.arg_list)}
+                    grouping_dict['customClass'] = class_dict
+        flux_dict['grouping'] = grouping_dict
+        return flux_dict
+
+    @classmethod
+    def to_flux_dict(cls, name):
+        """Convert topology to dict that can written out as Flux YAML file."""
+        flux_dict = {'name': name,
+                     'bolts': [],
+                     'spouts': [],
+                     'streams': []}
+        for spec in cls.specs:
+            if isinstance(spec, (JavaBoltSpec, ShellBoltSpec)):
+                flux_dict['bolts'].append(cls._spec_to_flux_dict(spec))
+                for global_stream, grouping in spec.inputs.items():
+                    stream_dict = cls._stream_to_flux_dict(spec,
+                                                           global_stream,
+                                                           grouping)
+                    flux_dict['streams'].append(stream_dict)
+            elif isinstance(spec, (JavaSpoutSpec, ShellSpoutSpec)):
+                flux_dict['spouts'].append(cls._spec_to_flux_dict(spec))
+            else:
+                raise TypeError('Specifications should either be bolts or '
+                                'spouts.  Given: {!r}'.format(spec))
+        flux_dict = {key: val for key, val in flux_dict.items() if val}
+        return flux_dict
