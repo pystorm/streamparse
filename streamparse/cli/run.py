@@ -4,18 +4,15 @@ Run a local Storm topology.
 
 from __future__ import absolute_import, print_function
 
-import os
-import sys
 from tempfile import NamedTemporaryFile
 
 import yaml
 from fabric.api import local
 
-from ..util import (get_config, get_topology_definition, get_topology_from_file,
+from ..util import (get_topology_definition, get_topology_from_file,
                     local_storm_version, storm_lib_version)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_par, add_simple_jar, add_workers,
-                     resolve_ackers_workers)
+                     add_options, add_par, add_workers, resolve_ackers_workers)
 from .jar import jar_for_deploy
 
 
@@ -24,10 +21,9 @@ def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
     """Run a topology locally using Flux and `storm jar`."""
     storm_options = {'topology.workers': workers,
                      'topology.acker.executors': ackers,
-                     'topology.debug': debug,
-                     'pystorm.log.level': 'debug' if debug else 'warning'}
-
-    config = get_config()
+                     'topology.debug': debug}
+    if debug:
+        storm_options['pystorm.log.level'] = 'debug'
     name, topology_file = get_topology_definition(name)
     topology_class = get_topology_from_file(topology_file)
 
@@ -41,14 +37,6 @@ def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
 
     # Prepare a JAR that has Storm dependencies packaged
     topology_jar = jar_for_deploy(simple_jar=False)
-
-    # Python logging settings
-    if not os.path.isdir("logs"):
-        os.makedirs("logs")
-    log_path = os.path.join(os.getcwd(), "logs")
-    print("Routing Python logging to {}.".format(log_path))
-    sys.stdout.flush()
-    storm_options['pystorm.log.path'] = log_path
 
     if options is not None:
         storm_options.update(options)

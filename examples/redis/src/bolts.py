@@ -1,4 +1,3 @@
-import os
 from collections import Counter
 
 from redis import StrictRedis
@@ -11,7 +10,6 @@ class WordCountBolt(Bolt):
 
     def initialize(self, conf, ctx):
         self.counter = Counter()
-        self.pid = os.getpid()
         self.total = 0
 
     def _increment(self, word, inc_by):
@@ -22,14 +20,12 @@ class WordCountBolt(Bolt):
         word = tup.values[0]
         self._increment(word, 10 if word == "dog" else 1)
         if self.total % 1000 == 0:
-            self.logger.info("counted [{:,}] words [pid={}]".format(self.total,
-                                                                    self.pid))
+            self.logger.info("counted %i words", self.total)
         self.emit([word, self.counter[word]])
 
 
 class RedisWordCountBolt(WordCountBolt):
     def initialize(self, conf, ctx):
-        self.pid = os.getpid()
         self.redis = StrictRedis()
         self.total = 0
 

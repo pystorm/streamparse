@@ -10,9 +10,6 @@
                 "streamparse-box"
             ],
             "log": {
-                "path": "/var/log/streamparse",
-                "max_bytes": 1000000,
-                "backup_count": 10,
                 "level": "info"
             },
             "virtualenv_root": "/data/virtualenvs"

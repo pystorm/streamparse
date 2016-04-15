@@ -219,7 +219,6 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
-        import pdb; pdb.set_trace()
         _kill_existing_topology(name, force, wait, nimbus_client)
         uploaded_jar = _upload_jar(nimbus_client, topology_jar)
         _submit_topology(name, topology_class, uploaded_jar, config, env_config,
