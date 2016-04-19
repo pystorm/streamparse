@@ -12,6 +12,7 @@ from six import integer_types, iteritems, string_types, text_type
 
 from ..thrift import storm_thrift
 from .stream import Grouping, Stream
+from .util import to_java_arg
 from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
                           JavaObject, JavaObjectArg, ShellComponent, StreamInfo)
 
@@ -182,23 +183,7 @@ class JavaComponentSpec(ComponentSpec):
             else:
                 # Convert arguments to JavaObjectArgs
                 for i, arg in enumerate(args_list):
-                    if isinstance(arg, bool):
-                        args_list[i] = JavaObjectArg(bool_arg=arg)
-                    elif isinstance(arg, integer_types):
-                        # Just use long all the time since Python 3 doesn't
-                        # distinguish between long and int
-                        args_list[i] = JavaObjectArg(long_arg=arg)
-                    elif isinstance(arg, bytes):
-                        args_list[i] = JavaObjectArg(binary_arg=arg)
-                    elif isinstance(arg, text_type):
-                        args_list[i] = JavaObjectArg(string_arg=arg)
-                    elif isinstance(arg, float):
-                        args_list[i] = JavaObjectArg(double_arg=arg)
-                    else:
-                        raise TypeError('Only basic data types can be specified'
-                                        ' as arguments to JavaObject '
-                                        'constructors.  Given: {!r}'
-                                        .format(arg))
+                    args_list[i] = to_java_arg(arg)
             java_object = JavaObject(full_class_name=full_class_name,
                                      args_list=args_list)
             self.component_object = ComponentObject(java_object=java_object)
