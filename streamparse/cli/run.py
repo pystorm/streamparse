@@ -48,7 +48,7 @@ def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
     with NamedTemporaryFile(suffix='.yaml', delete=False) as yaml_file:
         topology_flux_dict = topology_class.to_flux_dict(name)
         topology_flux_dict['config'] = storm_options
-        yaml.dump(topology_flux_dict, yaml_file)
+        yaml.safe_dump(topology_flux_dict, yaml_file)
         cmd = ('storm jar {jar} org.apache.storm.flux.Flux --local --no-splash '
                '--sleep {time} {yaml}'.format(jar=topology_jar,
                                               time=time,
