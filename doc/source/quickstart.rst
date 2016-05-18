@@ -15,10 +15,21 @@ However, to get the library running, you'll need
 
 1. JDK 7+, which you can install with apt-get, homebrew, or an installler;
    and
-2. Apache Storm development version, which you can install from the
+2. lein, which you can install from the
+   `project's page <http://leiningen.org/>`_ or
+   `github <https://github.com/technomancy/leiningen#leiningen>`_
+3. Apache Storm development version, which you can install from the
    `project's page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
    
    (You will need to have Apache Storm version 0.10.0+ to cooperate with Streamparse)
+
+Confirm that you have ``lein`` installed by running::
+
+    > lein version
+
+You should get output similar to this::
+  
+     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
    
 Confirm that you have ``storm`` installed by running::
 
@@ -33,6 +44,9 @@ You should get output similar to this::
     Compiled by tgoetz on 2016-04-29T20:44Z
     From source with checksum 1aea9df01b9181773125826339b9587e
 
+
+If ``lein`` isn't installed,
+ `follow these directions <http://leiningen.org/#install>`_.
 
 If ``storm`` isn't installed,
 `follow these directions <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_.
