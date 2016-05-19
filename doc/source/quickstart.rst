@@ -18,17 +18,38 @@ However, to get the library running, you'll need
 2. lein, which you can install from the
    `project's page <http://leiningen.org/>`_ or
    `github <https://github.com/technomancy/leiningen#leiningen>`_
+3. Apache Storm development version, which you can install from the
+   `project's page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
+   
+   (You will need to have Apache Storm version 0.10.0+ to cooperate with Streamparse)
 
 Confirm that you have ``lein`` installed by running::
 
     > lein version
 
 You should get output similar to this::
+  
+     Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
+   
+Confirm that you have ``storm`` installed by running::
 
-    Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
+    > storm version
+
+You should get output similar to this::
+
+    Running: java -client -Ddaemon.name= -Dstorm.options= -Dstorm.home=/opt/apache-storm-1.0.1 -Dstorm.log.dir=/opt/apache-storm-1.0.1/logs -Djava.library.path=/usr/local/lib:/opt/local/lib:/usr/lib -Dstorm.conf.file= -cp /opt/apache-storm-1.0.1/lib/reflectasm-1.10.1.jar:/opt/apache-storm-1.0.1/lib/kryo-3.0.3.jar:/opt/apache-storm-1.0.1/lib/log4j-over-slf4j-1.6.6.jar:/opt/apache-storm-1.0.1/lib/clojure-1.7.0.jar:/opt/apache-storm-1.0.1/lib/log4j-slf4j-impl-2.1.jar:/opt/apache-storm-1.0.1/lib/servlet-api-2.5.jar:/opt/apache-storm-1.0.1/lib/disruptor-3.3.2.jar:/opt/apache-storm-1.0.1/lib/objenesis-2.1.jar:/opt/apache-storm-1.0.1/lib/storm-core-1.0.1.jar:/opt/apache-storm-1.0.1/lib/slf4j-api-1.7.7.jar:/opt/apache-storm-1.0.1/lib/storm-rename-hack-1.0.1.jar:/opt/apache-storm-1.0.1/lib/log4j-api-2.1.jar:/opt/apache-storm-1.0.1/lib/log4j-core-2.1.jar:/opt/apache-storm-1.0.1/lib/minlog-1.3.0.jar:/opt/apache-storm-1.0.1/lib/asm-5.0.3.jar:/opt/apache-storm-1.0.1/conf org.apache.storm.utils.VersionInfo
+    Storm 1.0.1
+    URL https://git-wip-us.apache.org/repos/asf/storm.git -r b5c16f919ad4099e6fb25f1095c9af8b64ac9f91
+    Branch (no branch)
+    Compiled by tgoetz on 2016-04-29T20:44Z
+    From source with checksum 1aea9df01b9181773125826339b9587e
+
 
 If ``lein`` isn't installed,
-`follow these directions <http://leiningen.org/#install>`_.
+ `follow these directions <http://leiningen.org/#install>`_.
+
+If ``storm`` isn't installed,
+`follow these directions <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_.
 
 Once that's all set, you install streamparse using ``pip``::
 
@@ -63,10 +84,10 @@ the command-line tool, ``sparse``::
         create    wordcount/virtualenvs/wordcount.txt
     Done.
 
-    Try running your topology locally with:
+Try running your topology locally with::
 
-        cd wordcount
-        sparse run
+    > cd wordcount
+      sparse run
 
 The quickstart project provides a basic wordcount topology example which you
 can examine and modify. You can inspect the other commands that ``sparse``
@@ -74,6 +95,11 @@ provides by running::
 
     > sparse -h
 
+If you see error::
+
+    Local Storm version, 1.0.1, is not the same as the version in your project.clj, 0.10.0. The versions must match.
+   
+You will have to edit your wordcount/project.clj file and change Apache Storm library version to match the one you have installed.
 
 Project Structure
 -----------------
