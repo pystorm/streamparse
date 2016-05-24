@@ -191,7 +191,7 @@ def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
     if use_venv:
         config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
 
-        if install_virtualenv:
+        if install_venv:
             create_or_update_virtualenvs(
                 env_name,
                 name,
