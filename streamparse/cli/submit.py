@@ -178,6 +178,10 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
 
     # Check if we need to maintain virtualenv during the process
     use_venv = env_config.get('use_virtualenv', True)
+    
+    # Check if user wants to install virtualenv during the process
+    install_venv = env_config.get('install_virtualenv', use_venv)
+    
     # Setup the fabric env dictionary
     activate_env(env_name)
     # Run pre_submit actions provided by project
@@ -186,11 +190,13 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
         config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-        create_or_update_virtualenvs(
-            env_name,
-            name,
-            "{}/{}.txt".format(config["virtualenv_specs"], name),
-            virtualenv_flags=env_config.get('virtualenv_flags'))
+        
+        if install_virtualenv:
+          create_or_update_virtualenvs(
+              env_name,
+              name,
+              "{}/{}.txt".format(config["virtualenv_specs"], name),
+              virtualenv_flags=env_config.get('virtualenv_flags'))
         streamparse_run_path = '/'.join([env.virtualenv_root, name, 'bin',
                                          'streamparse_run'])
         # Update python paths in bolts
