@@ -211,6 +211,16 @@ class Topology(object):
                         ]
                     })
             flux_dict['parallelism'] = spec.par
+            if spec.config:
+                component_config = spec.config
+                if not isinstance(component_config, dict):
+                    component_config = json.loads(component_config)
+                flux_dict.setdefault('configMethods', [])
+                for key, value in component_config.items():
+                    flux_dict['configMethods'].append({
+                        'name': 'addComponentConfig',
+                        'args': [key, value]
+                    })
         else:
             if spec.component_object.serialized_java is not None:
                 raise TypeError('Flux does not support specifying serialized '
