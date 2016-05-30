@@ -203,6 +203,18 @@ class Topology(object):
                 raise TypeError('Flux does not currently support ShellBolts '
                                 'with multiple streams. Given: {!r}'
                                 .format(spec))
+            
+            flux_dict['configMethods'] = []
+            if spec.config:
+                import json
+                dconf = spec.config
+                if not isinstance(spec.config, dict):
+                    dconf = json.loads(spec.config)
+                for key, value in dconf.iteritems():
+                    flux_dict['configMethods'].append({
+                        'name': 'addComponentConfig',
+                        "args": [key, value]
+                    })
         else:
             if spec.component_object.serialized_java is not None:
                 raise TypeError('Flux does not support specifying serialized '
