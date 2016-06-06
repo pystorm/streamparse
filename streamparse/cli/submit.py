@@ -167,7 +167,7 @@ def _upload_jar(nimbus_client, local_path):
     return upload_location
 
 
-def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
+def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
                     options=None, force=False, debug=False, wait=None,
                     simple_jar=True):
     """Submit a topology to a remote Storm cluster."""
@@ -205,13 +205,13 @@ def submit_topology(name=None, env_name="prod", workers=2, ackers=2,
             if isinstance(inner_shell, ShellComponent):
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
-                    
+
     # Additional options
-    additional_options = env_config.get('options', None)
-    if additional_options and isinstance(additional_options, dict):
-        if isinstance(options, dict):
-            additional_options.update(options)
-        options = additional_options
+    additional_options = env_config.get('options', {})
+    if options is not None:
+        additional_options.update(options)
+    options = additional_options
+
     if not workers:
         workers = env_config.get('worker_count', 2)
     if not ackers:
