@@ -20,6 +20,7 @@ from fabric.api import env, hide, local, settings
 from fabric.colors import red
 from pkg_resources import parse_version
 from prettytable import PrettyTable
+from ruamel import yaml
 from six import iteritems
 from six.moves.socketserver import UDPServer, TCPServer
 from thriftpy.protocol import TBinaryProtocolFactory

@@ -7,4 +7,4 @@ setuptools
 simplejson
 pystorm>=2.0.1
 thriftpy>=0.3.2
-pyyaml
+ruamel.yaml

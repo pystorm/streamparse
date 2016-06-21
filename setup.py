@@ -40,7 +40,7 @@ install_requires = [
     'simplejson',
     'pystorm>=3.0.0',
     'thriftpy>=0.3.2',
-    'pyyaml'
+    'ruamel.yaml'
 ]
 
 if sys.version_info.major < 3:

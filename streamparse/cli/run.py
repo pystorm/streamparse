@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function
 
 from tempfile import NamedTemporaryFile
 
-import yaml
 from fabric.api import local
+from ruamel import yaml
 
 from ..util import (get_topology_definition, get_topology_from_file,
                     local_storm_version, storm_lib_version)
