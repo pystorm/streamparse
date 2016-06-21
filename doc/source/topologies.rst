@@ -70,7 +70,7 @@ The topology DSL fully supports JVM-based bolts and spouts via the
 :class:`~streamparse.JavaBolt` and :class:`~streamparse.JavaSpout` classes.
 
 Here's an example of how we would use the
-`Storm Kafka Spout <http://storm.apache.org/documentation/storm-kafka.html>`_:
+`Storm Kafka Spout <http://storm.apache.org/releases/current/storm-kafka.html>`_:
 
 .. literalinclude:: ../../examples/kafka-jvm/topologies/pixelcount.py
     :language: python
