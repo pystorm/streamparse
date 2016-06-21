@@ -145,6 +145,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                     wait=None, simple_jar=True, override_name=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
+    streamparse_config = config['streamparse']
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
     topology_class = get_topology_from_file(topology_file)

@@ -9,14 +9,14 @@ import time
 from collections import defaultdict
 from contextlib import contextmanager
 from glob import glob
-from os.path import join
+from os.path import exists, isdir, join, split
 from random import shuffle
 from socket import error as SocketError
 
 import requests
 import simplejson as json
 from fabric.api import env, hide, local, settings
-from fabric.colors import red
+from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from prettytable import PrettyTable
 from ruamel import yaml
@@ -113,7 +113,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
 
 def activate_env(env_name=None):
     """Activate a particular environment from a streamparse project's
-    config.json file and populate fabric's env dictionary with appropriate
+    storm.yaml file and populate fabric's env dictionary with appropriate
     values.
 
     :param env_name: a `str` corresponding to the key within the config file's
@@ -139,14 +139,35 @@ def die(msg, error_code=1):
     sys.exit(error_code)
 
 
+def warn(msg):
+    print("{}: {}".format(yellow("warning"), msg))
+
+
 @memoized
 def get_config():
-    if not os.path.exists("config.json"):
-        die("No config.json found. You must run this command inside a "
-            "streamparse project directory.")
+    '''Return the config stored in storm.yaml.
+    '''
+    if exists('config.json'):
+        warn('Found old config.json. Migrating settings to streamparse dict in '
+             'storm.yaml')
+        with open("config.json") as fp:
+            config = json.load(fp)
+        if exists('storm.yaml'):
+            with open('storm.yaml', 'r') as storm_yaml:
+                storm_settings = yaml.safe_load(storm_yaml)
+            config.update(storm_settings.get('streamparse', {}))
+        else:
+            storm_settings = {}
+        storm_settings['streamparse'] = config
+        with open('storm.yaml', 'w') as storm_yaml:
+            yaml.safe_dump(storm_settings, storm_yaml)
 
-    with open("config.json") as fp:
-        config = json.load(fp)
+    if not exists('storm.yaml'):
+        die('No storm.yaml found. You must run this command inside a '
+            'streamparse project directory.')
+
+    with open('storm.yaml') as storm_yaml:
+        config = yaml.safe_load(storm_yaml)
     return config
 
 
@@ -160,7 +181,7 @@ def get_topology_definition(topology_name=None):
     :returns: a `tuple` containing (topology_name, topology_file).
     """
     config = get_config()
-    topology_path = config["topology_specs"]
+    topology_path = config['streamparse']["topology_specs"]
     if topology_name is None:
         topology_files = glob("{}/*.py".format(topology_path))
         if not topology_files:
@@ -175,7 +196,7 @@ def get_topology_definition(topology_name=None):
         topology_name = re.sub(r'(^{}|\.py$)'.format(topology_path), '',
                                topology_file)
     else:
-        topology_file = "{}.py".format(os.path.join(topology_path,
+        topology_file = "{}.py".format(join(topology_path,
                                                     topology_name))
         if not exists(topology_file):
             die("Topology definition file not found {}. You need to "
@@ -186,22 +207,27 @@ def get_topology_definition(topology_name=None):
 
 
 def get_env_config(env_name=None):
-    """Fetch an environment name and config object from the config.json file.
+    """Fetch an environment name and config object from the storm.yaml file.
     If the name is None and there's only one environment, we'll select the
     first, otherwise we'll die to avoid ambiguity.
 
     :returns: a `tuple` containing (env_name, env_config).
     """
     config = get_config()
+    if 'streamparse' not in config:
+        die('No streamparse settings dict was found in your storm.yaml file. It'
+            ' is required for streamparse to function properly.')
+    else:
+        config = config['streamparse']
     if env_name is None and len(config["envs"]) == 1:
         env_name = list(config["envs"].keys())[0]
     elif env_name is None and len(config["envs"]) > 1:
-        die('Found more than one environment in config.json.  When more than '
-            'one environment exists, you must explicitly specify the '
-            'environment name via the -e or --environment flags.')
+        die('Found more than one environment in streamparse dict in storm.yaml.'
+            ' When more than one environment exists, you must explicitly '
+            'specify the environment name via the -e or --environment flags.')
     if env_name not in config["envs"]:
-        die('Could not find a "{}" in config.json, have you specified one?'
-            .format(env_name))
+        die('Could not find a "{}" in the streamparse dict in storm.yaml, have '
+            'you specified one?'.format(env_name))
 
     return (env_name, config["envs"][env_name])
 
@@ -216,7 +242,7 @@ def get_nimbus_host_port(env_config):
     :returns: (host, port)
     """
     if not env_config["nimbus"]:
-        die("No Nimbus server configured in config.json.")
+        die("No Nimbus server configured in streamparse dict in storm.yaml.")
 
     if ":" in env_config["nimbus"]:
         host, port = env_config["nimbus"].split(":", 1)
