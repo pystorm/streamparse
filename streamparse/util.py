@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import importlib
-import os
 import re
 import shutil
 import subprocess
@@ -178,7 +177,7 @@ def get_topology_definition(topology_name=None):
     else:
         topology_file = "{}.py".format(os.path.join(topology_path,
                                                     topology_name))
-        if not os.path.exists(topology_file):
+        if not exists(topology_file):
             die("Topology definition file not found {}. You need to "
                 "create a topology definition file first."
                 .format(topology_file))
@@ -360,9 +359,9 @@ def get_ui_json(env_name, api_path):
 def prepare_topology():
     """Prepare a topology for JAR creation"""
     resources_dir = join("_resources", "resources")
-    if os.path.isdir(resources_dir):
+    if isdir(resources_dir):
         shutil.rmtree(resources_dir)
-    if os.path.exists('src'):
+    if exists('src'):
         shutil.copytree("src", resources_dir)
     else:
         raise FileNotFoundError('Your project must have a "src" directory.')
@@ -425,10 +424,10 @@ def get_topology_from_file(topology_file):
     """
     Given a filename for a topology, import the topology and return the class
     """
-    topology_dir, mod_name = os.path.split(topology_file)
+    topology_dir, mod_name = split(topology_file)
     # Remove .py extension before trying to import
     mod_name = mod_name[:-3]
-    sys.path.append(os.path.join(topology_dir, '..', 'src'))
+    sys.path.append(join(topology_dir, '..', 'src'))
     sys.path.append(topology_dir)
     mod = importlib.import_module(mod_name)
     for attr in mod.__dict__.values():
