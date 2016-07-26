@@ -14,7 +14,8 @@ from fabric.api import env, execute, parallel, prefix, put, puts, run, show
 from fabric.contrib.files import exists
 
 from .common import add_environment, add_name
-from ..util import activate_env, die, get_config, get_topology_definition
+from ..util import (activate_env, die, get_config, get_env_config,
+                    get_topology_definition)
 
 
 @parallel
@@ -42,8 +43,7 @@ def _create_or_update_virtualenv(virtualenv_root,
         run("rm {}".format(tmpfile))
 
 
-def create_or_update_virtualenvs(env_name, topology_name, requirements_file,
-                                 virtualenv_flags=None):
+def create_or_update_virtualenvs(env_name, topology_name, requirements_file):
     """Create or update virtualenvs on remote servers.
 
     Assumes that virtualenv is on the path of the remote server(s).
@@ -53,6 +53,10 @@ def create_or_update_virtualenvs(env_name, topology_name, requirements_file,
     :param requirements_file: path to the requirements.txt file to use
                               to update/install this virtualenv.
     """
+    topology_name = get_topology_definition(topology_name)[0]
+    env_name, env_config = get_env_config(env_name)
+
+    # Setup the fabric env dictionary
     activate_env(env_name)
     # Check to ensure streamparse is in requirements
     with open(requirements_file, "r") as fp:
@@ -68,7 +72,8 @@ def create_or_update_virtualenvs(env_name, topology_name, requirements_file,
                 .format(requirements_file))
 
     execute(_create_or_update_virtualenv, env.virtualenv_root, topology_name,
-            requirements_file, virtualenv_flags=virtualenv_flags,
+            requirements_file,
+            virtualenv_flags=env_config.get('virtualenv_flags'),
             hosts=env.storm_workers)
 
 
@@ -84,9 +89,9 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Create or update a virtualenv on Storm workers. """
-    name = get_topology_definition(args.name)[0]
+    topology_name = get_topology_definition(args.name)[0]
     config = get_config()
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-    create_or_update_virtualenvs(args.environment, name,
+    create_or_update_virtualenvs(args.environment, topology_name,
                                  "{}/{}.txt".format(config["virtualenv_specs"],
-                                                    name))
+                                                    topology_name))
