@@ -195,17 +195,19 @@ class Topology(object):
             shell_object = spec.component_object.shell
             flux_dict['constructorArgs'].append([shell_object.execution_command,
                                                  shell_object.script])
-            flux_dict['configMethods'] = []
-            for key in spec.outputs.keys():
-                if key == 'default':
-                    flux_dict['configMethods'].append({
-                        'name': 'setDefaultStream',
-                        "args": [spec.outputs['default'].output_fields]
-                    })
+            for output_stream in spec.outputs.keys():
+                if output_stream == 'default':
+                    output_fields = spec.outputs['default'].output_fields
+                    flux_dict['constructorArgs'].append(output_fields)
                 else:
+                    if 'configMethods' not in flux_dict:
+                        flux_dict['configMethods'] = []
                     flux_dict['configMethods'].append({
                         'name': 'setNamedStream',
-                        "args": [key, spec.outputs[key].output_fields]
+                        'args': [
+                            output_stream,
+                            spec.outputs[output_stream].output_fields
+                        ]
                     })
         else:
             if spec.component_object.serialized_java is not None:
