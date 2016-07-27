@@ -4,6 +4,8 @@ Functions for adding common CLI arguments to argparse sub-commands.
 import argparse
 import copy
 
+from ruamel import yaml
+
 
 class _StoreDictAction(argparse.Action):
     """Action for storing key=val option strings as a single dict."""
@@ -31,14 +33,7 @@ class _StoreDictAction(argparse.Action):
         # Only doing a copy here because that's what _AppendAction does
         items = copy.copy(getattr(namespace, self.dest))
         key, val = values.split("=", 1)
-        try:
-            val = int(val)
-        except ValueError:
-            try:
-                val = float(val)
-            except ValueError:
-                pass
-        items[key] = val
+        items[key] = yaml.load(val)
         setattr(namespace, self.dest, items)
 
 
