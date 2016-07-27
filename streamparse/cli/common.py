@@ -82,6 +82,16 @@ def add_options(parser):
                              ' options.')
 
 
+def add_override_name(parser):
+    """ Add --override_name option to parser """
+    parser.add_argument('-N', '--override_name',
+                        help='For operations such as creating virtualenvs and '
+                             'killing/submitting topologies, use this value '
+                             'instead of NAME.  This is useful if you want to '
+                             'submit the same topology twice without having to '
+                             'duplicate the topology file.')
+
+
 def add_par(parser):
     """ Add --par option to parser """
     parser.add_argument('-p', '--par',
