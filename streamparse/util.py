@@ -366,9 +366,9 @@ def _get_file_names_command(path, patterns):
     """Given a list of bash `find` patterns, return a string for the
     bash command that will find those pystorm log files
     """
-    patterns = "' -o -name '".join(patterns)
+    patterns = "' -o -type f -name '".join(patterns)
     return ("cd {path} && "
-            "find . -maxdepth 1 -name '{patterns}' ") \
+            "find . -maxdepth 4 -type f -name '{patterns}'") \
             .format(path=path, patterns=patterns)
 
 
