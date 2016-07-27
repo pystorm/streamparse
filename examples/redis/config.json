@@ -1,5 +1,4 @@
 {
-    "library": "",
     "topology_specs": "topologies/",
     "virtualenv_specs": "virtualenvs/",
     "envs": {
