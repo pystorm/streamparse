@@ -189,8 +189,7 @@ def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
         create_or_update_virtualenvs(
             env_name,
             name,
-            "{}/{}.txt".format(config["virtualenv_specs"], name),
-            virtualenv_flags=env_config.get('virtualenv_flags'))
+            "{}/{}.txt".format(config["virtualenv_specs"], name))
         streamparse_run_path = '/'.join([env.virtualenv_root, name, 'bin',
                                          'streamparse_run'])
         # Update python paths in bolts
