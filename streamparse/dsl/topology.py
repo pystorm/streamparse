@@ -19,9 +19,8 @@ from .util import to_python_arg_list
 
 
 class TopologyType(type):
-    """
-    Class to define a Storm topology in a Python DSL.
-    """
+    """Class to define a Storm topology in a Python DSL."""
+
     def __new__(mcs, classname, bases, class_dict):
         bolt_specs = {}
         spout_specs = {}
@@ -51,9 +50,7 @@ class TopologyType(type):
 
     @classmethod
     def class_dict_to_specs(mcs, class_dict):
-        """
-        Takes a class `__dict__` and returns the `ComponentSpec` entries
-        """
+        """Extract valid `ComponentSpec` entries from `Topology.__dict__`."""
         specs = {}
         # Set spec names first
         for name, spec in iteritems(class_dict):
@@ -67,17 +64,15 @@ class TopologyType(type):
                 else:
                     specs[spec.name] = spec
             elif isinstance(spec, Component):
-                raise TypeError('Topology classes should only have '
-                                'ComponentSpec attributes.  Did you forget to '
-                                'call the spec class method for your component?'
-                                ' Given: {!r}'.format(spec))
+                raise TypeError('Topology classes should have ComponentSpec '
+                                'attributes.  Did you forget to call the spec '
+                                'class method for your component?  Given: {!r}'
+                                .format(spec))
         return specs
 
     @classmethod
     def add_bolt_spec(mcs, spec, bolt_specs):
-        """
-        Adds valid Bolt specs to `bolt_specs`, and raises exceptions for others.
-        """
+        """Add valid Bolt specs to `bolt_specs`; raise exceptions for others."""
         if not spec.inputs:
             cls_name = spec.component_cls.__name__
             raise ValueError('{} "{}" requires at least one input, because it '
@@ -87,8 +82,7 @@ class TopologyType(type):
 
     @classmethod
     def add_spout_spec(mcs, spec, spout_specs):
-        """
-        Adds valid Spout specs to `spout_specs`, and raises exceptions for others.
+        """Add valid Spout specs to `spout_specs`; raise exceptions for others.
         """
         if not spec.outputs:
             cls_name = spec.component_cls.__name__
@@ -99,8 +93,7 @@ class TopologyType(type):
 
     @classmethod
     def clean_spec_inputs(mcs, spec, specs):
-        """
-        Converts `spec.inputs` to a dict mapping from stream IDs to groupings.
+        """Convert `spec.inputs` to a dict mapping from stream IDs to groupings.
         """
         if spec.inputs is None:
             spec.inputs = {}
@@ -136,21 +129,19 @@ class TopologyType(type):
         if not isinstance(config_dict, dict):
             raise TypeError('Topology config must be a dictionary. Given: {!r}'
                             .format(config_dict))
-        for spec in specs:
+        for spec in itervalues(specs):
             spec_config_dict = deepcopy(config_dict)
             spec_config_dict.update(json.loads(spec.config))
             spec.config = json.dumps(spec_config_dict)
 
     def __repr__(cls):
         """:returns: A string representation of the topology"""
-        return repr(cls._topology)
+        return repr(getattr(cls, '_topology', None))
 
 
 @add_metaclass(TopologyType)
 class Topology(object):
-    """
-    Class to define a Storm topology in a Python DSL.
-    """
+    """Class to define a Storm topology in a Python DSL."""
     @classmethod
     def write(cls, stream):
         """Write the topology to a stream or file.
