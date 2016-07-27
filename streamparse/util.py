@@ -108,7 +108,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
 
 def activate_env(env_name=None):
     """Activate a particular environment from a streamparse project's
-    config.json file and populatefabric's env dictionary with appropriate
+    config.json file and populate fabric's env dictionary with appropriate
     values.
 
     :param env_name: a `str` corresponding to the key within the config file's
