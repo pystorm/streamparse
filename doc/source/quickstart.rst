@@ -392,6 +392,10 @@ If you do not have ssh access to all of the servers in your Storm cluster, but
 you know they have all of the requirements for your Python code installed, you
 can set ``"use_virtualenv"`` to ``false`` in ``config.json``.
 
+If you have virtualenvs on your machines that you would like streamparse to
+use, but not update or manage, you can set ``"install_virtualenv"`` to ``false``
+in ``config.json``.
+
 If you would like to pass command-line flags to virtualenv, you can set
 ``"virtualenv_flags"`` in ``config.json``, for example::
 
