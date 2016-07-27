@@ -195,14 +195,18 @@ class Topology(object):
             shell_object = spec.component_object.shell
             flux_dict['constructorArgs'].append([shell_object.execution_command,
                                                  shell_object.script])
-            output_fields = ['NONE_BUT_FLUX_WANTS_SOMETHING_HERE']
-            if 'default' in spec.outputs:
-                output_fields = spec.outputs['default'].output_fields
-            flux_dict['constructorArgs'].append(output_fields)
-            if set(spec.outputs.keys()) - {'default'}:
-                raise TypeError('Flux does not currently support ShellBolts '
-                                'with multiple streams. Given: {!r}'
-                                .format(spec))
+            flux_dict['configMethods'] = []
+            for key in spec.outputs.keys():
+                if key == 'default':
+                    flux_dict['configMethods'].append({
+                        'name': 'setDefaultStream',
+                        "args": [spec.outputs['default'].output_fields]
+                    })
+                else:
+                    flux_dict['configMethods'].append({
+                        'name': 'setNamedStream',
+                        "args": [key, spec.outputs[key].output_fields]
+                    })
         else:
             if spec.component_object.serialized_java is not None:
                 raise TypeError('Flux does not support specifying serialized '
