@@ -17,8 +17,8 @@ from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
                     get_topology_definition, get_topology_from_file, ssh_tunnel)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_par, add_wait, add_workers,
-                     resolve_ackers_workers)
+                     add_options, add_override_name, add_par, add_wait,
+                     add_workers, resolve_ackers_workers)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -169,19 +169,21 @@ def _upload_jar(nimbus_client, local_path):
 
 def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
                     options=None, force=False, debug=False, wait=None,
-                    simple_jar=True):
+                    simple_jar=True, override_name=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
     env_name, env_config = get_env_config(env_name)
     topology_class = get_topology_from_file(topology_file)
+    if override_name is None:
+        override_name = name
 
     # Check if we need to maintain virtualenv during the process
     use_venv = env_config.get('use_virtualenv', True)
-    
+
     # Check if user wants to install virtualenv during the process
     install_venv = env_config.get('install_virtualenv', use_venv)
-    
+
     # Setup the fabric env dictionary
     activate_env(env_name)
     # Run pre_submit actions provided by project
@@ -189,15 +191,11 @@ def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
 
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
-        config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
-
         if install_venv:
-            create_or_update_virtualenvs(
-                env_name,
-                name,
-                "{}/{}.txt".format(config["virtualenv_specs"], name))
-        streamparse_run_path = '/'.join([env.virtualenv_root, name, 'bin',
-                                         'streamparse_run'])
+            create_or_update_virtualenvs(env_name, name,
+                                         override_name=override_name)
+        streamparse_run_path = '/'.join([env.virtualenv_root, override_name,
+                                         'bin', 'streamparse_run'])
         # Update python paths in bolts
         for thrift_bolt in itervalues(topology_class.thrift_bolts):
             inner_shell = thrift_bolt.bolt_object.shell
@@ -230,16 +228,20 @@ def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
     # Prepare a JAR that doesn't have Storm dependencies packaged
     topology_jar = jar_for_deploy(simple_jar=simple_jar)
 
-    print('Deploying "{}" topology...'.format(name))
+    if name != override_name:
+        print('Deploying "{}" topology with name "{}"...'.format(name,
+                                                                 override_name))
+    else:
+        print('Deploying "{}" topology...'.format(name))
     sys.stdout.flush()
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         uploaded_jar = _upload_jar(nimbus_client, topology_jar)
-        _kill_existing_topology(name, force, wait, nimbus_client)
-        _submit_topology(name, topology_class, uploaded_jar, config, env_config,
-                         workers, ackers, nimbus_client, options=options,
-                         debug=debug)
+        _kill_existing_topology(override_name, force, wait, nimbus_client)
+        _submit_topology(override_name, topology_class, uploaded_jar, config,
+                         env_config, workers, ackers, nimbus_client,
+                         options=options, debug=debug)
     _post_submit_hooks(name, env_name, env_config)
 
 
@@ -259,6 +261,7 @@ def subparser_hook(subparsers):
                                 'name.')
     add_name(subparser)
     add_options(subparser)
+    add_override_name(subparser)
     add_par(subparser)
     subparser.add_argument('-u', '--uber_jar',
                            help='Build an Uber-JAR even if you have no Java '
@@ -275,4 +278,5 @@ def main(args):
     submit_topology(name=args.name, env_name=args.environment,
                     workers=args.workers, ackers=args.ackers,
                     options=args.options, force=args.force, debug=args.debug,
-                    wait=args.wait, simple_jar=args.simple_jar)
+                    wait=args.wait, simple_jar=args.simple_jar,
+                    override_name=args.override_name)
