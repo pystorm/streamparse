@@ -372,14 +372,16 @@ def _get_file_names_command(path, patterns):
             .format(path=path, patterns=patterns)
 
 
-def get_logfiles_cmd(topology_name=None, pattern=None):
+def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True):
     """ Returns a string representing a command to run on the Storm workers that
     will yield all of the logfiles for the given topology that meet the given
     pattern (if specified).
     """
+    log_name_patterns = ["pystorm_{topo_name}*".format(topo_name=topology_name)]
     # list log files found
-    log_name_patterns = ["worker*", "supervisor*", "access*", "metrics*",
-                         "pystorm_{topo_name}*".format(topo_name=topology_name)]
+    if include_worker_logs:
+        log_name_patterns.extend(["worker*", "supervisor*", "access*",
+                                  "metrics*"])
     ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)

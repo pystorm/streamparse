@@ -11,20 +11,23 @@ from ..util import activate_env, get_topology_definition, get_logfiles_cmd
 
 
 @parallel
-def _remove_logs(topology_name, pattern):
+def _remove_logs(topology_name, pattern, remove_worker_logs):
     """
     Actual task to remove logs on all servers in parallel.
     """
-    ls_cmd = get_logfiles_cmd(topology_name=topology_name, pattern=pattern)
+    ls_cmd = get_logfiles_cmd(topology_name=topology_name, pattern=pattern,
+                              include_worker_logs=remove_worker_logs)
     rm_pipe = " | xargs rm"
     sudo(ls_cmd + rm_pipe, warn_only=True)
 
 
-def remove_logs(topology_name=None, env_name=None, pattern=None):
+def remove_logs(topology_name=None, env_name=None, pattern=None,
+                remove_worker_logs=False):
     """Remove all Python logs on Storm workers in the log.path directory."""
     topology_name = get_topology_definition(topology_name)[0]
     activate_env(env_name)
-    execute(_remove_logs, topology_name, pattern, hosts=env.storm_workers)
+    execute(_remove_logs, topology_name, pattern, remove_worker_logs,
+            hosts=env.storm_workers)
 
 
 def subparser_hook(subparsers):
@@ -38,9 +41,14 @@ def subparser_hook(subparsers):
     add_pattern(subparser)
     subparser.add_argument('-u', '--user',
                            help="User argument to sudo when deleting logs.")
-
+    subparser.add_argument('-w', '--remove_worker_logs',
+                           help='Remove not only topology-specific logs, but '
+                                'also worker logs that may be shared between '
+                                'topologies.',
+                           action='store_true')
 
 def main(args):
     """ Remove logs from Storm workers. """
     remove_logs(topology_name=args.name, env_name=args.environment,
-                pattern=args.pattern)
+                pattern=args.pattern,
+                remove_worker_logs=args.remove_worker_logs)
