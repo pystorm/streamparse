@@ -10,6 +10,7 @@ General Questions
 * `How do I trigger some code before or after I submit my topology?`_
 * `How should I install streamparse on the cluster nodes?`_
 * `Should I install Clojure?`_
+* `How do I deploy into a VPC?`_
 
 Why use streamparse?
 ~~~~~~~~~~~~~~~~~~~~
@@ -98,4 +99,23 @@ to do any separate installation of Clojure.  You just need Java on all Storm
 servers.
 
 .. _bundles Clojure as a requirement: https://github.com/apache/storm/blob/5383ac375cb2955e3247d485e46f1f58bff62810/pom.xml#L320-L322
+
+How do I deploy into a VPC?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Update your ``~/.ssh/config`` to use a bastion host inside your VPC for your
+commands::
+
+    Host *.internal.example.com
+        ProxyCommand ssh bastion.example.com exec nc %h %p
+
+If you don't have a common subdomain you'll have to list all of the hosts
+individually::
+
+    Host host1.example.com
+        ProxyCommand ssh bastion.example.com exec nc %h %p
+    ...
+
+Set up your streamparse config to use all of the hosts normally (without bastion
+host).
 
