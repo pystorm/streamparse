@@ -91,6 +91,46 @@ To do that you just need to use the :meth:`streamparse.ShellBolt.spec` and
 ``script`` arguments to specify a binary to run and its string-separated
 arguments.
 
+Multiple Streams
+^^^^^^^^^^^^^^^^
+
+To specify that a component has multiple output streams, instead of using a
+list of strings for :attr:`~streamparse.dsl.component.ComponentSpec.outputs`,
+you must specify a list of :class:`~streamparse.Stream` objects, as shown below.
+
+.. code-block:: python
+
+    class FancySpout(Spout):
+        outputs = [Stream(fields=['good_data'], name='default'),
+                   Stream(fields=['bad_data'], name='errors')]
+
+To select one of those streams as the input for a downstream
+:class:`~streamparse.Bolt`, you simply use ``[]`` to specify the stream you
+want. Without any stream specified, the ``default`` stream will be used.
+
+.. code-block:: python
+
+    class ExampleTopology(Topology):
+        fancy_spout = FancySpout.spec()
+        error_bolt = ErrorBolt.spec(inputs=[fancy_spout['errors']])
+        process_bolt = ProcessBolt.spec(inputs=[fancy_spout])
+
+
+Groupings
+^^^^^^^^^
+
+By default, Storm uses a :attr:`~streamparse.Grouping.SHUFFLE` grouping to route
+tuples to particular executors for a given component, but you can also specify
+other groupings by using the appropriate :class:`~streamparse.Grouping`
+attribute. The most common grouping is probably the
+:meth:`~streamparse.Grouping.fields` grouping, which will send all the tuples
+with the same value for the specified fields to the same executor. This can be
+seen in the prototypical word count topology:
+
+.. literalinclude:: ../../examples/redis/topologies/wordcount_mem.py
+    :language: python
+
+
 Topology-Level Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
