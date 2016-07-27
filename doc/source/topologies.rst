@@ -91,6 +91,20 @@ To do that you just need to use the :meth:`streamparse.ShellBolt.spec` and
 ``script`` arguments to specify a binary to run and its string-separated
 arguments.
 
+Topology-Level Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to set a config option for all components in your topology, like
+``topology.environment``, you can do that by adding a ``config`` class attribute
+to your :class:`~streamparse.Topology` that is a `dict` mapping from option
+names to their values.  For example:
+
+.. code-block:: python
+
+    class WordCount(Topology):
+        config = {'topology.environment': {'LD_LIBRARY_PATH': '/usr/local/lib/'}}
+        ...
+
 
 Running Topologies
 ------------------
