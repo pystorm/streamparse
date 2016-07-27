@@ -32,7 +32,7 @@ You can clone Storm from Github here::
 
 There are tags available for releases, e.g.::
 
-    git checkout v0.10.0
+    git checkout v1.0.1
 
 To build a local Storm release, use::
 
@@ -46,7 +46,7 @@ integration tests.
 The first line will actually install Storm locally in your maven (.m2)
 repository. You can confirm this with::
 
-    ls ~/.m2/repository/org/apache/storm/storm-core/0.9.2-incubating
+    ls ~/.m2/repository/org/apache/storm/storm-core/1.0.1
 
 You should now be able to change your ``project.clj`` to include a reference to
 this new release.

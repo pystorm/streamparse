@@ -20,7 +20,7 @@ However, to get the library running, you'll need
    `github <https://github.com/technomancy/leiningen#leiningen>`_
 3. Apache Storm development version, which you can install from the
    `project's page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
-   
+
    (You will need to have Apache Storm version 0.10.0+ to cooperate with Streamparse)
 
 Confirm that you have ``lein`` installed by running::
@@ -28,9 +28,9 @@ Confirm that you have ``lein`` installed by running::
     > lein version
 
 You should get output similar to this::
-  
+
      Leiningen 2.3.4 on Java 1.7.0_55 Java HotSpot(TM) 64-Bit Server VM
-   
+
 Confirm that you have ``storm`` installed by running::
 
     > storm version
@@ -95,10 +95,10 @@ provides by running::
 
     > sparse -h
 
-If you see error::
+If you see an error like::
 
     Local Storm version, 1.0.1, is not the same as the version in your project.clj, 0.10.0. The versions must match.
-   
+
 You will have to edit your wordcount/project.clj file and change Apache Storm library version to match the one you have installed.
 
 Project Structure
