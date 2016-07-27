@@ -18,7 +18,7 @@ However, to get the library running, you'll need
 2. lein, which you can install from the
    `project's page <http://leiningen.org/>`_ or
    `github <https://github.com/technomancy/leiningen#leiningen>`_
-3. Apache Storm development version, which you can install from the
+3. Apache Storm development environment, which you can install from the
    `project's page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
 
    (You will need to have Apache Storm version 0.10.0+ to cooperate with Streamparse)
