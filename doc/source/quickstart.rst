@@ -423,6 +423,59 @@ Streamparse assumes that your Storm cluster is not on your local machine. If it
 is, such as the case with VMs or Docker images, change ``"use_ssh_for_nimbus"``
 in ``config.json`` to ``false``.
 
+
+Setting Submit Options in config.json
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you frequently use the same options to ``sparse submit`` in your project, you
+can set them in ``config.json`` using the ``options`` key in your environment
+settings.  For example:
+
+.. code-block:: json
+
+    {
+        "topology_specs": "topologies/",
+        "virtualenv_specs": "virtualenvs/",
+        "envs": {
+            "vagrant": {
+                "user": "vagrant",
+                "nimbus": "streamparse-box",
+                "workers": [
+                    "streamparse-box"
+                ],
+                "virtualenv_root": "/data/virtualenvs",
+                "options": {
+                    "topology.environment": {
+                        "LD_LIBRARY_PATH": "/usr/local/lib/"
+                    }
+                }
+            }
+        }
+    }
+
+You can also set the ``--worker`` and ``--acker`` parameters in ``config.json``
+via the ``worker_count`` and ``acker_count`` keys in your environment settings.
+
+.. code-block:: json
+
+    {
+        "topology_specs": "topologies/",
+        "virtualenv_specs": "virtualenvs/",
+        "envs": {
+            "vagrant": {
+                "user": "vagrant",
+                "nimbus": "streamparse-box",
+                "workers": [
+                    "streamparse-box"
+                ],
+                "virtualenv_root": "/data/virtualenvs",
+                "acker_count": 1,
+                "worker_count": 1
+            }
+        }
+    }
+
+
 Logging
 ^^^^^^^
 
