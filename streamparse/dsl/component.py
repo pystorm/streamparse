@@ -8,13 +8,13 @@ from __future__ import absolute_import
 from copy import deepcopy
 
 import simplejson as json
-from six import integer_types, iteritems, string_types, text_type
+from six import iteritems, string_types
 
 from ..thrift import storm_thrift
 from .stream import Grouping, Stream
 from .util import to_java_arg
 from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
-                          JavaObject, JavaObjectArg, ShellComponent, StreamInfo)
+                          JavaObject, ShellComponent, StreamInfo)
 
 
 class ComponentSpec(object):
