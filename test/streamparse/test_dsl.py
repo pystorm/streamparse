@@ -247,18 +247,6 @@ class TopologyTests(unittest.TestCase):
                 word_spout = WordSpout.spec()
                 word_bolt = WordCountBolt.spec(inputs=[word_spout])
 
-    def test_propogate_config(self):
-        # configs must be either dict, or None; not str
-        config_dict = {'topology.environment': {'LD_LIBRARY_PATH': '/foo/'}}
-        class WordCount(Topology):
-            config = config_dict
-            word_spout = WordSpout.spec()
-            word_bolt = WordCountBolt.spec(inputs=[word_spout],
-                                           config={'foo': 'bar'})
-        self.assertEqual(WordCount.word_spout.config, json.dumps(config_dict))
-        config_dict['foo'] = 'bar'
-        self.assertEqual(WordCount.word_bolt.config, json.dumps(config_dict))
-
     def test_invalid_outputs_entry_int(self):
         # Outputs must either be list of strings or list of streams, not ints
         class BadSpout(Spout):
