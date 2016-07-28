@@ -30,13 +30,6 @@ def run_local_topology(name=None, env_name=None, time=0, options=None):
         storm_options['topology.acker.executors'] = 1
     storm_options['topology.workers'] = 1
 
-    if not os.path.isdir("logs"):
-        os.makedirs("logs")
-    log_path = os.path.join(os.getcwd(), "logs")
-    storm_options['pystorm.log.path'] = log_path
-    print("Routing Python logging to {}.".format(log_path))
-    sys.stdout.flush()
-
     # Check Storm version is the same
     local_version = local_storm_version()
     project_version = storm_lib_version()
