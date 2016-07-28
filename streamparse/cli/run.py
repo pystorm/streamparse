@@ -16,9 +16,13 @@ from .common import (add_ackers, add_debug, add_environment, add_name,
 from .jar import jar_for_deploy
 
 
-def run_local_topology(name=None, time=0, workers=2, ackers=2, options=None,
-                       debug=False):
+def run_local_topology(name=None, time=0, workers=None, ackers=None,
+                       options=None, debug=False):
     """Run a topology locally using Flux and `storm jar`."""
+    if workers is None:
+        workers = 1
+    if ackers is None:
+        ackers = 1
     storm_options = {'topology.workers': workers,
                      'topology.acker.executors': ackers,
                      'topology.debug': debug}
