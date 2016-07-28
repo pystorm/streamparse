@@ -10,15 +10,15 @@ import time
 
 import simplejson as json
 from fabric.api import env
-from six import itervalues, string_types
+from six import itervalues
 
 from ..dsl.component import JavaComponentSpec
 from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
                     get_topology_definition, get_topology_from_file, ssh_tunnel)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_override_name, add_par, add_wait,
-                     add_workers, resolve_ackers_workers)
+                     add_options, add_override_name, add_wait, add_workers,
+                     resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -68,36 +68,9 @@ def _kill_existing_topology(topology_name, force, wait, nimbus_client):
 
 
 def _submit_topology(topology_name, topology_class, uploaded_jar, config,
-                     env_config, workers, ackers, nimbus_client, options=None,
-                     debug=False):
-    storm_options = {'topology.workers': workers,
-                     'topology.acker.executors': ackers,
-                     'topology.debug': debug}
-
-    if env_config.get('use_virtualenv', True):
-        python_path = '/'.join([env_config["virtualenv_root"],
-                                topology_name, "bin", "python"])
-        storm_options['topology.python.path'] = python_path
-
-    # Python logging settings
-    log_config = env_config.get("log", {})
-    log_path = log_config.get("path") or env_config.get("log_path")
-    log_file = log_config.get("file") or env_config.get("log_file")
-    print("Routing Python logging to {}.".format(log_path))
+                     env_config, nimbus_client, options=None):
+    print("Routing Python logging to {}.".format(options['pystorm.log.path']))
     sys.stdout.flush()
-    if log_path:
-        storm_options['pystorm.log.path'] = log_path
-    if log_file:
-        storm_options['pystorm.log.file'] = log_file
-    if isinstance(log_config.get("max_bytes"), int):
-        storm_options['pystorm.log.max_bytes'] = log_config["max_bytes"]
-    if isinstance(log_config.get("backup_count"), int):
-        storm_options['pystorm.log.backup_count'] = log_config["backup_count"]
-    if isinstance(log_config.get("level"), string_types):
-        storm_options['pystorm.log.level'] = log_config["level"].lower()
-
-    if options is not None:
-        storm_options.update(options)
 
     serializer = env_config.get('serializer', config.get('serializer', None))
     if serializer is not None:
@@ -118,7 +91,7 @@ def _submit_topology(topology_name, topology_class, uploaded_jar, config,
     sys.stdout.flush()
     nimbus_client.submitTopology(name=topology_name,
                                  uploadedJarLocation=uploaded_jar,
-                                 jsonConf=json.dumps(storm_options),
+                                 jsonConf=json.dumps(options),
                                  topology=topology_class.thrift_topology)
     print('done')
 
@@ -167,9 +140,8 @@ def _upload_jar(nimbus_client, local_path):
     return upload_location
 
 
-def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
-                    options=None, force=False, debug=False, wait=None,
-                    simple_jar=True, override_name=None):
+def submit_topology(name=None, env_name=None, options=None, force=False,
+                    wait=None, simple_jar=True, override_name=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
@@ -209,16 +181,9 @@ def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
 
-    # Additional options
-    additional_options = env_config.get('options', {})
-    if options is not None:
-        additional_options.update(options)
-    options = additional_options
-
-    if workers is None:
-        workers = env_config.get('worker_count', len(env.storm_workers))
-    if ackers is None:
-        ackers = env_config.get('acker_count', len(env.storm_workers))
+    # Handle option conflicts
+    options = resolve_options(options, env_config, topology_class,
+                              override_name)
 
     # Check topology for JVM stuff to see if we need to create uber-jar
     if simple_jar:
@@ -240,8 +205,7 @@ def submit_topology(name=None, env_name="prod", workers=None, ackers=None,
         uploaded_jar = _upload_jar(nimbus_client, topology_jar)
         _kill_existing_topology(override_name, force, wait, nimbus_client)
         _submit_topology(override_name, topology_class, uploaded_jar, config,
-                         env_config, workers, ackers, nimbus_client,
-                         options=options, debug=debug)
+                         env_config, nimbus_client, options=options)
     _post_submit_hooks(name, env_name, env_config)
 
 
@@ -262,7 +226,6 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_override_name(subparser)
-    add_par(subparser)
     subparser.add_argument('-u', '--uber_jar',
                            help='Build an Uber-JAR even if you have no Java '
                                 'components in your topology.  Useful if you '
@@ -274,9 +237,7 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Submit a Storm topology to Nimbus. """
-    resolve_ackers_workers(args)
     submit_topology(name=args.name, env_name=args.environment,
-                    workers=args.workers, ackers=args.ackers,
-                    options=args.options, force=args.force, debug=args.debug,
-                    wait=args.wait, simple_jar=args.simple_jar,
+                    options=args.options, force=args.force, wait=args.wait,
+                    simple_jar=args.simple_jar,
                     override_name=args.override_name)
