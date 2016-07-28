@@ -1,11 +1,13 @@
 """
 Run a local Storm topology.
+
+Note: If you have "org.apache.storm" in your uberjar-exclusions list in your
+project.clj, this will fail. Temporarily remove it to use `sparse run`.
 """
 
 from __future__ import absolute_import, print_function
 
-import os
-import sys
+from argparse import RawDescriptionHelpFormatter
 from tempfile import NamedTemporaryFile
 
 from fabric.api import local
@@ -60,7 +62,8 @@ def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
     subparser = subparsers.add_parser('run',
                                       description=__doc__,
-                                      help=main.__doc__)
+                                      help=main.__doc__,
+                                      formatter_class=RawDescriptionHelpFormatter)
     subparser.set_defaults(func=main)
     add_ackers(subparser)
     add_debug(subparser)
@@ -77,5 +80,5 @@ def subparser_hook(subparsers):
 
 
 def main(args):
-    """ Run the local topology with the given arguments """
+    """Run the local topology with the given arguments"""
     run_local_topology(name=args.name, time=args.time, options=args.options)
