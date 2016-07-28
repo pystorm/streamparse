@@ -95,11 +95,11 @@ def add_override_name(parser):
 def add_par(parser):
     """ Add --par option to parser """
     parser.add_argument('-p', '--par',
-                        default=2,
                         type=int,
                         help='Parallelism of topology; conveniently sets '
                              'number of Storm workers and acker bolts at once '
-                             'to passed value. (default: %(default)s)')
+                             'to passed value. Defaults to the number of worker'
+                             ' nodes in your Storm environment.')
 
 def add_pattern(parser):
     """ Add --pattern option to parser """
