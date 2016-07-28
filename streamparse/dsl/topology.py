@@ -39,7 +39,12 @@ class TopologyType(type):
         if classname != 'Topology' and not spout_specs:
             raise ValueError('A Topology requires at least one Spout')
         if 'config' in class_dict:
-            TopologyType.propogate_config(class_dict['config'], specs)
+            config_dict = class_dict['config']
+            if not isinstance(config_dict, dict):
+                raise TypeError('Topology config must be a dictionary. Given: '
+                                '{!r}'.format(config_dict))
+        else:
+            class_dict['config'] = {}
         class_dict['thrift_bolts'] = bolt_specs
         class_dict['thrift_spouts'] = spout_specs
         class_dict['specs'] = list(specs.values())
@@ -118,21 +123,6 @@ class TopologyType(type):
                                          ' {!r} stream.'.format(field,
                                                                 stream_comp.name,
                                                                 stream_id.streamId))
-
-    @classmethod
-    def propogate_config(mcs, config_dict, specs):
-        """Propogate the settings in config to all specs.
-
-        This is necessary because there is no way to set topology-level config
-        options via Thrift.
-        """
-        if not isinstance(config_dict, dict):
-            raise TypeError('Topology config must be a dictionary. Given: {!r}'
-                            .format(config_dict))
-        for spec in itervalues(specs):
-            spec_config_dict = deepcopy(config_dict)
-            spec_config_dict.update(json.loads(spec.config))
-            spec.config = json.dumps(spec_config_dict)
 
     def __repr__(cls):
         """:returns: A string representation of the topology"""

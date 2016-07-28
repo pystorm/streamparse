@@ -5,7 +5,7 @@ import argparse
 import copy
 
 from ruamel import yaml
-
+from six import integer_types, string_types
 
 class _StoreDictAction(argparse.Action):
     """Action for storing key=val option strings as a single dict."""
@@ -37,19 +37,33 @@ class _StoreDictAction(argparse.Action):
         setattr(namespace, self.dest, items)
 
 
+def option_alias(option):
+    """Returns a function that will create option=val for _StoreDictAction."""
+    def _create_key_val_str(val):
+        return '{}={}'.format(option, val)
+    return _create_key_val_str
+
+
 def add_ackers(parser):
     """ Add --ackers option to parser """
     parser.add_argument('-a', '--ackers',
-                        help='Set number of acker bolts. Takes precedence over '
-                             '--par if both set.',
-                        type=int)
+                        help='Set number of acker executors for your topology. '
+                             'Defaults to the number of worker nodes in your '
+                             'Storm environment.',
+                        type=option_alias('topology.acker.executors'),
+                        action=_StoreDictAction,
+                        dest='options')
 
 
 def add_debug(parser):
     """ Add --debug option to parser """
     parser.add_argument('-d', '--debug',
-                        action='store_true',
-                        help='Set topology.debug and produce debugging output.')
+                        help='Set topology.debug and produce debugging output.',
+                        type=option_alias('topology.debug'),
+                        action=_StoreDictAction,
+                        dest='options',
+                        const='true',
+                        nargs='?')
 
 
 def add_environment(parser):
@@ -92,15 +106,6 @@ def add_override_name(parser):
                              'duplicate the topology file.')
 
 
-def add_par(parser):
-    """ Add --par option to parser """
-    parser.add_argument('-p', '--par',
-                        type=int,
-                        help='Parallelism of topology; conveniently sets '
-                             'number of Storm workers and acker bolts at once '
-                             'to passed value. Defaults to the number of worker'
-                             ' nodes in your Storm environment.')
-
 def add_pattern(parser):
     """ Add --pattern option to parser """
     parser.add_argument('--pattern',
@@ -131,14 +136,62 @@ def add_wait(parser):
 def add_workers(parser):
     """ Add --workers option to parser """
     parser.add_argument('-w', '--workers',
-                        type=int,
-                        help='Set number of Storm workers. Takes precedence '
-                             'over --par if both set.')
+                        help='Set number of Storm workers for your topology. '
+                             'Defaults to the number of worker nodes in your '
+                             'Storm environment.',
+                        type=option_alias('topology.workers'),
+                        action=_StoreDictAction,
+                        dest='options')
 
 
-def resolve_ackers_workers(args):
-    """ Set --ackers and --workers to --par if they're None. """
-    if args.ackers is None:
-        args.ackers = args.par
-    if args.workers is None:
-        args.workers = args.par
+def resolve_options(cli_options, env_config, topology_class, topology_name):
+    """Resolve potentially conflicting Storm options from three sources:
+
+    CLI options > Topology options > config.json options
+    """
+    storm_options = {}
+
+    # Start with environment options
+    storm_options.update(env_config.get('options', {}))
+
+    # Set topology.python.path
+    if env_config.get('use_virtualenv', True):
+        python_path = '/'.join([env_config["virtualenv_root"],
+                                topology_name, "bin", "python"])
+        # This setting is for information purposes only, and is not actually
+        # read by any pystorm or streamparse code.
+        storm_options['topology.python.path'] = python_path
+
+    # Set logging options based on environment config
+    log_config = env_config.get("log", {})
+    log_path = log_config.get("path") or env_config.get("log_path")
+    log_file = log_config.get("file") or env_config.get("log_file")
+    if log_path:
+        storm_options['pystorm.log.path'] = log_path
+    if log_file:
+        storm_options['pystorm.log.file'] = log_file
+    if isinstance(log_config.get("max_bytes"), integer_types):
+        storm_options['pystorm.log.max_bytes'] = log_config["max_bytes"]
+    if isinstance(log_config.get("backup_count"), integer_types):
+        storm_options['pystorm.log.backup_count'] = log_config["backup_count"]
+    if isinstance(log_config.get("level"), string_types):
+        storm_options['pystorm.log.level'] = log_config["level"].lower()
+
+    # Override options with topology options
+    storm_options.update(topology_class.config)
+
+    # Override options with CLI options
+    storm_options.update(cli_options or {})
+
+    # Set log level to debug if topology.debug is set
+    if storm_options.get('topology.debug', False):
+        storm_options['pystorm.log.level'] = 'debug'
+
+    # If ackers and executors still aren't set, use number of worker nodes
+    num_storm_workers = len(env_config["workers"])
+    if storm_options.get('topology.acker.executors') is None:
+        storm_options['topology.acker.executors'] = num_storm_workers
+    if storm_options.get('topology.workers') is None:
+        storm_options['topology.workers'] = num_storm_workers
+
+    return storm_options

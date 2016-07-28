@@ -4,32 +4,38 @@ Run a local Storm topology.
 
 from __future__ import absolute_import, print_function
 
+import os
+import sys
 from tempfile import NamedTemporaryFile
 
 from fabric.api import local
 from ruamel import yaml
 
-from ..util import (get_topology_definition, get_topology_from_file,
-                    local_storm_version, storm_lib_version)
+from ..util import (get_env_config, get_topology_definition,
+                    get_topology_from_file, local_storm_version,
+                    storm_lib_version)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_par, add_workers, resolve_ackers_workers)
+                     add_options, add_workers, resolve_options)
 from .jar import jar_for_deploy
 
 
-def run_local_topology(name=None, time=0, workers=None, ackers=None,
-                       options=None, debug=False):
+def run_local_topology(name=None, env_name=None, time=0, options=None):
     """Run a topology locally using Flux and `storm jar`."""
-    if workers is None:
-        workers = 1
-    if ackers is None:
-        ackers = 1
-    storm_options = {'topology.workers': workers,
-                     'topology.acker.executors': ackers,
-                     'topology.debug': debug}
-    if debug:
-        storm_options['pystorm.log.level'] = 'debug'
     name, topology_file = get_topology_definition(name)
+    env_name, env_config = get_env_config(env_name)
     topology_class = get_topology_from_file(topology_file)
+
+    storm_options = resolve_options(options, env_config, topology_class, name)
+    if storm_options['topology.acker.executors'] != 0:
+        storm_options['topology.acker.executors'] = 1
+    storm_options['topology.workers'] = 1
+
+    if not os.path.isdir("logs"):
+        os.makedirs("logs")
+    log_path = os.path.join(os.getcwd(), "logs")
+    storm_options['pystorm.log.path'] = log_path
+    print("Routing Python logging to {}.".format(log_path))
+    sys.stdout.flush()
 
     # Check Storm version is the same
     local_version = local_storm_version()
@@ -41,9 +47,6 @@ def run_local_topology(name=None, time=0, workers=None, ackers=None,
 
     # Prepare a JAR that has Storm dependencies packaged
     topology_jar = jar_for_deploy(simple_jar=False)
-
-    if options is not None:
-        storm_options.update(options)
 
     if time <= 0:
         time = 9223372036854775807  # Max long value in Java
@@ -71,7 +74,6 @@ def subparser_hook(subparsers):
     add_environment(subparser)
     add_name(subparser)
     add_options(subparser)
-    add_par(subparser)
     subparser.add_argument('-t', '--time',
                            default=0,
                            type=int,
@@ -83,7 +85,4 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Run the local topology with the given arguments """
-    resolve_ackers_workers(args)
-    run_local_topology(name=args.name, time=args.time, workers=args.workers,
-                       ackers=args.ackers, options=args.options,
-                       debug=args.debug)
+    run_local_topology(name=args.name, time=args.time, options=args.options)
