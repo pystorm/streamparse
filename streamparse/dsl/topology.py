@@ -194,6 +194,8 @@ class Topology(object):
             shell_object = spec.component_object.shell
             flux_dict['constructorArgs'].append([shell_object.execution_command,
                                                  shell_object.script])
+            if not spec.outputs or len(spec.outputs) == 0:
+                flux_dict['constructorArgs'].append(['NONE_BUT_FLUX_WANTS_SOMETHING_HERE'])
             for output_stream in spec.outputs.keys():
                 if output_stream == 'default':
                     output_fields = spec.outputs['default'].output_fields
