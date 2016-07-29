@@ -69,8 +69,9 @@ def _kill_existing_topology(topology_name, force, wait, nimbus_client):
 
 def _submit_topology(topology_name, topology_class, uploaded_jar, config,
                      env_config, nimbus_client, options=None):
-    print("Routing Python logging to {}.".format(options['pystorm.log.path']))
-    sys.stdout.flush()
+    if options.get('pystorm.log.path'):
+        print("Routing Python logging to {}.".format(options['pystorm.log.path']))
+        sys.stdout.flush()
 
     serializer = env_config.get('serializer', config.get('serializer', None))
     if serializer is not None:
