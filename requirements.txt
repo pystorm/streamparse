@@ -5,6 +5,6 @@ requests
 prettytable
 setuptools
 simplejson
-pystorm>=2.0.1
+pystorm>=3.0.2
 thriftpy>=0.3.2
 ruamel.yaml
