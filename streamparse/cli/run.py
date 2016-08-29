@@ -81,4 +81,5 @@ def subparser_hook(subparsers):
 
 def main(args):
     """Run the local topology with the given arguments"""
-    run_local_topology(name=args.name, time=args.time, options=args.options)
+    run_local_topology(name=args.name, time=args.time, options=args.options,
+                       env_name=args.environment)
