@@ -5,6 +5,6 @@
   :jvm-opts ["-client"]
   :dependencies  [[org.apache.storm/storm-core "1.0.2"]
                   [org.apache.storm/flux-core "1.0.2"]]
-  :jar-exclusions     [#"log4j\.properties" #"org.apache.storm" #"backtype" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
-  :uberjar-exclusions [#"log4j\.properties" #"org.apache.storm" #"backtype" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
+  :jar-exclusions     [#"log4j\.properties" #"org\.apache\.storm\.(?!flux)" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
+  :uberjar-exclusions [#"log4j\.properties" #"org\.apache\.storm\.(?!flux)" #"trident" #"META-INF" #"meta-inf" #"\.yaml"]
   )
