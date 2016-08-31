@@ -3,7 +3,7 @@ Streams and Groupings
 """
 from __future__ import absolute_import
 
-from six import string_types
+from six import iteritems, string_types
 
 from ..thrift import storm_thrift
 from .util import to_java_arg
@@ -48,6 +48,19 @@ class Stream(storm_thrift.StreamInfo):
                             .format(direct))
 
 
+class _Grouping(storm_thrift.Grouping):
+    """
+    Version of `storm_thrift.Grouping` that has better __str__.
+    """
+    def __repr__(self):
+        for name, val in iteritems(vars(self)):
+            if not name.startswith('_') and val is not None:
+                if isinstance(val, NullStruct):
+                    return '{}'.format(name.upper())
+                else:
+                    return '{}({!r})'.format(name, val)
+
+
 class Grouping(object):
     """
     A Grouping describes how Tuples should be distributed to the tasks of a
@@ -83,12 +96,12 @@ class Grouping(object):
     """
     __slots__ = ()
 
-    SHUFFLE = storm_thrift.Grouping(shuffle=NullStruct())
-    GLOBAL = storm_thrift.Grouping(fields=[])
-    DIRECT = storm_thrift.Grouping(direct=NullStruct())
-    ALL = storm_thrift.Grouping(all=NullStruct())
-    NONE = storm_thrift.Grouping(none=NullStruct())
-    LOCAL_OR_SHUFFLE = storm_thrift.Grouping(local_or_shuffle=NullStruct())
+    SHUFFLE = _Grouping(shuffle=NullStruct())
+    GLOBAL = _Grouping(fields=[])
+    DIRECT = _Grouping(direct=NullStruct())
+    ALL = _Grouping(all=NullStruct())
+    NONE = _Grouping(none=NullStruct())
+    LOCAL_OR_SHUFFLE = _Grouping(local_or_shuffle=NullStruct())
 
     @classmethod
     def fields(cls, *fields):
@@ -103,7 +116,7 @@ class Grouping(object):
             fields = list(fields)
         if not fields:
             raise ValueError('List cannot be empty for fields grouping')
-        return storm_thrift.Grouping(fields=fields)
+        return _Grouping(fields=fields)
 
     @classmethod
     def custom_object(cls, java_class_name, arg_list):
@@ -111,7 +124,7 @@ class Grouping(object):
         java_object = storm_thrift.JavaObject(full_class_name=java_class_name,
                                               arg_list=[to_java_arg(arg)
                                                         for arg in arg_list])
-        return storm_thrift.Grouping(custom_object=java_object)
+        return _Grouping(custom_object=java_object)
 
     @classmethod
     def custom_serialized(cls, java_serialized):
@@ -121,4 +134,4 @@ class Grouping(object):
             return TypeError('Argument to custom_serialized must be a '
                              'serialized Java class as bytes.  Given: {!r}'
                              .format(java_serialized))
-        return storm_thrift.Grouping(custom_serialized=java_serialized)
+        return _Grouping(custom_serialized=java_serialized)
