@@ -73,6 +73,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
 
         if need_setup:
             user = env_config.get("user")
+            port = env_config.get('ssh_port')
             if user:
                 user_at_host = "{user}@{host}".format(user=user, host=host)
             else:
@@ -83,6 +84,11 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
                        "{local}:localhost:{remote}".format(local=local_port,
                                                            remote=remote_port),
                        user_at_host]
+            # Specify port if in config
+            if port:
+                ssh_cmd.insert(-1, '-p')
+                ssh_cmd.insert(-1, str(port))
+
             ssh_proc = subprocess.Popen(ssh_cmd, shell=False)
             # Validate that the tunnel is actually running before yielding
             while not _port_in_use(local_port):

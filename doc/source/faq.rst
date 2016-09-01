@@ -11,6 +11,8 @@ General Questions
 * `How should I install streamparse on the cluster nodes?`_
 * `Should I install Clojure?`_
 * `How do I deploy into a VPC?`_
+* `How do I override SSH settings?`_
+
 
 Why use streamparse?
 ~~~~~~~~~~~~~~~~~~~~
@@ -119,3 +121,29 @@ individually::
 Set up your streamparse config to use all of the hosts normally (without bastion
 host).
 
+How do I override SSH settings?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is highly recommended that you just modify your ``~/.ssh/config`` file if you
+need to tweak settings for setting up the SSH tunnel to your Nimbus server, but
+you can also set your SSH password or port in your ``config.json`` by setting
+the ``ssh_password`` or ``ssh_port`` environment settings.
+
+.. code-block:: json
+
+    {
+        "topology_specs": "topologies/",
+        "virtualenv_specs": "virtualenvs/",
+        "envs": {
+            "prod": {
+                "user": "somebody",
+                "ssh_password": "THIS IS A REALLY BAD IDEA",
+                "ssh_port": 52,
+                "nimbus": "streamparse-box",
+                "workers": [
+                    "streamparse-box"
+                ],
+                "virtualenv_root": "/data/virtualenvs"
+            }
+        }
+    }
