@@ -12,6 +12,7 @@ python:
 
 install:
   - travis_retry pip install -r requirements.txt
+  - travis_retry pip install -r test-requirements.txt
   - travis_retry pip install coveralls coverage nose-cov
   - echo TRAVIS_PYTHON_VERSION=${TRAVIS_PYTHON_VERSION}
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} != "3" ]; then travis_retry pip install contextlib2; fi
