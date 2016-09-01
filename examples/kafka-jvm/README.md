@@ -79,7 +79,7 @@ Next, seed the `pixels` topic in Kafka with some sample data by running the
 following command from outside of your VM:
 
 ```bash
-invoke seed_kafka
+fab seed_kafka
 ```
 
 By default, this will seed the topic with 100,000 randomized pixels. Pixels are

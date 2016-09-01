@@ -1,18 +1,13 @@
-from __future__ import print_function
 import random
 import time
-import logging
 
 import simplejson as json
-from invoke import task, run
+from fabric.api import puts, task
 from kafka.common import UnknownTopicOrPartitionError
 from kafka.client import KafkaClient
 from kafka.producer import SimpleProducer
 from six.moves import range
 
-
-logging.basicConfig(format='%(asctime)-15s %(module)s %(name)s %(message)s')
-log = logging.getLogger()
 
 def retry(tries, delay=3, backoff=2, safe_exc_types=None):
     """Retry a function call."""
@@ -59,22 +54,23 @@ def random_pixel_generator():
 
 
 @task
-@retry(2, safe_exc_types=(UnknownTopicOrPartitionError,))
-def seed_kafka(kafka_hosts=None, topic_name=None, num_pixels=100000):
+def seed_kafka(kafka_hosts="streamparse-box:9092", topic_name="pixels",
+               num_pixels=100000):
     """Seed the local Kafka cluster's "pixels" topic with sample pixel data."""
-    topic_name = topic_name or "pixels"
-    kafka_hosts = kafka_hosts or "streamparse-box:9092"
-
     kafka = KafkaClient(kafka_hosts)
     producer = SimpleProducer(kafka)
     # producer = SimpleProducer(kafka, batch_send=True, batch_send_every_n=1000,
     #                           batch_send_every_t=5)
 
-    print("Seeding Kafka ({}) topic '{}' with {:,} fake pixels."
-           .format(kafka_hosts, topic_name, num_pixels))
+    puts("Seeding Kafka ({}) topic '{}' with {:,} fake pixels..."
+         .format(kafka_hosts, topic_name, num_pixels))
     pixels = random_pixel_generator()
     for i in range(num_pixels):
         pixel = json.dumps(next(pixels)).encode("utf-8", "ignore")
-        producer.send_messages(topic_name, pixel)
-    print("Done.")
-
+        try:
+            producer.send_messages(topic_name, pixel)
+        except UnknownTopicOrPartitionError:
+            puts('Topic did not exist yet, so sleeping and trying again...',
+                 flush=True)
+            time.sleep(3)
+        puts(i, end='\r', flush=True)
