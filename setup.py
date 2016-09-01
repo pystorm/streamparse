@@ -52,9 +52,9 @@ lint_requires = [
 ]
 
 if sys.version_info.major < 3:
-    tests_require = ['mock', 'nose', 'unittest2']
+    tests_require = ['graphviz', 'mock', 'nose', 'unittest2']
 else:
-    tests_require = ['mock', 'nose']
+    tests_require = ['graphviz', 'mock', 'nose']
 
 dependency_links = []
 setup_requires = []
