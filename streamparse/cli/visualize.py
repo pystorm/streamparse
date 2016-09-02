@@ -15,9 +15,9 @@ from .common import add_name
 
 try:
     import graphviz
+    HAVE_GRAPHVIZ = True
 except:
-    raise ImportError('The visualize command requires the `graphviz` Python '
-                      'library and `graphviz` system library to be installed.')
+    HAVE_GRAPHVIZ = False
 
 
 IPYTHON_IMAGE_FORMATS = frozenset(['jpeg', 'png'])
@@ -26,6 +26,10 @@ IPYTHON_NO_DISPLAY_FORMATS = frozenset(['dot', 'pdf'])
 
 def to_graphviz(topology_class, node_attr=None, edge_attr=None, **kwargs):
     """Convert a Topology into a DiGraph"""
+    if not HAVE_GRAPHVIZ:
+        raise ImportError('The visualize command requires the `graphviz` Python'
+                          ' library and `graphviz` system library to be '
+                          'installed.')
     attributes = {'fontsize': '16',
                   'fontcolor': 'white',
                   'bgcolor': '#333333',
