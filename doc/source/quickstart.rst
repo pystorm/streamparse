@@ -21,7 +21,7 @@ However, to get the library running, you'll need
 3. Apache Storm development environment, which you can install from the
    `project's page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
 
-   (You will need to have Apache Storm version 0.10.0+ to cooperate with Streamparse)
+   You will need to have at least Apache Storm version 0.10.0 to cooperate with Streamparse.
 
 Confirm that you have ``lein`` installed by running::
 
