@@ -2,7 +2,8 @@
 Run a local Storm topology.
 
 Note: If you have "org.apache.storm" in your uberjar-exclusions list in your
-project.clj, this will fail. Temporarily remove it to use `sparse run`.
+project.clj, this will fail. Temporarily remove it to use `sparse run`. You will
+also need to add [org.apache.storm/flux-core "1.0.1"] to dependencies.
 """
 
 from __future__ import absolute_import, print_function
