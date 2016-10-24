@@ -16,10 +16,10 @@ However, to get the library running, you'll need
 1. JDK 7+, which you can install with apt-get, homebrew, or an installler;
    and
 2. lein, which you can install from the
-   `project's page <http://leiningen.org/>`_ or
+   `Leiningen project page <http://leiningen.org/>`_ or
    `github <https://github.com/technomancy/leiningen#leiningen>`_
 3. Apache Storm development environment, which you can install from the
-   `project's page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
+   `Storm project page <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_
 
    You will need to have at least Apache Storm version 0.10.0 to cooperate with Streamparse.
 
@@ -107,6 +107,7 @@ Project Structure
 streamparse projects expect to have the following directory layout:
 
 .. csv-table::
+
     :header: "File/Folder","Contents"
     :widths: 30,70
 
