@@ -46,7 +46,7 @@ You should get output similar to this::
 
 
 If ``lein`` isn't installed,
- `follow these directions <http://leiningen.org/#install>`_.
+ `follow these directions to install it <http://leiningen.org/#install>`_.
 
 If ``storm`` isn't installed,
 `follow these directions <http://storm.apache.org/releases/current/Setting-up-development-environment.html>`_.
@@ -106,19 +106,25 @@ Project Structure
 
 streamparse projects expect to have the following directory layout:
 
-.. csv-table::
+.. table::
 
-    :header: "File/Folder","Contents"
-    :widths: 30,70
-
-    "config.json","Configuration information for all of your topologies."
-    "fabfile.py","Optional custom fabric tasks."
-    "project.clj","leiningen project file, can be used to add external JVM dependencies."
-    "src/","Python source files (bolts/spouts/etc.) for topologies."
-    "tasks.py","Optional custom invoke tasks."
-    "topologies/","Contains topology definitions written using the :ref:`topology_dsl`.
-    "virtualenvs/","Contains pip requirements files in order to install dependencies on remote Storm servers."
-
+    +----------------+-------------------------------------------------------------------------------------------+
+    | File/Folder    | Contents                                                                                  |
+    +================+===========================================================================================+
+    | `config.json`  | Configuration information for all of your topologies.                                     |
+    +----------------+-------------------------------------------------------------------------------------------+
+    | `fabfile.py`   | Optional custom fabric tasks.                                                             |
+    +----------------+-------------------------------------------------------------------------------------------+
+    | `project.clj`  | leiningen project file (can be used to add external JVM dependencies).                    |
+    +----------------+-------------------------------------------------------------------------------------------+
+    | `src/`         | Python source files (bolts/spouts/etc.) for topologies.                                   |
+    +----------------+-------------------------------------------------------------------------------------------+
+    | `tasks.py`     | Optional custom invoke tasks.                                                             |
+    +----------------+-------------------------------------------------------------------------------------------+
+    | `topologies/`  | Contains topology definitions written using the :ref:`topology_dsl`.                      |
+    +----------------+-------------------------------------------------------------------------------------------+
+    | `virtualenvs/` | Contains pip requirements files in order to install dependencies on remote Storm servers. |
+    +----------------+-------------------------------------------------------------------------------------------+
 
 Defining Topologies
 -------------------
