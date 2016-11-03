@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 import time
+from itertools import chain
 
 import simplejson as json
 from fabric.api import env
@@ -185,6 +186,13 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     # Handle option conflicts
     options = resolve_options(options, env_config, topology_class,
                               override_name)
+
+    # Set parallelism based on env_name if necessary
+    for thrift_component in chain(itervalues(topology_class.thrift_bolts),
+                                  itervalues(topology_class.thrift_spouts)):
+        par_hint = thrift_component.common.parallelism_hint
+        if isinstance(par_hint, dict):
+            thrift_component.common.parallelism_hint = par_hint.get(env_name)
 
     # Check topology for JVM stuff to see if we need to create uber-jar
     if simple_jar:

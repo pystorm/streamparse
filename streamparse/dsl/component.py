@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from copy import deepcopy
 
 import simplejson as json
-from six import iteritems, string_types
+from six import string_types
 
 from ..thrift import storm_thrift
 from .stream import Grouping, Stream
@@ -41,16 +41,32 @@ class ComponentSpec(object):
         """ Raises exceptions if `par` value is not a positive integer. """
         if par is None:
             par = component_cls.par
-        if not isinstance(par, int):
-            raise TypeError("Parallelism must be a integer greater than 0")
+        if isinstance(par, dict):
+            for stage, par_hint in par.items():
+                if not (isinstance(stage, string_types) and isinstance(par_hint,
+                                                                       int)):
+                    raise TypeError("If par is a dict, it must map from "
+                                    "environment names to integers specifying "
+                                    "the parallelism hint for the component.\n"
+                                    "Given stage: {!r}\n"
+                                    "Given parallelism hint: {!r}"
+                                    .format(stage, par_hint))
+                elif par_hint < 1:
+                    raise ValueError("Parallelism hint for stage {} must be an "
+                                     "integer greater than 0. Given: {}"
+                                     .format(stage, par_hint))
+        elif not isinstance(par, int):
+            raise TypeError("Parallelism hint must be an integer greater than "
+                            "0. Given: {!r}".format(par))
         elif par < 1:
-            raise ValueError("Parallelism must be a integer greater than 0")
+            raise ValueError("Parallelism hint must be an integer greater than "
+                             "0. Given: {}".format(par))
         return par
 
     @staticmethod
     def _sanitize_inputs(inputs):
         if isinstance(inputs, dict):
-            for key, val in list(iteritems(inputs)):
+            for key, val in inputs.items():
                 if not isinstance(key, GlobalStreamId):
                     if isinstance(key, ComponentSpec):
                         inputs[key['default']] = val

@@ -208,6 +208,25 @@ class TopologyTests(unittest.TestCase):
             class WordCount(Topology):
                 word_spout = WordSpout.spec(par=5.4)
 
+    def test_dict_par(self):
+        # Component parallelism (number of processes) can temporarily be a dict
+        class WordCount(Topology):
+            word_spout = WordSpout.spec(par={'prod': 5, 'beta': 1})
+        self.assertEqual(WordCount.thrift_spouts['word_spout'].common.parallelism_hint,
+                         {'prod': 5, 'beta': 1})
+
+    def test_dict_par_bad_key_type(self):
+        # Component parallelism dict must map for str to int
+        with self.assertRaises(TypeError):
+            class WordCount(Topology):
+                word_spout = WordSpout.spec(par={1000: 5, 'beta': 1})
+
+    def test_dict_par_bad_value_type(self):
+        # Component parallelism dict must map for str to int
+        with self.assertRaises(TypeError):
+            class WordCount(Topology):
+                word_spout = WordSpout.spec(par={'prod': 5.5, 'beta': 1})
+
     def test_invalid_bolt_input_dict_key(self):
         # Keys in input dict must be either GlobalStreamId or ComponentSpec
         with self.assertRaises(TypeError):
