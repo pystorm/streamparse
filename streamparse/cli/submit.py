@@ -162,7 +162,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     # Setup the fabric env dictionary
     activate_env(env_name)
     # Run pre_submit actions provided by project
-    _pre_submit_hooks(name, env_name, env_config)
+    _pre_submit_hooks(override_name, env_name, env_config)
 
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
@@ -217,7 +217,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
         _kill_existing_topology(override_name, force, wait, nimbus_client)
         _submit_topology(override_name, topology_class, uploaded_jar, config,
                          env_config, nimbus_client, options=options)
-    _post_submit_hooks(name, env_name, env_config)
+    _post_submit_hooks(override_name, env_name, env_config)
 
 
 def subparser_hook(subparsers):
