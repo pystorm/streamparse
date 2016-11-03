@@ -37,7 +37,10 @@ def _create_or_update_virtualenv(virtualenv_root,
         puts("Updating virtualenv: {}".format(virtualenv_name))
         cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
         with prefix(cmd):
-            run("pip install -r {} --exists-action w".format(tmpfile))
+            # Make sure we're using latest pip so options work as expected
+            run("pip install --upgrade 'pip~=9.0'")
+            run("pip install -r {} --exists-action w --upgrade "
+                "--upgrade-strategy only-if-needed".format(tmpfile))
 
         run("rm {}".format(tmpfile))
 
