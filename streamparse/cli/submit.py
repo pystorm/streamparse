@@ -18,8 +18,8 @@ from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
                     get_topology_definition, get_topology_from_file, ssh_tunnel)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_override_name, add_wait, add_workers,
-                     resolve_options)
+                     add_options, add_override_name, add_requirements, add_wait,
+                     add_workers, resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -143,7 +143,8 @@ def _upload_jar(nimbus_client, local_path):
 
 
 def submit_topology(name=None, env_name=None, options=None, force=False,
-                    wait=None, simple_jar=True, override_name=None):
+                    wait=None, simple_jar=True, override_name=None,
+                    requirements_paths=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
@@ -167,7 +168,8 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     if use_venv:
         if install_venv:
             create_or_update_virtualenvs(env_name, name,
-                                         override_name=override_name)
+                                         override_name=override_name,
+                                         requirements_paths=requirements_paths)
         streamparse_run_path = '/'.join([env.virtualenv_root, override_name,
                                          'bin', 'streamparse_run'])
         # Update python paths in bolts
@@ -235,6 +237,7 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_override_name(subparser)
+    add_requirements(subparser)
     subparser.add_argument('-u', '--uber_jar',
                            help='Build an Uber-JAR even if you have no Java '
                                 'components in your topology.  Useful if you '
@@ -249,4 +252,5 @@ def main(args):
     submit_topology(name=args.name, env_name=args.environment,
                     options=args.options, force=args.force, wait=args.wait,
                     simple_jar=args.simple_jar,
-                    override_name=args.override_name)
+                    override_name=args.override_name,
+                    requirements_paths=args.requirements)

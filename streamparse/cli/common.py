@@ -112,6 +112,18 @@ def add_pattern(parser):
                         help='Pattern of log files to operate on.')
 
 
+def add_requirements(parser):
+    """ Add --requirements option to parser """
+    parser.add_argument('-r', '--requirements',
+                        nargs='*',
+                        help='Path to pip-style requirements file specifying '
+                             'the dependencies to use for creating the '
+                             'virtualenv for this topology.  If unspecified, '
+                             'streamparse will look for a file called NAME.txt '
+                             'in the directory specified by the '
+                             'virtualenv_specs setting in config.json.')
+
+
 def add_simple_jar(parser):
     """ Add --simple_jar option to parser. """
     parser.add_argument("-s", "--simple_jar",
