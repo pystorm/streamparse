@@ -95,7 +95,7 @@ def _get_component_ui_detail(env_name, topology_name, component_names):
     detail_urls = [base_url % (topology_id, name) for name in component_names]
     detail = get_ui_jsons(env_name, detail_urls)
     if len(detail) == 1:
-        return detail.values()[0]
+        return list(detail.values())[0]
     else:
         return detail
 
