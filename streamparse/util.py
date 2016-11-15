@@ -17,7 +17,7 @@ from socket import error as SocketError
 import requests
 import simplejson as json
 from fabric.api import env, hide, local, settings
-from fabric.colors import red
+from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from prettytable import PrettyTable
 from ruamel import yaml
@@ -138,6 +138,10 @@ def activate_env(env_name=None):
 def die(msg, error_code=1):
     print("{}: {}".format(red("error"), msg))
     sys.exit(error_code)
+
+
+def warn(msg, error_code=1):
+    print("{}: {}".format(yellow("warning"), msg))
 
 
 @memoized
