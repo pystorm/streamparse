@@ -14,6 +14,7 @@ import os
 import pkgutil
 import sys
 
+from ..util import die
 from ..version import __version__
 
 
@@ -66,6 +67,12 @@ def main():
                              choices=sorted(subparsers.choices.keys()))
     help_parser.set_defaults(func=_help_command)
     args = parser.parse_args()
+
+    if os.getuid() == 0 and not os.getenv('LEIN_ROOT'):
+        die('Because streamparse relies on Leiningen, you cannot run '
+            'streamparse as root without the LEIN_ROOT environment variable '
+            'set. Otherwise, Leiningen would hang indefinitely under-the-hood '
+            'waiting for user input.')
 
     # http://grokbase.com/t/python/python-bugs-list/12arsq9ayf/issue16308-undocumented-behaviour-change-in-argparse-from-3-2-3-to-3-3-0
     if hasattr(args, 'func'):
