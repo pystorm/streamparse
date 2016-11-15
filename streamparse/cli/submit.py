@@ -16,7 +16,8 @@ from six import itervalues
 from ..dsl.component import JavaComponentSpec
 from ..thrift import storm_thrift
 from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
-                    get_topology_definition, get_topology_from_file, ssh_tunnel)
+                    get_topology_definition, get_topology_from_file, ssh_tunnel,
+                    warn)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_override_name, add_requirements, add_wait,
                      add_workers, resolve_options)
@@ -68,7 +69,7 @@ def _kill_existing_topology(topology_name, force, wait, nimbus_client):
         sys.stdout.flush()
 
 
-def _submit_topology(topology_name, topology_class, uploaded_jar, config,
+def _submit_topology(topology_name, topology_class, remote_jar_path, config,
                      env_config, nimbus_client, options=None):
     if options.get('pystorm.log.path'):
         print("Routing Python logging to {}.".format(options['pystorm.log.path']))
@@ -92,7 +93,7 @@ def _submit_topology(topology_name, topology_class, uploaded_jar, config,
     print("Submitting {} topology to nimbus...".format(topology_name), end='')
     sys.stdout.flush()
     nimbus_client.submitTopology(name=topology_name,
-                                 uploadedJarLocation=uploaded_jar,
+                                 uploadedJarLocation=remote_jar_path,
                                  jsonConf=json.dumps(options),
                                  topology=topology_class.thrift_topology)
     print('done')
@@ -144,7 +145,8 @@ def _upload_jar(nimbus_client, local_path):
 
 def submit_topology(name=None, env_name=None, options=None, force=False,
                     wait=None, simple_jar=True, override_name=None,
-                    requirements_paths=None):
+                    requirements_paths=None, local_jar_path=None,
+                    remote_jar_path=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
@@ -152,6 +154,9 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     topology_class = get_topology_from_file(topology_file)
     if override_name is None:
         override_name = name
+    if remote_jar_path and local_jar_path:
+        warn('Ignoring local_jar_path because given remote_jar_path')
+        local_jar_path = None
 
     # Check if we need to maintain virtualenv during the process
     use_venv = env_config.get('use_virtualenv', True)
@@ -196,13 +201,16 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
         if isinstance(par_hint, dict):
             thrift_component.common.parallelism_hint = par_hint.get(env_name)
 
-    # Check topology for JVM stuff to see if we need to create uber-jar
-    if simple_jar:
-        simple_jar = not any(isinstance(spec, JavaComponentSpec)
-                             for spec in topology_class.specs)
+    if local_jar_path:
+        print('Using prebuilt JAR: {}'.format(local_jar_path))
+    elif not remote_jar_path:
+        # Check topology for JVM stuff to see if we need to create uber-jar
+        if simple_jar:
+            simple_jar = not any(isinstance(spec, JavaComponentSpec)
+                                 for spec in topology_class.specs)
 
-    # Prepare a JAR that doesn't have Storm dependencies packaged
-    topology_jar = jar_for_deploy(simple_jar=simple_jar)
+        # Prepare a JAR that doesn't have Storm dependencies packaged
+        local_jar_path = jar_for_deploy(simple_jar=simple_jar)
 
     if name != override_name:
         print('Deploying "{}" topology with name "{}"...'.format(name,
@@ -213,9 +221,13 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
-        uploaded_jar = _upload_jar(nimbus_client, topology_jar)
+        if remote_jar_path:
+            print('Reusing remote JAR on Nimbus server at path: {}'
+                  .format(remote_jar_path))
+        else:
+            remote_jar_path = _upload_jar(nimbus_client, local_jar_path)
         _kill_existing_topology(override_name, force, wait, nimbus_client)
-        _submit_topology(override_name, topology_class, uploaded_jar, config,
+        _submit_topology(override_name, topology_class, remote_jar_path, config,
                          env_config, nimbus_client, options=options)
     _post_submit_hooks(override_name, env_name, env_config)
 
@@ -234,10 +246,21 @@ def subparser_hook(subparsers):
                            help='Force a topology to submit by killing any '
                                 'currently running topologies with the same '
                                 'name.')
+    subparser.add_argument('-j', '--local_jar_path',
+                           help='Path to a prebuilt JAR to upload to Nimbus. '
+                                'This is useful when you have multiple '
+                                'topologies that all run out of the same JAR, '
+                                'or you have manually created the JAR.')
     add_name(subparser)
     add_options(subparser)
     add_override_name(subparser)
     add_requirements(subparser)
+    subparser.add_argument('-R', '--remote_jar_path',
+                           help='Path to a prebuilt JAR that already exists on '
+                                'your Nimbus server. This is useful when you '
+                                'have multiple topologies that all run out of '
+                                'the same JAR, and you do not want to upload it'
+                                ' multiple times.')
     subparser.add_argument('-u', '--uber_jar',
                            help='Build an Uber-JAR even if you have no Java '
                                 'components in your topology.  Useful if you '
@@ -253,4 +276,6 @@ def main(args):
                     options=args.options, force=args.force, wait=args.wait,
                     simple_jar=args.simple_jar,
                     override_name=args.override_name,
-                    requirements_paths=args.requirements)
+                    requirements_paths=args.requirements,
+                    local_jar_path=args.local_jar_path,
+                    remote_jar_path=args.remote_jar_path)
