@@ -49,6 +49,22 @@ def main():
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(__version__))
     load_subparsers(subparsers)
+
+    def _help_command(args):
+        """Print help information about other commands.
+
+        Does the same thing as adding --help flag to sub-command calls.
+        """
+        subparsers.choices[args.sub_command].print_help()
+        sys.exit(1)
+
+    help_parser = subparsers.add_parser('help',
+                                        description=_help_command.__doc__,
+                                        help=_help_command.__doc__.splitlines()[0])
+    help_parser.add_argument('sub_command',
+                             help='The command to provide help for.',
+                             choices=sorted(subparsers.choices.keys()))
+    help_parser.set_defaults(func=_help_command)
     args = parser.parse_args()
 
     # http://grokbase.com/t/python/python-bugs-list/12arsq9ayf/issue16308-undocumented-behaviour-change-in-argparse-from-3-2-3-to-3-3-0
