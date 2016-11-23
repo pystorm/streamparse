@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from ..thrift import storm_thrift
 from ..util import (get_topology_definition, get_env_config, get_nimbus_client,
                     ssh_tunnel)
-from .common import add_environment, add_name, add_override_name, add_wait
+from .common import add_environment, add_name, add_wait
 
 
 def _kill_topology(topology_name, nimbus_client, wait=None):
@@ -15,15 +15,16 @@ def _kill_topology(topology_name, nimbus_client, wait=None):
     nimbus_client.killTopologyWithOpts(name=topology_name, options=kill_opts)
 
 
-def kill_topology(topology_name=None, env_name=None, wait=None,
-                  override_name=None):
-    topology_name = get_topology_definition(topology_name)[0]
+def kill_topology(topology_name=None, env_name=None, wait=None):
+    # For kill, we allow any topology name to be specified, because people
+    # should be able to kill topologies not in their local branch
+    if topology_name is None:
+        topology_name = get_topology_definition(topology_name)[0]
     env_name, env_config = get_env_config(env_name)
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
-        return _kill_topology(override_name or topology_name, nimbus_client,
-                              wait=wait)
+        return _kill_topology(topology_name, nimbus_client, wait=wait)
 
 
 def subparser_hook(subparsers):
@@ -34,11 +35,10 @@ def subparser_hook(subparsers):
     subparser.set_defaults(func=main)
     add_environment(subparser)
     add_name(subparser)
-    add_override_name(subparser)
     add_wait(subparser)
 
 
 def main(args):
     """ Kill the specified Storm topology """
     kill_topology(topology_name=args.name, env_name=args.environment,
-                  wait=args.wait, override_name=None)
+                  wait=args.wait)
