@@ -33,7 +33,7 @@ class _StoreDictAction(argparse.Action):
         # Only doing a copy here because that's what _AppendAction does
         items = copy.copy(getattr(namespace, self.dest))
         key, val = values.split("=", 1)
-        items[key] = yaml.load(val)
+        items[key] = yaml.safe_load(val)
         setattr(namespace, self.dest, items)
 
 
