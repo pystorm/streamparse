@@ -36,7 +36,6 @@ def jar_for_deploy(simple_jar=False):
             raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
                                "\nSTDERR:\n{}".format(cmd, res.stdout,
                                                       res.stderr))
-        res = local(cmd, capture=True)
     # XXX: This will fail if more than one JAR is built
     lines = res.stdout.splitlines()
     for line in lines:
