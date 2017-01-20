@@ -212,14 +212,17 @@ def get_env_config(env_name=None):
 
 
 def get_nimbus_host_port(env_config):
-    """Get the Nimbus server's hostname and port from a streamparse project's
-    config file.
+    """Get the Nimbus server's hostname and port from environment variables
+    or from a streamparse project's config file.
 
     :param env_config: The project's parsed config.
     :type env_config: `dict`
 
     :returns: (host, port)
     """
+    env_config["nimbus"] = os.environ.get('STREAMPARSE_NIMBUS',
+                                          env_config["nimbus"])
+
     if not env_config["nimbus"]:
         die("No Nimbus server configured in config.json.")
 
