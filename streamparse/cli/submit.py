@@ -193,6 +193,8 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     # Handle option conflicts
     options = resolve_options(options, env_config, topology_class,
                               override_name)
+    # In case we're overriding things, let's save the original name
+    options['topology.original_name'] = name
 
     # Set parallelism based on env_name if necessary
     for thrift_component in chain(itervalues(topology_class.thrift_bolts),
