@@ -129,3 +129,8 @@ class Spout(pystorm.spout.Spout, ShellSpout):
                                                     cls.__name__),
                               name=name, par=par, config=config,
                               outputs=cls.outputs)
+
+
+class ReliableSpout(pystorm.spout.ReliableSpout, Spout):
+    """pystorm ReliableSpout with streamparse-specific additions"""
+    pass

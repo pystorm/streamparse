@@ -38,7 +38,7 @@ install_requires = [
     'prettytable',
     'six>=1.5',
     'simplejson',
-    'pystorm>=3.0.3',
+    'pystorm>=3.1.0',
     'thriftpy>=0.3.2',
     'ruamel.yaml'
 ]

@@ -35,14 +35,20 @@ emit tuples into streams.
 .. autoclass:: streamparse.Spout
     :show-inheritance:
 
+.. autoclass:: streamparse.ReliableSpout
+    :show-inheritance:
+
+
 Bolts
 ^^^^^
 
 .. autoclass:: streamparse.Bolt
     :show-inheritance:
 
-
 .. autoclass:: streamparse.BatchingBolt
+    :show-inheritance:
+
+.. autoclass:: streamparse.TicklessBatchingBolt
     :show-inheritance:
 
 
