@@ -8,6 +8,9 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
+  - "3.6-dev"
+  # - "3.7-dev" -- to be added when beta is out - see https://www.python.org/dev/peps/pep-0537/#id6
   - "pypy-5.4.1"
 
 install:
