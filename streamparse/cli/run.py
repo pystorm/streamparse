@@ -11,7 +11,7 @@ from __future__ import absolute_import, print_function
 from argparse import RawDescriptionHelpFormatter
 from tempfile import NamedTemporaryFile
 
-from fabric.api import local
+from fabric.api import local, show
 from ruamel import yaml
 
 from ..util import (get_env_config, get_topology_definition,
@@ -48,15 +48,16 @@ def run_local_topology(name=None, env_name=None, time=0, options=None):
         time = 9223372036854775807  # Max long value in Java
 
     # Write YAML file
-    with NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as yaml_file:
-        topology_flux_dict = topology_class.to_flux_dict(name)
-        topology_flux_dict['config'] = storm_options
-        yaml.safe_dump(topology_flux_dict, yaml_file)
-        cmd = ('storm jar {jar} org.apache.storm.flux.Flux --local --no-splash '
-               '--sleep {time} {yaml}'.format(jar=topology_jar,
-                                              time=time,
-                                              yaml=yaml_file.name))
-        local(cmd)
+    with show('output'):
+        with NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as yaml_file:
+            topology_flux_dict = topology_class.to_flux_dict(name)
+            topology_flux_dict['config'] = storm_options
+            yaml.safe_dump(topology_flux_dict, yaml_file)
+            cmd = ('storm jar {jar} org.apache.storm.flux.Flux --local --no-splash '
+                   '--sleep {time} {yaml}'.format(jar=topology_jar,
+                                                  time=time,
+                                                  yaml=yaml_file.name))
+            local(cmd)
 
 
 def subparser_hook(subparsers):
