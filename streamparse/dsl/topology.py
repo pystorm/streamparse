@@ -210,6 +210,7 @@ class Topology(object):
                             spec.outputs[output_stream].output_fields
                         ]
                     })
+            flux_dict['parallelism'] = spec.par
         else:
             if spec.component_object.serialized_java is not None:
                 raise TypeError('Flux does not support specifying serialized '

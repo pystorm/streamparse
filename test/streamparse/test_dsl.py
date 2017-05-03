@@ -446,3 +446,30 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(JavaWordCount.thrift_spouts['word_spout'].spout_object.serialized_java, serialized_java)
         self.assertIsNone(JavaWordCount.thrift_spouts['word_spout'].spout_object.java_object)
         self.assertIsNone(JavaWordCount.thrift_spouts['word_spout'].spout_object.shell)
+
+    def test_basic_to_flux_dict(self):
+        class WordCount(Topology):
+            word_spout = WordSpout.spec(par=2)
+            word_bolt = WordCountBolt.spec(inputs={word_spout:
+                                                   Grouping.fields("word")},
+                                           par=8)
+        
+        self.assertEqual(WordCount.to_flux_dict('word_count'),
+                         {'name': 'word_count',
+                          'spouts': [{'id': 'word_spout',
+                                      'className': 'org.apache.storm.flux.wrappers.spouts.FluxShellSpout',
+                                      'constructorArgs': [['streamparse_run',
+                                                           'test.streamparse.test_dsl.WordSpout'],
+                                                          ['word']],
+                                      'parallelism': 2}],
+                          'streams': [{'to': 'word_bolt',
+                                       'from': 'word_spout',
+                                       'grouping': {'streamId': 'default',
+                                                    'args': ['word'],
+                                                    'type': 'FIELDS'}}],
+                          'bolts': [{'id': 'word_bolt',
+                                     'className': 'org.apache.storm.flux.wrappers.bolts.FluxShellBolt',
+                                     'constructorArgs': [['streamparse_run',
+                                                          'test.streamparse.test_dsl.WordCountBolt'],
+                                                         ['word', 'count']],
+                                     'parallelism': 8}]})
