@@ -9,6 +9,7 @@ import sys
 
 from pystorm.component import _SERIALIZERS
 
+RESOURCES_PATH = 'resources'
 
 def main():
     """main entry point for Python bolts and spouts"""
@@ -27,10 +28,17 @@ def main():
     if len(sys.argv) == 2:
         sys.argv = [sys.argv[0]] + sys.argv[1].split()
     args = parser.parse_args()
-    # Add current directory to sys.path so imports will work
-    sys.path.append(os.getcwd())
-    # Import module
     mod_name, cls_name = args.target_class.rsplit('.', 1)
+    # Add current directory to sys.path so imports will work
+    import_path = os.getcwd()  # Storm <= 1.0.2
+    if RESOURCES_PATH in next(os.walk(import_path))[1] and \
+       os.path.isfile(os.path.join(import_path,
+                                   RESOURCES_PATH,
+                                   mod_name.replace('.', os.path.sep) + '.py')):
+        import_path = os.path.join(import_path,
+                                   RESOURCES_PATH)  # Storm >= 1.0.3
+    sys.path.append(import_path)
+    # Import module
     mod = importlib.import_module(mod_name)
     # Get class from module and run it
     cls = getattr(mod, cls_name)
