@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2014-2015 Parsely, Inc.
+# Copyright 2014-2017 Parsely, Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ in one place. Based on the suggestion `here. <http://bit.ly/16LbuJF>`_
 
 :organization: Parsely
 '''
+
 
 def _safe_int(string):
     """ Simple function to convert strings into ints without dying. """
