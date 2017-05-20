@@ -34,6 +34,8 @@ class DatabaseDumperBolt(Bolt):
 
 
 class TopologyTests(unittest.TestCase):
+    maxDiff = 1000
+
     def test_basic_spec(self):
         class WordCount(Topology):
             word_spout = WordSpout.spec(par=2)
@@ -453,11 +455,12 @@ class TopologyTests(unittest.TestCase):
             word_bolt = WordCountBolt.spec(inputs={word_spout:
                                                    Grouping.fields("word")},
                                            par=8)
-        
+
         self.assertEqual(WordCount.to_flux_dict('word_count'),
                          {'name': 'word_count',
                           'spouts': [{'id': 'word_spout',
                                       'className': 'org.apache.storm.flux.wrappers.spouts.FluxShellSpout',
+                                      'configMethods': [],
                                       'constructorArgs': [['streamparse_run',
                                                            'test.streamparse.test_dsl.WordSpout'],
                                                           ['word']],
@@ -469,6 +472,7 @@ class TopologyTests(unittest.TestCase):
                                                     'type': 'FIELDS'}}],
                           'bolts': [{'id': 'word_bolt',
                                      'className': 'org.apache.storm.flux.wrappers.bolts.FluxShellBolt',
+                                     'configMethods': [],
                                      'constructorArgs': [['streamparse_run',
                                                           'test.streamparse.test_dsl.WordCountBolt'],
                                                          ['word', 'count']],
