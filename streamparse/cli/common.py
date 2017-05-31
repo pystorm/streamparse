@@ -106,6 +106,14 @@ def add_override_name(parser):
                              'duplicate the topology file.')
 
 
+def add_virtualenv_name(parser):
+    """ Add --virtualenv_name option to parser """
+    parser.add_argument('-V', '--virtualenv_name',
+                        help='Override virtualenv name when submitting topologies.'
+                             'It takes precedence over "--override-name" and is only'
+                             'used only when "use_virtualenv" is set to True.')
+
+
 def add_pattern(parser):
     """ Add --pattern option to parser """
     parser.add_argument('--pattern',
