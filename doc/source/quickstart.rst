@@ -411,6 +411,12 @@ If you would like to pass command-line flags to virtualenv, you can set
 Note that this only applies when the virtualenv is created, not when an
 existing virtualenv is used.
 
+If you would like to share a single virtualenv across topologies, you can set
+``"virtualenv_name"`` in ``config.json`` which overrides the default behaviour
+of using the topology name for virtualenv. Updates to a shared virtualenv should
+be done after shutting down topologies, as code changes in running topologies
+may cause errors.
+
 Using unofficial versions of Storm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
