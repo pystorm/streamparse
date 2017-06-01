@@ -171,12 +171,12 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
 
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
-        virtualenv_override_name = env_config.get('virtualenv_name', override_name)
+        virtualenv_name = env_config.get('virtualenv_name', override_name)
         if install_venv:
             create_or_update_virtualenvs(env_name, name,
-                                         virtualenv_override_name=virtualenv_override_name,
+                                         virtualenv_name=virtualenv_name,
                                          requirements_paths=requirements_paths)
-        streamparse_run_path = '/'.join([env.virtualenv_root, virtualenv_override_name,
+        streamparse_run_path = '/'.join([env.virtualenv_root, virtualenv_name,
                                          'bin', 'streamparse_run'])
         # Update python paths in bolts
         for thrift_bolt in itervalues(topology_class.thrift_bolts):

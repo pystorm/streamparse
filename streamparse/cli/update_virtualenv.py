@@ -51,7 +51,7 @@ def _create_or_update_virtualenv(virtualenv_root,
             run("rm {}".format(temp_req))
 
 
-def create_or_update_virtualenvs(env_name, topology_name, virtualenv_override_name=None,
+def create_or_update_virtualenvs(env_name, topology_name, virtualenv_name=None,
                                  requirements_paths=None):
     """Create or update virtualenvs on remote servers.
 
@@ -59,7 +59,7 @@ def create_or_update_virtualenvs(env_name, topology_name, virtualenv_override_na
 
     :param env_name: the name of the environment in config.json.
     :param topology_name: the name of the topology (and virtualenv).
-    :param virtualenv_override_name: the name that we should use for the virtualenv, even
+    :param virtualenv_name: the name that we should use for the virtualenv, even
                           though the topology file has a different name.
     :param requirements_paths: a list of paths to requirements files to use to
                                create virtualenv
@@ -67,8 +67,8 @@ def create_or_update_virtualenvs(env_name, topology_name, virtualenv_override_na
     config = get_config()
     topology_name = get_topology_definition(topology_name)[0]
     env_name, env_config = get_env_config(env_name)
-    if virtualenv_override_name is None:
-        virtualenv_override_name = topology_name
+    if virtualenv_name is None:
+        virtualenv_name = topology_name
 
     config["virtualenv_specs"] = config["virtualenv_specs"].rstrip("/")
 
@@ -94,7 +94,7 @@ def create_or_update_virtualenvs(env_name, topology_name, virtualenv_override_na
     activate_env(env_name)
 
     # Actually create or update virtualenv on worker nodes
-    execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_override_name,
+    execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,
             requirements_paths,
             virtualenv_flags=env_config.get('virtualenv_flags'),
             hosts=env.storm_workers)
@@ -115,5 +115,5 @@ def subparser_hook(subparsers):
 def main(args):
     """ Create or update a virtualenv on Storm workers. """
     create_or_update_virtualenvs(args.environment, args.name,
-                                 virtualenv_override_name=args.override_name,
+                                 virtualenv_name=args.override_name,
                                  requirements_paths=args.requirements)
