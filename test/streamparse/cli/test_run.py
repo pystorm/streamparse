@@ -5,9 +5,9 @@ import unittest
 
 from nose.tools import ok_
 try:
-	from unittest.mock import patch
+    from unittest.mock import patch
 except ImportError:
-	from mock import patch
+    from mock import patch
 
 from streamparse.cli.run import main, subparser_hook
 
@@ -21,7 +21,6 @@ class RunTestCase(unittest.TestCase):
 
         subcommands = parser._optionals._actions[1].choices.keys()
         ok_('run' in subcommands)
-
 
     @patch('streamparse.cli.run.run_local_topology', autospec=True)
     def test_main_args_passed(self, run_local_mock):
