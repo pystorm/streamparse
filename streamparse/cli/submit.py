@@ -4,6 +4,7 @@ Submit a Storm topology to Nimbus.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import importlib
 import os
 import sys
 import time
@@ -15,12 +16,13 @@ from six import itervalues
 
 from ..dsl.component import JavaComponentSpec
 from ..thrift import storm_thrift
-from ..util import (activate_env, get_config, get_env_config, get_nimbus_client,
-                    get_topology_definition, get_topology_from_file, ssh_tunnel,
-                    warn)
+
+from ..util import (activate_env, get_config, get_env_config,
+                    get_nimbus_client, get_topology_definition,
+                    get_topology_from_file, ssh_tunnel, warn)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_override_name, add_requirements, add_wait,
-                     add_workers, resolve_options)
+                     add_options, add_override_name, add_requirements,
+                     add_wait, add_workers, resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -32,18 +34,18 @@ THRIFT_CHUNK_SIZE = 307200
 
 
 def get_user_tasks():
-    """Get tasks defined in a user's tasks.py and fabric.py file which is
+    """Get tasks defined in a user's tasks.py and fabfile.py file which is
     assumed to be in the current working directory.
 
     :returns: a `tuple` (invoke_tasks, fabric_tasks)
     """
     sys.path.insert(0, os.getcwd())
     try:
-        import tasks as user_invoke
+        user_invoke = importlib.import_module('tasks')
     except ImportError:
         user_invoke = None
     try:
-        import fabfile as user_fabric
+        user_fabric = importlib.import_module('fabfile')
     except ImportError:
         user_fabric = None
     return user_invoke, user_fabric
