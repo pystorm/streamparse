@@ -7,6 +7,7 @@ import copy
 from ruamel import yaml
 from six import integer_types, string_types
 
+
 class _StoreDictAction(argparse.Action):
     """Action for storing key=val option strings as a single dict."""
     def __init__(self, option_strings, dest, nargs=None, const=None,
@@ -33,7 +34,11 @@ class _StoreDictAction(argparse.Action):
         # Only doing a copy here because that's what _AppendAction does
         items = copy.copy(getattr(namespace, self.dest))
         key, val = values.split("=", 1)
-        items[key] = yaml.safe_load(val)
+        if yaml.version_info < (0, 15):
+            items[key] = yaml.safe_load(val)
+        else:
+            yml = yaml.YAML(typ='safe', pure=True)
+            items[key] = yml.load(val)
         setattr(namespace, self.dest, items)
 
 
