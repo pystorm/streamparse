@@ -57,7 +57,7 @@ How do I trigger some code before or after I submit my topology?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After you create a streamparse project using ``sparse quickstart``, you'll have
-both a ``tasks.py`` in that directory as well as ``fabric.py``. In either of
+both a ``tasks.py`` in that directory as well as ``fabfile.py``. In either of
 these files, you can specify two functions: ``pre_submit`` and ``post_submit``
 which are expected to accept three arguments:
 

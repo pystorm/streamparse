@@ -34,7 +34,7 @@ THRIFT_CHUNK_SIZE = 307200
 
 
 def get_user_tasks():
-    """Get tasks defined in a user's tasks.py and fabric.py file which is
+    """Get tasks defined in a user's tasks.py and fabfile.py file which is
     assumed to be in the current working directory.
 
     :returns: a `tuple` (invoke_tasks, fabric_tasks)
