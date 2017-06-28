@@ -14,6 +14,7 @@ python:
   - "pypy-5.4.1"
 
 install:
+  - travis_retry pip install --upgrade pip setuptools
   - travis_retry pip install -r requirements.txt
   - travis_retry pip install -r test-requirements.txt
   - travis_retry pip install coveralls coverage nose-cov
