@@ -280,7 +280,7 @@ def local_storm_version():
                                "\nSTDERR:\n{}".format(cmd, res.stdout,
                                                       res.stderr))
 
-    pattern = r'^Storm ([0-9.]+)'
+    pattern = r'Storm ([0-9.]+)'
     return parse_version(re.findall(pattern, res.stdout, flags=re.MULTILINE)[0])
 
 
