@@ -136,6 +136,33 @@ seen in the prototypical word count topology:
     :language: python
 
 
+Topology Cycles
+^^^^^^^^^^^^^^^
+
+On rare occassions, you may want to create a cyclical topology. This may not
+seem easily done with the current topology DSL, but there is a workaround you
+can use: manually declaring a temporary lower-level
+`:class:~streamparse.thrift.GlobalStreamId` that you can refer to in multiple
+places.
+
+The following code creates a :class:`~streamparse.Topology` with a cycle
+between its two Bolts.
+
+.. code-block:: python
+
+    from streamparse.thrift import GlobalStreamId
+
+    # Create a reference to B's output stream before we even declare Topology
+    b_stream = GlobalStreamId(componentId='b_bolt', streamId='default')
+
+    class CyclicalTopology(Topology):
+        some_spout = SomeSpout.spec()
+        # Include our saved stream in your list of inputs for A
+        a_bolt = A.spec(name="A", inputs=[some_spout, b_stream])
+        # Have B get input from A like normal
+        b_bolt = B.spec(name="B", inputs=[a_bolt])
+
+
 Topology-Level Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
