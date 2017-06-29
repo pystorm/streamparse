@@ -14,9 +14,9 @@ from tempfile import NamedTemporaryFile
 from fabric.api import local, show
 from ruamel import yaml
 
-from ..util import (get_env_config, get_topology_definition,
+from ..util import (get_config, get_env_config, get_topology_definition,
                     get_topology_from_file, local_storm_version,
-                    storm_lib_version)
+                    set_topology_serializer, storm_lib_version)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_workers, resolve_options)
 from .jar import jar_for_deploy
@@ -25,8 +25,11 @@ from .jar import jar_for_deploy
 def run_local_topology(name=None, env_name=None, time=0, options=None):
     """Run a topology locally using Flux and `storm jar`."""
     name, topology_file = get_topology_definition(name)
+    config = get_config()
     env_name, env_config = get_env_config(env_name)
     topology_class = get_topology_from_file(topology_file)
+
+    set_topology_serializer(env_config, config, topology_class)
 
     storm_options = resolve_options(options, env_config, topology_class, name)
     if storm_options['topology.acker.executors'] != 0:
