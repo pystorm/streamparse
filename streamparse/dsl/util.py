@@ -6,23 +6,23 @@ from __future__ import absolute_import
 
 from six import integer_types, text_type
 
-from ..thrift import storm_thrift
+from ..thrift import JavaObjectArg
 
 
 def to_java_arg(arg):
     """Converts Python objects to equivalent Thrift JavaObjectArgs"""
     if isinstance(arg, bool):
-        java_arg = storm_thrift.JavaObjectArg(bool_arg=arg)
+        java_arg = JavaObjectArg(bool_arg=arg)
     elif isinstance(arg, integer_types):
         # Just use long all the time since Python 3 doesn't
         # distinguish between long and int
-        java_arg = storm_thrift.JavaObjectArg(long_arg=arg)
+        java_arg = JavaObjectArg(long_arg=arg)
     elif isinstance(arg, bytes):
-        java_arg = storm_thrift.JavaObjectArg(binary_arg=arg)
+        java_arg = JavaObjectArg(binary_arg=arg)
     elif isinstance(arg, text_type):
-        java_arg = storm_thrift.JavaObjectArg(string_arg=arg)
+        java_arg = JavaObjectArg(string_arg=arg)
     elif isinstance(arg, float):
-        java_arg = storm_thrift.JavaObjectArg(double_arg=arg)
+        java_arg = JavaObjectArg(double_arg=arg)
     else:
         raise TypeError('Only basic data types can be specified'
                         ' as arguments to JavaObject '

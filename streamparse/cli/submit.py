@@ -15,7 +15,7 @@ from fabric.api import env
 from six import itervalues
 
 from ..dsl.component import JavaComponentSpec
-from ..thrift import storm_thrift
+from ..thrift import ShellComponent
 
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_client, get_topology_definition,
@@ -27,7 +27,6 @@ from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
 from .update_virtualenv import create_or_update_virtualenvs
-from storm_thrift import ShellComponent
 
 
 THRIFT_CHUNK_SIZE = 307200

@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from ..util import (get_env_config, get_nimbus_client, print_stats_table,
                     ssh_tunnel)
-from ..thrift import storm_thrift
+from ..thrift import TopologySummary
 from .common import add_environment
 
 
@@ -26,8 +26,7 @@ def list_topologies(env_name):
     if not topologies:
         print('No topologies found.')
     else:
-        columns = [field for field, default in
-                   storm_thrift.TopologySummary.default_spec]
+        columns = [field for field, default in TopologySummary.default_spec]
         print_stats_table('Topologies', topologies, columns, 'l')
 
 

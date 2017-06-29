@@ -5,12 +5,11 @@ from __future__ import absolute_import
 
 from six import iteritems, string_types
 
-from ..thrift import storm_thrift
+from ..thrift import JavaObject, NullStruct, storm_thrift, StreamInfo
 from .util import to_java_arg
-from storm_thrift import NullStruct
 
 
-class Stream(storm_thrift.StreamInfo):
+class Stream(StreamInfo):
     """
     A Storm output stream
     """
@@ -121,9 +120,9 @@ class Grouping(object):
     @classmethod
     def custom_object(cls, java_class_name, arg_list):
         """Tuples will be assigned to tasks by the given Java class."""
-        java_object = storm_thrift.JavaObject(full_class_name=java_class_name,
-                                              arg_list=[to_java_arg(arg)
-                                                        for arg in arg_list])
+        java_object = JavaObject(full_class_name=java_class_name,
+                                 arg_list=[to_java_arg(arg)
+                                           for arg in arg_list])
         return _Grouping(custom_object=java_object)
 
     @classmethod

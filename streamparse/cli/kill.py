@@ -4,14 +4,14 @@ Kill the specified Storm topology.
 
 from __future__ import absolute_import
 
-from ..thrift import storm_thrift
+from ..thrift import KillOptions
 from ..util import (get_topology_definition, get_env_config, get_nimbus_client,
                     ssh_tunnel)
 from .common import add_environment, add_name, add_wait
 
 
 def _kill_topology(topology_name, nimbus_client, wait=None):
-    kill_opts = storm_thrift.KillOptions(wait_secs=wait)
+    kill_opts = KillOptions(wait_secs=wait)
     nimbus_client.killTopologyWithOpts(name=topology_name, options=kill_opts)
 
 
