@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from ..util import (get_env_config, get_nimbus_client, print_stats_table,
                     ssh_tunnel)
 from ..thrift import TopologySummary
-from .common import add_environment
+from .common import add_environment, add_timeout
 
 
 def _list_topologies(nimbus_client):
@@ -16,12 +16,13 @@ def _list_topologies(nimbus_client):
     return cluster_summary.topologies
 
 
-def list_topologies(env_name):
+def list_topologies(env_name, timeout=None):
     """Prints out all running Storm topologies"""
     env_name, env_config = get_env_config(env_name)
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
-        nimbus_client = get_nimbus_client(env_config, host=host, port=port)
+        nimbus_client = get_nimbus_client(env_config, host=host, port=port,
+                                          timeout=timeout)
         topologies = _list_topologies(nimbus_client)
     if not topologies:
         print('No topologies found.')
@@ -37,8 +38,9 @@ def subparser_hook(subparsers):
                                       help=main.__doc__)
     subparser.set_defaults(func=main)
     add_environment(subparser)
+    add_timeout(subparser)
 
 
 def main(args):
     """ List the currently running Storm topologies """
-    list_topologies(args.environment)
+    list_topologies(args.environment, timeout=args.timeout)
