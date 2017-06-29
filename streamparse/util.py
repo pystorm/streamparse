@@ -20,7 +20,7 @@ from fabric.api import env, hide, local, settings
 from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from prettytable import PrettyTable
-from six import iteritems
+from six import iteritems, itervalues
 from six.moves.socketserver import UDPServer, TCPServer
 from thriftpy.protocol import TBinaryProtocolFactory
 from thriftpy.rpc import make_client
@@ -444,3 +444,26 @@ def get_topology_from_file(topology_file):
     else:
         raise ValueError('Could not find topology subclass in topology module.')
     return topology_class
+
+
+def set_topology_serializer(env_config, config, topology_class):
+    """Go through the components in a `Topology` and set the serializer.
+
+    This is necessary because the `Topology` class has no information about the
+    user-specified serializer, but it needs to be passed as an argument to
+    ``streamparse_run``.
+    """
+    serializer = env_config.get('serializer', config.get('serializer', None))
+    if serializer is not None:
+        # Set serializer arg in bolts
+        for thrift_bolt in itervalues(topology_class.thrift_bolts):
+            inner_shell = thrift_bolt.bolt_object.shell
+            if inner_shell is not None:
+                inner_shell.script = '-s {} {}'.format(serializer,
+                                                       inner_shell.script)
+        # Set serializer arg in spouts
+        for thrift_spout in itervalues(topology_class.thrift_spouts):
+            inner_shell = thrift_spout.spout_object.shell
+            if inner_shell is not None:
+                inner_shell.script = '-s {} {}'.format(serializer,
+                                                       inner_shell.script)

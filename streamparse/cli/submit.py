@@ -19,7 +19,8 @@ from ..thrift import ShellComponent
 
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_client, get_topology_definition,
-                    get_topology_from_file, ssh_tunnel, warn)
+                    get_topology_from_file, set_topology_serializer,
+                    ssh_tunnel, warn)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_override_name, add_requirements,
                      add_timeout, add_wait, add_workers, resolve_options)
@@ -76,20 +77,7 @@ def _submit_topology(topology_name, topology_class, remote_jar_path, config,
         print("Routing Python logging to {}.".format(options['pystorm.log.path']))
         sys.stdout.flush()
 
-    serializer = env_config.get('serializer', config.get('serializer', None))
-    if serializer is not None:
-        # Set serializer arg in bolts
-        for thrift_bolt in itervalues(topology_class.thrift_bolts):
-            inner_shell = thrift_bolt.bolt_object.shell
-            if inner_shell is not None:
-                inner_shell.script = '-s {} {}'.format(serializer,
-                                                       inner_shell.script)
-        # Set serializer arg in spouts
-        for thrift_spout in itervalues(topology_class.thrift_spouts):
-            inner_shell = thrift_spout.spout_object.shell
-            if inner_shell is not None:
-                inner_shell.script = '-s {} {}'.format(serializer,
-                                                       inner_shell.script)
+    set_topology_serializer(env_config, config, topology_class)
 
     print("Submitting {} topology to nimbus...".format(topology_name), end='')
     sys.stdout.flush()
