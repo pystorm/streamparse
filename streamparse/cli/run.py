@@ -60,6 +60,7 @@ def run_local_topology(name=None, env_name=None, time=0, options=None):
                                default_flow_style=False)
             else:
                 yml = yaml.YAML(typ='safe', pure=True)
+                yml.default_flow_style = False
                 yml.dump(topology_flux_dict, yaml_file)
             cmd = ('storm jar {jar} org.apache.storm.flux.Flux --local --no-splash '
                    '--sleep {time} {yaml}'.format(jar=topology_jar,
