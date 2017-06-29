@@ -2,7 +2,6 @@
 Tests for Topology DSL
 """
 
-import json
 import logging
 import unittest
 from io import BytesIO
@@ -10,8 +9,8 @@ from io import BytesIO
 from streamparse.dsl import Grouping, Stream, Topology
 from streamparse.storm import (Bolt, Component, JavaBolt, JavaSpout, ShellBolt,
                                ShellSpout, Spout)
-from streamparse.thrift import storm_thrift
-from storm_thrift import JavaObjectArg
+from streamparse.thrift import JavaObjectArg
+
 
 log = logging.getLogger(__name__)
 

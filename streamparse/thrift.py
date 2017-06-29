@@ -567,3 +567,6 @@ storm_thrift = thriftpy.load_fp(io_class(_THRIFT_STR),
 # Fix a lovely issue where GlobalStreamIds didn't have consistent hash values
 storm_thrift.GlobalStreamId.__hash__ = lambda self: (hash(self.componentId) ^
                                                      hash(self.streamId))
+
+# Import everything so it's actually available within this module
+from storm_thrift import *

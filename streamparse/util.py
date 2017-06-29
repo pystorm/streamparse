@@ -28,7 +28,7 @@ from thriftpy.transport import TFramedTransportFactory
 
 from .decorators import memoized
 from .dsl.topology import Topology, TopologyType
-from .thrift import storm_thrift
+from .thrift import Nimbus
 
 
 def _port_in_use(port, server_type="tcp"):
@@ -253,7 +253,7 @@ def get_nimbus_client(env_config=None, host=None, port=None, timeout=7000):
     """
     if host is None:
         host, port = get_nimbus_host_port(env_config)
-    nimbus_client = make_client(storm_thrift.Nimbus, host=host, port=port,
+    nimbus_client = make_client(Nimbus, host=host, port=port,
                                 proto_factory=TBinaryProtocolFactory(),
                                 trans_factory=TFramedTransportFactory(),
                                 timeout=timeout)

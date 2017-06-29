@@ -3,15 +3,13 @@ Topology base class
 """
 from __future__ import absolute_import
 
-from copy import deepcopy
-
 import simplejson as json
 from pystorm.component import Component
 from six import add_metaclass, iteritems, itervalues, string_types
 from thriftpy.transport import TMemoryBuffer
 from thriftpy.protocol import TBinaryProtocol
 
-from ..thrift import storm_thrift
+from ..thrift import Bolt, SpoutSpec, StormTopology
 from .bolt import JavaBoltSpec, ShellBoltSpec
 from .component import ComponentSpec, ShellComponentSpec
 from .spout import JavaSpoutSpec, ShellSpoutSpec
@@ -48,9 +46,9 @@ class TopologyType(type):
         class_dict['thrift_bolts'] = bolt_specs
         class_dict['thrift_spouts'] = spout_specs
         class_dict['specs'] = list(specs.values())
-        class_dict['thrift_topology'] = storm_thrift.StormTopology(spouts=spout_specs,
-                                                                   bolts=bolt_specs,
-                                                                   state_spouts={})
+        class_dict['thrift_topology'] = StormTopology(spouts=spout_specs,
+                                                      bolts=bolt_specs,
+                                                      state_spouts={})
         return type.__new__(mcs, classname, bases, class_dict)
 
     @classmethod
@@ -82,8 +80,8 @@ class TopologyType(type):
             cls_name = spec.component_cls.__name__
             raise ValueError('{} "{}" requires at least one input, because it '
                              'is a Bolt.'.format(cls_name, spec.name))
-        bolt_specs[spec.name] = storm_thrift.Bolt(bolt_object=spec.component_object,
-                                                  common=spec.common)
+        bolt_specs[spec.name] = Bolt(bolt_object=spec.component_object,
+                                     common=spec.common)
 
     @classmethod
     def add_spout_spec(mcs, spec, spout_specs):
@@ -93,8 +91,8 @@ class TopologyType(type):
             cls_name = spec.component_cls.__name__
             raise ValueError('{} "{}" requires at least one output, because it '
                              'is a Spout'.format(cls_name, spec.name))
-        spout_specs[spec.name] = storm_thrift.SpoutSpec(spout_object=spec.component_object,
-                                                        common=spec.common)
+        spout_specs[spec.name] = SpoutSpec(spout_object=spec.component_object,
+                                           common=spec.common)
 
     @classmethod
     def clean_spec_inputs(mcs, spec, specs):
@@ -167,7 +165,7 @@ class Topology(object):
             stream_bytes = stream.read()
             transport_in = TMemoryBuffer(stream_bytes)
             protocol_in = TBinaryProtocol(transport_in)
-            topology = storm_thrift.StormTopology()
+            topology = StormTopology()
             topology.read(protocol_in)
             cls._topology = topology
             cls.thrift_bolts = topology.bolts

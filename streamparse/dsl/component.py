@@ -10,11 +10,10 @@ from copy import deepcopy
 import simplejson as json
 from six import string_types
 
-from ..thrift import storm_thrift
+from ..thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
+                      JavaObject, ShellComponent, storm_thrift, StreamInfo)
 from .stream import Grouping, Stream
 from .util import to_java_arg
-from storm_thrift import (ComponentCommon, ComponentObject, GlobalStreamId,
-                          JavaObject, ShellComponent, StreamInfo)
 
 
 class ComponentSpec(object):
