@@ -53,7 +53,8 @@ def run_local_topology(name=None, env_name=None, time=0, options=None):
             topology_flux_dict = topology_class.to_flux_dict(name)
             topology_flux_dict['config'] = storm_options
             if yaml.version_info < (0, 15):
-                yaml.safe_dump(topology_flux_dict, yaml_file)
+                yaml.safe_dump(topology_flux_dict, yaml_file,
+                               default_flow_style=False)
             else:
                 yml = yaml.YAML(typ='safe', pure=True)
                 yml.dump(topology_flux_dict, yaml_file)
