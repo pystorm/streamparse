@@ -141,6 +141,15 @@ def add_simple_jar(parser):
                              'dependencies.')
 
 
+def add_timeout(parser):
+    """ Add --timeout option to parser """
+    parser.add_argument('--timeout',
+                        type=int,
+                        default=7000,
+                        help='Milliseconds to wait for Nimbus to respond. '
+                             '(default: %(default)s)')
+
+
 def add_wait(parser):
     """ Add --wait option to parser """
     parser.add_argument('--wait',

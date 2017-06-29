@@ -22,7 +22,7 @@ from ..util import (activate_env, get_config, get_env_config,
                     get_topology_from_file, ssh_tunnel, warn)
 from .common import (add_ackers, add_debug, add_environment, add_name,
                      add_options, add_override_name, add_requirements,
-                     add_wait, add_workers, resolve_options)
+                     add_timeout, add_wait, add_workers, resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -147,7 +147,7 @@ def _upload_jar(nimbus_client, local_path):
 def submit_topology(name=None, env_name=None, options=None, force=False,
                     wait=None, simple_jar=True, override_name=None,
                     requirements_paths=None, local_jar_path=None,
-                    remote_jar_path=None):
+                    remote_jar_path=None, timeout=None):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name)
@@ -224,7 +224,8 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     sys.stdout.flush()
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
-        nimbus_client = get_nimbus_client(env_config, host=host, port=port)
+        nimbus_client = get_nimbus_client(env_config, host=host, port=port,
+                                          timeout=timeout)
         if remote_jar_path:
             print('Reusing remote JAR on Nimbus server at path: {}'
                   .format(remote_jar_path))
@@ -265,6 +266,7 @@ def subparser_hook(subparsers):
                                 'have multiple topologies that all run out of '
                                 'the same JAR, and you do not want to upload it'
                                 ' multiple times.')
+    add_timeout(subparser)
     subparser.add_argument('-u', '--uber_jar',
                            help='Build an Uber-JAR even if you have no Java '
                                 'components in your topology.  Useful if you '
@@ -282,4 +284,5 @@ def main(args):
                     override_name=args.override_name,
                     requirements_paths=args.requirements,
                     local_jar_path=args.local_jar_path,
-                    remote_jar_path=args.remote_jar_path)
+                    remote_jar_path=args.remote_jar_path,
+                    timeout=args.timeout)
