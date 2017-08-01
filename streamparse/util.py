@@ -344,10 +344,15 @@ def get_ui_jsons(env_name, api_paths):
             with ssh_tunnel(env_config, local_port=local_port,
                             remote_port=remote_ui_port) as (host, local_port):
                 for api_path in api_paths:
-                    r = requests.get('http://{}:{}{}'.format(host,
-                                                             local_port,
-                                                             api_path))
+                    url = 'http://{}:{}{}'.format(host, local_port, api_path)
+                    r = requests.get(url)
                     data[api_path] = r.json()
+                    error = data[api_path].get('error')
+                    if error:
+                        error_msg = data[api_path].get('errorMessage')
+                        raise RuntimeError('Received bad response from {}: '
+                                           '{}\n{}'
+                                           .format(url, error, error_msg))
             return data
         except Exception as e:
             if "already in use" in str(e):
