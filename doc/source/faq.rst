@@ -12,6 +12,7 @@ General Questions
 * `Should I install Clojure?`_
 * `How do I deploy into a VPC?`_
 * `How do I override SSH settings?`_
+* `How do I dynamically generate the worker list?`_
 
 
 Why use streamparse?
@@ -147,3 +148,43 @@ the ``ssh_password`` or ``ssh_port`` environment settings.
             }
         }
     }
+
+
+How do I dynamically generate the worker list?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In a small cluster it's sufficient to specify the list of workers in ``config.json``. 
+However, if you have a large or complex environment where workers are numerous 
+or short-lived, ``streamparse`` supports querying the nimbus server for a list of hosts.
+
+To trigger the dynamic lookup, the ``workers`` list should be empty or undefined.
+Disable this lookup (and use the empty list) by setting ``allow_worker_lookup: false``.
+Explicitly defined hosts are preferred over a lookup, even if the feature is enabled,
+as it is by default.
+
+Lookups are configured on a per-environment basis, so the ``prod`` environment 
+below uses the dynamic lookup, while ``beta`` will not, even if the worker list
+was cleared. 
+
+.. code-block:: json
+
+    {
+        "topology_specs": "topologies/",
+        "virtualenv_specs": "virtualenvs/",
+        "envs": {
+            "prod": {
+                "nimbus": "streamparse-prod",
+                "workers": [],
+                "virtualenv_root": "/data/virtualenvs"
+            },
+            "beta": {
+                "nimbus": "streamparse-beta",
+                "workers": [
+                    "streamparse-beta"
+                ],
+                "allow_worker_lookup": false,
+                "virtualenv_root": "/data/virtualenvs"
+            }
+        }
+    }
+

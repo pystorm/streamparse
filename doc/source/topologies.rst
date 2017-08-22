@@ -259,7 +259,7 @@ of 2 workers, which are independent JVM processes for Storm. This allows a
 topology to continue running when one worker process dies; the other is around
 until the dead process restarts.
 
-Both ``sparse run`` and ``sparse sumbit`` accept a ``-p N`` command-line flag
+Both ``sparse run`` and ``sparse submit`` accept a ``-p N`` command-line flag
 to set the number of topology workers to N. For convenience, this flag also
 sets the number of `Storm's underlying messaging reliability
 <https://storm.apache.org/documentation/Guaranteeing-message-processing.html>`_
