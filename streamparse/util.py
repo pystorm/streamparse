@@ -121,7 +121,7 @@ def activate_env(env_name=None):
     """
     env_name, env_config = get_env_config(env_name)
 
-    env.storm_workers = env_config["workers"]
+    env.storm_workers = get_storm_workers(env_config)
     env.user = env_config.get("user")
     env.log_path = env_config.get("log_path") or \
                    env_config.get("log", {}).get("path")
@@ -258,6 +258,31 @@ def get_nimbus_client(env_config=None, host=None, port=None, timeout=7000):
                                 trans_factory=TFramedTransportFactory(),
                                 timeout=timeout)
     return nimbus_client
+
+_storm_workers = {}
+def get_storm_workers(env_config):
+    """Retrieves list of workers, optionally from nimbus
+
+    This function will look up the list of current workers from nimbus if
+    workers has not been defined in config.json
+    :param env_config: The project's parsed config.
+    :type env_config: `dict`
+
+    :returns: List of workers
+    """
+    nimbus_info = get_nimbus_host_port(env_config)
+    if nimbus_info in _storm_workers:
+        return _storm_workers[nimbus_info]
+
+    worker_list = env_config.get('workers')
+    if not worker_list:
+        with ssh_tunnel(env_config) as (host, port):
+            nimbus_client = get_nimbus_client(env_config, host=host, port=port)
+            cluster_info = nimbus_client.getClusterInfo()
+            worker_list = [supervisor.host for supervisor in cluster_info.supervisors]
+
+    _storm_workers[nimbus_info] = worker_list
+    return worker_list
 
 
 def is_ssh_for_nimbus(env_config):
