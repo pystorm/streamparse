@@ -274,8 +274,8 @@ def get_storm_workers(env_config):
     if nimbus_info in _storm_workers:
         return _storm_workers[nimbus_info]
 
-    worker_list = env_config.get('workers', None)
-    if worker_list is None:
+    worker_list = env_config.get('workers')
+    if not worker_list:
         with ssh_tunnel(env_config) as (host, port):
             nimbus_client = get_nimbus_client(env_config, host=host, port=port)
             cluster_info = nimbus_client.getClusterInfo()

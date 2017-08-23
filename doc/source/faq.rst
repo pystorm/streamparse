@@ -157,8 +157,8 @@ In a small cluster it's sufficient to specify the list of workers in ``config.js
 However, if you have a large or complex environment where workers are numerous 
 or short-lived, ``streamparse`` supports querying the nimbus server for a list of hosts.
 
-An undefined list of ``workers`` will trigger the lookup. Explicitly defined
-hosts are preferred over a lookup, even if the list of workers is empty.
+An undefined list (empty or None) of ``workers`` will trigger the lookup. 
+Explicitly defined hosts are preferred over a lookup.
 
 Lookups are configured on a per-environment basis, so the ``prod`` environment 
 below uses the dynamic lookup, while ``beta`` will not.
