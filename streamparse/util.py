@@ -263,20 +263,19 @@ _storm_workers = {}
 def get_storm_workers(env_config):
     """Retrieves list of workers, optionally from nimbus
 
-    This function will look up the list of current workers from nimbus unless
-    `allow_worker_lookup: False` is set in `env_config` or if a list of workers
-    has been provided in `env_config`.
+    This function will look up the list of current workers from nimbus if
+    workers has not been defined in config.json
     :param env_config: The project's parsed config.
     :type env_config: `dict`
 
     :returns: List of workers
     """
     nimbus_info = get_nimbus_host_port(env_config)
-    if _storm_workers.get(nimbus_info):
+    if nimbus_info in _storm_workers:
         return _storm_workers[nimbus_info]
 
-    worker_list = env_config.get('workers', [])
-    if not worker_list and env_config.get('allow_worker_lookup', True):
+    worker_list = env_config.get('workers', None)
+    if worker_list is None:
         with ssh_tunnel(env_config) as (host, port):
             nimbus_client = get_nimbus_client(env_config, host=host, port=port)
             cluster_info = nimbus_client.getClusterInfo()

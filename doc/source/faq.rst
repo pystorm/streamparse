@@ -157,14 +157,11 @@ In a small cluster it's sufficient to specify the list of workers in ``config.js
 However, if you have a large or complex environment where workers are numerous 
 or short-lived, ``streamparse`` supports querying the nimbus server for a list of hosts.
 
-To trigger the dynamic lookup, the ``workers`` list should be empty or undefined.
-Disable this lookup (and use the empty list) by setting ``allow_worker_lookup: false``.
-Explicitly defined hosts are preferred over a lookup, even if the feature is enabled,
-as it is by default.
+An undefined list of ``workers`` will trigger the lookup. Explicitly defined
+hosts are preferred over a lookup, even if the list of workers is empty.
 
 Lookups are configured on a per-environment basis, so the ``prod`` environment 
-below uses the dynamic lookup, while ``beta`` will not, even if the worker list
-was cleared. 
+below uses the dynamic lookup, while ``beta`` will not.
 
 .. code-block:: json
 
@@ -174,7 +171,6 @@ was cleared.
         "envs": {
             "prod": {
                 "nimbus": "streamparse-prod",
-                "workers": [],
                 "virtualenv_root": "/data/virtualenvs"
             },
             "beta": {
@@ -182,7 +178,6 @@ was cleared.
                 "workers": [
                     "streamparse-beta"
                 ],
-                "allow_worker_lookup": false,
                 "virtualenv_root": "/data/virtualenvs"
             }
         }
