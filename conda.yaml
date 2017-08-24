@@ -38,7 +38,6 @@ test:
   imports:
     - streamparse
     - streamparse.bootstrap
-    - streamparse.ext
 
   commands:
     - sparse --help

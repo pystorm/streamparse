@@ -58,9 +58,8 @@ How do I trigger some code before or after I submit my topology?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After you create a streamparse project using ``sparse quickstart``, you'll have
-both a ``tasks.py`` in that directory as well as ``fabfile.py``. In either of
-these files, you can specify two functions: ``pre_submit`` and ``post_submit``
-which are expected to accept three arguments:
+a ``fabfile.py`` in that directory. In that file, you can specify two
+functions (``pre_submit`` and ``post_submit``) which are expected to accept three arguments:
 
 * ``topology_name``: the name of the topology being submitted
 * ``env_name``: the name of the environment where the topology is being
@@ -68,16 +67,15 @@ which are expected to accept three arguments:
 * ``env_config``: the relevant config portion from the ``config.json`` file for
   the environment you are submitting the topology to
 
-Here is a sample ``tasks.py`` file that sends a message to IRC after a topology
-is successfully submitted to prod.
+Here is a sample ``fabfile.py`` file that sends a message to IRC after a
+topology is successfully submitted to prod.
 
 .. code-block:: python
 
-    # my_project/tasks.py
+    # my_project/fabfile.py
     from __future__ import absolute_import, print_function, unicode_literals
 
-    from invoke import task, run
-    from streamparse.ext.invoke import *
+    from my_project import write_to_irc
 
 
     def post_submit(topo_name, env_name, env_config):
@@ -153,14 +151,14 @@ the ``ssh_password`` or ``ssh_port`` environment settings.
 How do I dynamically generate the worker list?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In a small cluster it's sufficient to specify the list of workers in ``config.json``. 
-However, if you have a large or complex environment where workers are numerous 
+In a small cluster it's sufficient to specify the list of workers in ``config.json``.
+However, if you have a large or complex environment where workers are numerous
 or short-lived, ``streamparse`` supports querying the nimbus server for a list of hosts.
 
-An undefined list (empty or None) of ``workers`` will trigger the lookup. 
+An undefined list (empty or None) of ``workers`` will trigger the lookup.
 Explicitly defined hosts are preferred over a lookup.
 
-Lookups are configured on a per-environment basis, so the ``prod`` environment 
+Lookups are configured on a per-environment basis, so the ``prod`` environment
 below uses the dynamic lookup, while ``beta`` will not.
 
 .. code-block:: json
