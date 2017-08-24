@@ -26,7 +26,6 @@ from thriftpy.protocol import TBinaryProtocolFactory
 from thriftpy.rpc import make_client
 from thriftpy.transport import TFramedTransportFactory
 
-from .decorators import memoized
 from .dsl.topology import Topology, TopologyType
 from .thrift import Nimbus
 
