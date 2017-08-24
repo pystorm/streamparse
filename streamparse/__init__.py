@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from . import bolt, cli, component, decorators, dsl, spout, storm
+from . import bolt, cli, component, dsl, spout, storm
 from .dsl import Grouping, Stream, Topology
 from .storm import (BatchingBolt, Bolt, JavaBolt, JavaSpout, ReliableSpout,
                     ShellBolt, ShellSpout, Spout, StormHandler,
@@ -25,7 +25,6 @@ __all__ = [
     'bolt',
     'cli',
     'component',
-    'decorators',
     'dsl',
     'Grouping',
     'JavaBolt',
