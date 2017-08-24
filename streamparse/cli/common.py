@@ -7,6 +7,8 @@ import copy
 from ruamel import yaml
 from six import integer_types, string_types
 
+from streamparse.util import get_storm_workers
+
 
 class _StoreDictAction(argparse.Action):
     """Action for storing key=val option strings as a single dict."""
@@ -214,7 +216,7 @@ def resolve_options(cli_options, env_config, topology_class, topology_name):
         storm_options['pystorm.log.level'] = 'debug'
 
     # If ackers and executors still aren't set, use number of worker nodes
-    num_storm_workers = len(env_config["workers"])
+    num_storm_workers = len(get_storm_workers(env_config))
     if storm_options.get('topology.acker.executors') is None:
         storm_options['topology.acker.executors'] = num_storm_workers
     if storm_options.get('topology.workers') is None:
