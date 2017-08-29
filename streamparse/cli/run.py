@@ -37,6 +37,11 @@ def run_local_topology(name=None, env_name=None, time=0, options=None):
         storm_options['topology.acker.executors'] = 1
     storm_options['topology.workers'] = 1
 
+    # Set parallelism based on env_name if necessary
+    for spec in topology_class.specs:
+        if isinstance(spec.par, dict):
+            spec.par = spec.par.get(env_name)
+
     # Check Storm version is the same
     local_version = local_storm_version()
     project_version = storm_lib_version()
