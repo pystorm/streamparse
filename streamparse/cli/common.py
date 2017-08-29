@@ -172,10 +172,14 @@ def add_workers(parser):
                         dest='options')
 
 
-def resolve_options(cli_options, env_config, topology_class, topology_name):
+def resolve_options(cli_options, env_config, topology_class, topology_name,
+                    local_only=False):
     """Resolve potentially conflicting Storm options from three sources:
 
     CLI options > Topology options > config.json options
+
+    :param local_only: Whether or not we should talk to Nimbus to get Storm
+                       workers and other info.
     """
     storm_options = {}
 
@@ -216,7 +220,10 @@ def resolve_options(cli_options, env_config, topology_class, topology_name):
         storm_options['pystorm.log.level'] = 'debug'
 
     # If ackers and executors still aren't set, use number of worker nodes
-    num_storm_workers = len(get_storm_workers(env_config))
+    if not local_only:
+        num_storm_workers = len(get_storm_workers(env_config))
+    else:
+        num_storm_workers = 1
     if storm_options.get('topology.acker.executors') is None:
         storm_options['topology.acker.executors'] = num_storm_workers
     if storm_options.get('topology.workers') is None:
