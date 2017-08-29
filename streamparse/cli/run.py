@@ -31,7 +31,8 @@ def run_local_topology(name=None, env_name=None, time=0, options=None):
 
     set_topology_serializer(env_config, config, topology_class)
 
-    storm_options = resolve_options(options, env_config, topology_class, name)
+    storm_options = resolve_options(options, env_config, topology_class, name,
+                                    local_only=True)
     if storm_options['topology.acker.executors'] != 0:
         storm_options['topology.acker.executors'] = 1
     storm_options['topology.workers'] = 1
