@@ -433,6 +433,8 @@ def _get_file_names_command(path, patterns):
     """Given a list of bash `find` patterns, return a string for the
     bash command that will find those pystorm log files
     """
+    if path is None:
+        raise ValueError('path cannot be None')
     patterns = "' -o -type f -name '".join(patterns)
     return ("cd {path} && "
             "find . -maxdepth 4 -type f -name '{patterns}'") \
@@ -449,6 +451,10 @@ def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True)
     if include_worker_logs:
         log_name_patterns.extend(["worker*", "supervisor*", "access*",
                                   "metrics*"])
+    if env.log_path is None:
+        raise ValueError('Cannot find log files if you do not set `log_path` '
+                         'or the `path` key in the `log` dict for your '
+                         'environment in your config.json.')
     ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
