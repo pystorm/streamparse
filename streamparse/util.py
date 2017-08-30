@@ -59,7 +59,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
     host, nimbus_port = get_nimbus_host_port(env_config)
     if remote_port is None:
         remote_port = nimbus_port
-    if env_config.get('use_ssh_for_nimbus', True):
+    if is_ssh_for_nimbus(env_config):
         need_setup = True
         while _port_in_use(local_port):
             if local_port in _active_tunnels:
@@ -122,8 +122,9 @@ def activate_env(env_name=None):
 
     env.storm_workers = get_storm_workers(env_config)
     env.user = env_config.get("user")
-    env.log_path = env_config.get("log_path") or \
-                   env_config.get("log", {}).get("path")
+    env.log_path = (env_config.get("log_path") or
+                    env_config.get("log", {}).get("path") or
+                    get_nimbus_config(env_config).get('storm.log.dir'))
     env.virtualenv_root = env_config.get("virtualenv_root") or \
                           env_config.get("virtualenv_path")
     env.disable_known_hosts = True
@@ -132,6 +133,7 @@ def activate_env(env_name=None):
     # fix for config file load issue
     if env_config.get("ssh_password"):
         env.password = env_config.get("ssh_password")
+
 
 def die(msg, error_code=1):
     print("{}: {}".format(red("error"), msg))
@@ -310,6 +312,25 @@ def get_storm_workers(env_config):
     return worker_list
 
 
+_nimbus_configs = {}
+def get_nimbus_config(env_config):
+    """Retrieves a dict with all the config info stored in Nimbus
+
+    :param env_config: The project's parsed config.
+    :type env_config: `dict`
+
+    :returns: dict of Nimbus settings
+    """
+    nimbus_info = get_nimbus_host_port(env_config)
+    if nimbus_info not in _nimbus_configs:
+        with ssh_tunnel(env_config) as (host, port):
+            nimbus_client = get_nimbus_client(env_config, host=host, port=port)
+            nimbus_json = nimbus_client.getNimbusConf()
+            nimbus_conf = json.loads(nimbus_json)
+        _nimbus_configs[nimbus_info] = nimbus_conf
+    return _nimbus_configs[nimbus_info]
+
+
 def is_ssh_for_nimbus(env_config):
     """Check if we need to use SSH access to Nimbus or not.
     """
@@ -433,22 +454,35 @@ def _get_file_names_command(path, patterns):
     """Given a list of bash `find` patterns, return a string for the
     bash command that will find those pystorm log files
     """
-    patterns = "' -o -type f -name '".join(patterns)
+    if path is None:
+        raise ValueError('path cannot be None')
+    patterns = "' -o -type f -wholename '".join(patterns)
     return ("cd {path} && "
-            "find . -maxdepth 4 -type f -name '{patterns}'") \
+            "find . -maxdepth 4 -type f -wholename '{patterns}'") \
             .format(path=path, patterns=patterns)
 
 
-def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True):
+def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True,
+                     is_old_storm=False, include_all_artifacts=False):
     """ Returns a string representing a command to run on the Storm workers that
     will yield all of the logfiles for the given topology that meet the given
     pattern (if specified).
     """
-    log_name_patterns = ["pystorm_{topo_name}*".format(topo_name=topology_name)]
+    log_name_patterns = ["*{topo_name}*".format(topo_name=topology_name)]
+    if not include_all_artifacts:
+        log_name_patterns[0] += '.log'
+    # The worker logs are separated by topology in Storm 1.0+, so no need to do
+    # this except on old versions of Storm
+    if not is_old_storm:
+        include_worker_logs = False
     # list log files found
     if include_worker_logs:
         log_name_patterns.extend(["worker*", "supervisor*", "access*",
                                   "metrics*"])
+    if env.log_path is None:
+        raise ValueError('Cannot find log files if you do not set `log_path` '
+                         'or the `path` key in the `log` dict for your '
+                         'environment in your config.json.')
     ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)

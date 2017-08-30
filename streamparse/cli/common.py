@@ -119,6 +119,15 @@ def add_pattern(parser):
                         help='Pattern of log files to operate on.')
 
 
+def add_pool_size(parser):
+    """ Add --pool_size option to parser """
+    parser.add_argument('--pool_size',
+                        help='Number of simultaneous SSH connections to use when updating '
+                             'virtualenvs, removing logs, or tailing logs.',
+                        default=10,
+                        type=int)
+
+
 def add_requirements(parser):
     """ Add --requirements option to parser """
     parser.add_argument('-r', '--requirements',
