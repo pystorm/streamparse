@@ -230,8 +230,10 @@ def resolve_options(cli_options, env_config, topology_class, topology_name,
 
     # If ackers and executors still aren't set, use number of worker nodes
     if not local_only:
-        num_storm_workers = len(get_storm_workers(env_config))
+        storm_options['storm.workers.list'] = get_storm_workers(env_config)
+        num_storm_workers = len(storm_options['storm.workers.list'])
     else:
+        storm_options['storm.workers.list'] = []
         num_storm_workers = 1
     if storm_options.get('topology.acker.executors') is None:
         storm_options['topology.acker.executors'] = num_storm_workers
