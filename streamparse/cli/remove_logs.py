@@ -22,7 +22,7 @@ def _remove_logs(topology_name, pattern, remove_worker_logs, user, is_old_storm,
     ls_cmd = get_logfiles_cmd(topology_name=topology_name, pattern=pattern,
                               include_worker_logs=remove_worker_logs,
                               include_all_artifacts=remove_all_artifacts)
-    rm_pipe = " | xargs rm"
+    rm_pipe = " | xargs rm -f"
     if user == env.user:
         run(ls_cmd + rm_pipe, warn_only=True)
     else:
