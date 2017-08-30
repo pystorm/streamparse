@@ -7,7 +7,8 @@ from __future__ import absolute_import, print_function
 from fabric.api import env, execute, parallel, run, sudo
 from pkg_resources import parse_version
 
-from .common import add_environment, add_name, add_override_name, add_pattern
+from .common import (add_environment, add_name, add_override_name, add_pattern,
+                     add_pool_size)
 from ..util import (activate_env, get_env_config, get_topology_definition,
                     get_logfiles_cmd, get_nimbus_client, nimbus_storm_version,
                     ssh_tunnel)
@@ -61,6 +62,7 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_override_name(subparser)
     add_pattern(subparser)
+    add_pool_size(subparser)
     subparser.add_argument('-u', '--user',
                            help="User argument to sudo when deleting logs.",
                            default='root')
@@ -73,6 +75,7 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Remove logs from Storm workers. """
+    env.pool_size = args.pool_size
     remove_logs(topology_name=args.name, env_name=args.environment,
                 pattern=args.pattern,
                 remove_worker_logs=args.remove_worker_logs,

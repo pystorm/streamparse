@@ -22,8 +22,9 @@ from ..util import (activate_env, get_config, get_env_config,
                     get_topology_from_file, set_topology_serializer,
                     ssh_tunnel, warn)
 from .common import (add_ackers, add_debug, add_environment, add_name,
-                     add_options, add_override_name, add_requirements,
-                     add_timeout, add_wait, add_workers, resolve_options)
+                     add_options, add_override_name, add_pool_size,
+                     add_requirements, add_timeout, add_wait, add_workers,
+                     resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -247,6 +248,7 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_override_name(subparser)
+    add_pool_size(subparser)
     add_requirements(subparser)
     subparser.add_argument('-R', '--remote_jar_path',
                            help='Path to a prebuilt JAR that already exists on '
@@ -266,6 +268,7 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Submit a Storm topology to Nimbus. """
+    env.pool_size = args.pool_size
     submit_topology(name=args.name, env_name=args.environment,
                     options=args.options, force=args.force, wait=args.wait,
                     simple_jar=args.simple_jar,

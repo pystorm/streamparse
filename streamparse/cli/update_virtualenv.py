@@ -14,7 +14,7 @@ from fabric.contrib.files import exists
 from six import string_types
 
 from .common import (add_environment, add_name, add_override_name,
-                     add_requirements)
+                     add_pool_size, add_requirements)
 from ..util import (activate_env, die, get_config, get_env_config,
                     get_topology_definition)
 
@@ -109,11 +109,13 @@ def subparser_hook(subparsers):
     add_environment(subparser)
     add_name(subparser)
     add_override_name(subparser)
+    add_pool_size(subparser)
     add_requirements(subparser)
 
 
 def main(args):
     """ Create or update a virtualenv on Storm workers. """
+    env.pool_size = args.pool_size
     create_or_update_virtualenvs(args.environment, args.name,
                                  virtualenv_name=args.override_name,
                                  requirements_paths=args.requirements)

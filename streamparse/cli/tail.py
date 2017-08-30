@@ -7,7 +7,8 @@ from __future__ import absolute_import, print_function
 from fabric.api import env, execute, parallel, run
 from pkg_resources import parse_version
 
-from .common import add_environment, add_name, add_override_name, add_pattern
+from .common import (add_environment, add_name, add_override_name, add_pattern,
+                     add_pool_size)
 from ..util import (activate_env, get_env_config, get_logfiles_cmd,
                     get_topology_definition, get_nimbus_client,
                     nimbus_storm_version, ssh_tunnel)
@@ -64,11 +65,13 @@ def subparser_hook(subparsers):
                                 'logs. (default: %(default)s)')
     add_name(subparser)
     add_override_name(subparser)
+    add_pool_size(subparser)
     add_pattern(subparser)
 
 
 def main(args):
     """ Tail logs for specified Storm topology. """
+    env.pool_size = args.pool_size
     tail_topology(topology_name=args.name, env_name=args.environment,
                   pattern=args.pattern, follow=args.follow,
                   num_lines=args.num_lines, override_name=args.override_name)
