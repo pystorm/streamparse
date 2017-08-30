@@ -59,7 +59,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
     host, nimbus_port = get_nimbus_host_port(env_config)
     if remote_port is None:
         remote_port = nimbus_port
-    if env_config.get('use_ssh_for_nimbus', True):
+    if is_ssh_for_nimbus(env_config):
         need_setup = True
         while _port_in_use(local_port):
             if local_port in _active_tunnels:
@@ -122,8 +122,9 @@ def activate_env(env_name=None):
 
     env.storm_workers = get_storm_workers(env_config)
     env.user = env_config.get("user")
-    env.log_path = env_config.get("log_path") or \
-                   env_config.get("log", {}).get("path")
+    env.log_path = (env_config.get("log_path") or
+                    env_config.get("log", {}).get("path") or
+                    get_nimbus_config(env_config).get('storm.log.dir'))
     env.virtualenv_root = env_config.get("virtualenv_root") or \
                           env_config.get("virtualenv_path")
     env.disable_known_hosts = True
@@ -308,6 +309,25 @@ def get_storm_workers(env_config):
 
     _storm_workers[nimbus_info] = worker_list
     return worker_list
+
+
+_nimbus_configs = {}
+def get_nimbus_config(env_config):
+    """Retrieves a dict with all the config info stored in Nimbus
+
+    :param env_config: The project's parsed config.
+    :type env_config: `dict`
+
+    :returns: dict of Nimbus settings
+    """
+    nimbus_info = get_nimbus_host_port(env_config)
+    if nimbus_info not in _nimbus_configs:
+        with ssh_tunnel(env_config) as (host, port):
+            nimbus_client = get_nimbus_client(env_config, host=host, port=port)
+            nimbus_json = nimbus_client.getNimbusConf()
+            nimbus_conf = json.loads(nimbus_json)
+        _nimbus_configs[nimbus_info] = nimbus_conf
+    return _nimbus_configs[nimbus_info]
 
 
 def is_ssh_for_nimbus(env_config):
