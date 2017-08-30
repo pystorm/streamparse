@@ -455,18 +455,25 @@ def _get_file_names_command(path, patterns):
     """
     if path is None:
         raise ValueError('path cannot be None')
-    patterns = "' -o -type f -name '".join(patterns)
+    patterns = "' -o -type f -wholename '".join(patterns)
     return ("cd {path} && "
-            "find . -maxdepth 4 -type f -name '{patterns}'") \
+            "find . -maxdepth 4 -type f -wholename '{patterns}'") \
             .format(path=path, patterns=patterns)
 
 
-def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True):
+def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True,
+                     is_old_storm=False, include_all_artifacts=False):
     """ Returns a string representing a command to run on the Storm workers that
     will yield all of the logfiles for the given topology that meet the given
     pattern (if specified).
     """
-    log_name_patterns = ["pystorm_{topo_name}*".format(topo_name=topology_name)]
+    log_name_patterns = ["*{topo_name}*".format(topo_name=topology_name)]
+    if not include_all_artifacts:
+        log_name_patterns[0] += '.log'
+    # The worker logs are separated by topology in Storm 1.0+, so no need to do
+    # this except on old versions of Storm
+    if not is_old_storm:
+        include_worker_logs = False
     # list log files found
     if include_worker_logs:
         log_name_patterns.extend(["worker*", "supervisor*", "access*",
