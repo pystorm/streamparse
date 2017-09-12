@@ -89,26 +89,26 @@ def _submit_topology(topology_name, topology_class, remote_jar_path, config,
     print('done')
 
 
-def _pre_submit_hooks(topology_name, env_name, env_config):
+def _pre_submit_hooks(topology_name, env_name, env_config, options):
     """Pre-submit hooks for invoke and fabric."""
     user_invoke, user_fabric = get_user_tasks()
     pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
     if callable(pre_submit_invoke):
-        pre_submit_invoke(topology_name, env_name, env_config)
+        pre_submit_invoke(topology_name, env_name, env_config, options)
     pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
     if callable(pre_submit_fabric):
-        pre_submit_fabric(topology_name, env_name, env_config)
+        pre_submit_fabric(topology_name, env_name, env_config, options)
 
 
-def _post_submit_hooks(topology_name, env_name, env_config):
+def _post_submit_hooks(topology_name, env_name, env_config, options):
     """Post-submit hooks for invoke and fabric."""
     user_invoke, user_fabric = get_user_tasks()
     post_submit_invoke = getattr(user_invoke, "post_submit", None)
     if callable(post_submit_invoke):
-        post_submit_invoke(topology_name, env_name, env_config)
+        post_submit_invoke(topology_name, env_name, env_config, options)
     post_submit_fabric = getattr(user_fabric, "post_submit", None)
     if callable(post_submit_fabric):
-        post_submit_fabric(topology_name, env_name, env_config)
+        post_submit_fabric(topology_name, env_name, env_config, options)
 
 
 def _upload_jar(nimbus_client, local_path):
@@ -156,14 +156,19 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
 
     # Setup the fabric env dictionary
     activate_env(env_name)
+
+    # Handle option conflicts
+    options = resolve_options(options, env_config, topology_class,
+                              override_name)
+
     # Run pre_submit actions provided by project
-    _pre_submit_hooks(override_name, env_name, env_config)
+    _pre_submit_hooks(override_name, env_name, env_config, options)
 
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
         virtualenv_name = env_config.get('virtualenv_name', override_name)
         if install_venv:
-            create_or_update_virtualenvs(env_name, name,
+            create_or_update_virtualenvs(env_name, name, options,
                                          virtualenv_name=virtualenv_name,
                                          requirements_paths=requirements_paths)
         streamparse_run_path = '/'.join([env.virtualenv_root, virtualenv_name,
@@ -181,9 +186,6 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
 
-    # Handle option conflicts
-    options = resolve_options(options, env_config, topology_class,
-                              override_name)
     # In case we're overriding things, let's save the original name
     options['topology.original_name'] = name
 
@@ -223,7 +225,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
         _kill_existing_topology(override_name, force, wait, nimbus_client)
         _submit_topology(override_name, topology_class, remote_jar_path, config,
                          env_config, nimbus_client, options=options)
-    _post_submit_hooks(override_name, env_name, env_config)
+    _post_submit_hooks(override_name, env_name, env_config, options)
 
 
 def subparser_hook(subparsers):
