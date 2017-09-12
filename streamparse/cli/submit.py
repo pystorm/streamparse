@@ -89,15 +89,15 @@ def _submit_topology(topology_name, topology_class, remote_jar_path, config,
     print('done')
 
 
-def _pre_submit_hooks(topology_name, env_name, env_config):
+def _pre_submit_hooks(topology_name, env_name, env_config, options):
     """Pre-submit hooks for invoke and fabric."""
     user_invoke, user_fabric = get_user_tasks()
     pre_submit_invoke = getattr(user_invoke, "pre_submit", None)
     if callable(pre_submit_invoke):
-        pre_submit_invoke(topology_name, env_name, env_config)
+        pre_submit_invoke(topology_name, env_name, env_config, options)
     pre_submit_fabric = getattr(user_fabric, "pre_submit", None)
     if callable(pre_submit_fabric):
-        pre_submit_fabric(topology_name, env_name, env_config)
+        pre_submit_fabric(topology_name, env_name, env_config, options)
 
 
 def _post_submit_hooks(topology_name, env_name, env_config):
@@ -156,14 +156,19 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
 
     # Setup the fabric env dictionary
     activate_env(env_name)
+
+    # Handle option conflicts
+    options = resolve_options(options, env_config, topology_class,
+                              override_name)
+
     # Run pre_submit actions provided by project
-    _pre_submit_hooks(override_name, env_name, env_config)
+    _pre_submit_hooks(override_name, env_name, env_config, options)
 
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
         virtualenv_name = env_config.get('virtualenv_name', override_name)
         if install_venv:
-            create_or_update_virtualenvs(env_name, name,
+            create_or_update_virtualenvs(env_name, name, options,
                                          virtualenv_name=virtualenv_name,
                                          requirements_paths=requirements_paths)
         streamparse_run_path = '/'.join([env.virtualenv_root, virtualenv_name,
@@ -181,9 +186,6 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                 if 'streamparse_run' in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
 
-    # Handle option conflicts
-    options = resolve_options(options, env_config, topology_class,
-                              override_name)
     # In case we're overriding things, let's save the original name
     options['topology.original_name'] = name
 

@@ -32,7 +32,7 @@ def _remove_logs(topology_name, pattern, remove_worker_logs, user, is_old_storm,
 
 def remove_logs(topology_name=None, env_name=None, pattern=None,
                 remove_worker_logs=False, user='root', override_name=None,
-                remove_all_artifacts=False):
+                remove_all_artifacts=False, options=None):
     """Remove all Python logs on Storm workers in the log.path directory."""
     if override_name is not None:
         topology_name = override_name
@@ -42,7 +42,7 @@ def remove_logs(topology_name=None, env_name=None, pattern=None,
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         is_old_storm = nimbus_storm_version(nimbus_client) < parse_version('1.0')
-    activate_env(env_name)
+    activate_env(env_name, options=options)
     execute(_remove_logs, topology_name, pattern, remove_worker_logs, user,
             is_old_storm, remove_all_artifacts, hosts=env.storm_workers)
 

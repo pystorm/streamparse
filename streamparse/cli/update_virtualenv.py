@@ -51,7 +51,7 @@ def _create_or_update_virtualenv(virtualenv_root,
             run("rm {}".format(temp_req))
 
 
-def create_or_update_virtualenvs(env_name, topology_name, virtualenv_name=None,
+def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_name=None,
                                  requirements_paths=None):
     """Create or update virtualenvs on remote servers.
 
@@ -91,7 +91,7 @@ def create_or_update_virtualenvs(env_name, topology_name, virtualenv_name=None,
             .format(requirements_paths))
 
     # Setup the fabric env dictionary
-    activate_env(env_name)
+    activate_env(env_name, options)
 
     # Actually create or update virtualenv on worker nodes
     execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,

@@ -13,3 +13,4 @@ _resources/
 *.sw*
 .tox/
 .python-version
+.*.un~

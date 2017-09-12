@@ -110,7 +110,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
         yield host, remote_port
 
 
-def activate_env(env_name=None):
+def activate_env(env_name=None, options=None):
     """Activate a particular environment from a streamparse project's
     config.json file and populate fabric's env dictionary with appropriate
     values.
@@ -120,7 +120,10 @@ def activate_env(env_name=None):
     """
     env_name, env_config = get_env_config(env_name)
 
-    env.storm_workers = get_storm_workers(env_config)
+    if options and 'storm.workers.list' in options:
+        env.storm_workers = options['storm.workers.list']
+    else:
+        env.storm_workers = get_storm_workers(env_config)
     env.user = env_config.get("user")
     env.log_path = (env_config.get("log_path") or
                     env_config.get("log", {}).get("path") or
