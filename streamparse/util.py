@@ -120,7 +120,7 @@ def activate_env(env_name=None, options=None):
     """
     env_name, env_config = get_env_config(env_name)
 
-    if options and 'storm.workers.list' in options:
+    if options and options.get('storm.workers.list'):
         env.storm_workers = options['storm.workers.list']
     else:
         env.storm_workers = get_storm_workers(env_config)

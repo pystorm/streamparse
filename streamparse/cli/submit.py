@@ -100,15 +100,15 @@ def _pre_submit_hooks(topology_name, env_name, env_config, options):
         pre_submit_fabric(topology_name, env_name, env_config, options)
 
 
-def _post_submit_hooks(topology_name, env_name, env_config):
+def _post_submit_hooks(topology_name, env_name, env_config, options):
     """Post-submit hooks for invoke and fabric."""
     user_invoke, user_fabric = get_user_tasks()
     post_submit_invoke = getattr(user_invoke, "post_submit", None)
     if callable(post_submit_invoke):
-        post_submit_invoke(topology_name, env_name, env_config)
+        post_submit_invoke(topology_name, env_name, env_config, options)
     post_submit_fabric = getattr(user_fabric, "post_submit", None)
     if callable(post_submit_fabric):
-        post_submit_fabric(topology_name, env_name, env_config)
+        post_submit_fabric(topology_name, env_name, env_config, options)
 
 
 def _upload_jar(nimbus_client, local_path):
@@ -225,7 +225,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
         _kill_existing_topology(override_name, force, wait, nimbus_client)
         _submit_topology(override_name, topology_class, remote_jar_path, config,
                          env_config, nimbus_client, options=options)
-    _post_submit_hooks(override_name, env_name, env_config)
+    _post_submit_hooks(override_name, env_name, env_config, options)
 
 
 def subparser_hook(subparsers):
