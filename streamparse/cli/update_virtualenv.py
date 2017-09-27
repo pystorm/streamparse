@@ -8,50 +8,61 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 from io import open
+from gevent import joinall
 
-from fabric.api import env, execute, parallel, prefix, put, puts, run, show
-from fabric.contrib.files import exists
+from fabric.api import env
 from six import string_types
 
+from . import ParallelSSHClient
 from .common import (add_environment, add_name, add_override_name,
                      add_pool_size, add_requirements)
 from ..util import (activate_env, die, get_config, get_env_config,
                     get_topology_definition)
 
 
-@parallel
-def _create_or_update_virtualenv(virtualenv_root,
-                                 virtualenv_name,
-                                 requirements_paths,
+def _create_or_update_virtualenv(virtualenv_root, virtualenv_name, requirements_paths, hosts=None,
                                  virtualenv_flags=None):
-    with show('output'):
-        virtualenv_path = '/'.join((virtualenv_root, virtualenv_name))
-        if not exists(virtualenv_path):
+    virtualenv_path = '/'.join((virtualenv_root, virtualenv_name))
+    ssh_client = ParallelSSHClient(hosts)
+    virtualenv_exists_output = ssh_client.run_command('if [ -d {} ]; then echo \"present\"; fi'.format(virtualenv_path))
+
+    hosts_without_virtualenv = []
+    for host, host_output in virtualenv_exists_output.items():
+        try:
+            host_output.stdout.next()
+        except StopIteration:
             if virtualenv_flags is None:
                 virtualenv_flags = ''
-            puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-            run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
+            hosts_without_virtualenv.append(host)
 
-        if isinstance(requirements_paths, string_types):
-            requirements_paths = [requirements_paths]
-        for requirements_path in requirements_paths:
-            puts("Uploading {} to temporary file.".format(requirements_path))
-            temp_req = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
-            put(requirements_path, temp_req)
+    ssh_client.hosts = hosts_without_virtualenv
+    output = ssh_client.run_command("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
+    ssh_client.join(output)
 
-            puts("Updating virtualenv: {}".format(virtualenv_name))
-            cmd = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
-            with prefix(cmd):
-                # Make sure we're using latest pip so options work as expected
-                run("pip install --upgrade 'pip~=9.0'", pty=False)
-                run("pip install -r {} --exists-action w --upgrade "
-                    "--upgrade-strategy only-if-needed".format(temp_req),
-                    pty=False)
+    ssh_client.hosts = hosts
 
-            run("rm {}".format(temp_req))
+    if isinstance(requirements_paths, string_types):
+        requirements_paths = [requirements_paths]
+
+    for requirements_path in requirements_paths:
+        output = ssh_client.run_command('mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt')
+        temp_req = output[hosts[0]].stdout.next()
+        greenlets = ssh_client.copy_file(requirements_path, temp_req)
+        joinall(greenlets)
+
+        virtualenv_activate = "source {}".format(os.path.join(virtualenv_path, 'bin/activate'))
+        pip_upgrade = "pip install --upgrade 'pip~=9.0'"
+        pip_requirements_install = "pip install -r {} --exists-action w --upgrade --upgrade-strategy " \
+                                   "only-if-needed".format(temp_req)
+
+        output = ssh_client.run_command("{} && {} && {}".format(virtualenv_activate, pip_upgrade,
+                                                                pip_requirements_install))
+        ssh_client.join(output)
+        ssh_client.run_command("rm {}".format(temp_req))
+        ssh_client.join(output)
 
 
-def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_name=None,
+def create_or_update_virtualenvs(env_name, topology_name, options=None, virtualenv_name=None,
                                  requirements_paths=None):
     """Create or update virtualenvs on remote servers.
 
@@ -94,10 +105,11 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
     activate_env(env_name, options)
 
     # Actually create or update virtualenv on worker nodes
-    execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,
-            requirements_paths,
-            virtualenv_flags=options.get('virtualenv_flags'),
-            hosts=env.storm_workers)
+    _create_or_update_virtualenv(env.virtualenv_root,
+                                 virtualenv_name,
+                                 requirements_paths,
+                                 virtualenv_flags=env_config.get('virtualenv_flags'),
+                                 hosts=env.storm_workers)
 
 
 def subparser_hook(subparsers):
