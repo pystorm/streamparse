@@ -11,7 +11,6 @@ import time
 from itertools import chain
 
 import simplejson as json
-from fabric.api import env
 from pkg_resources import parse_version
 from six import itervalues
 
@@ -19,7 +18,7 @@ from ..dsl.component import JavaComponentSpec
 from ..thrift import ShellComponent, SubmitOptions, TopologyInitialStatus
 
 from ..util import (
-    activate_env,
+    get_config_dict,
     get_config,
     get_env_config,
     get_nimbus_client,
@@ -196,6 +195,7 @@ def submit_topology(
     overwrite_virtualenv=False,
     user="root",
     active=True,
+    pool_size=10,
 ):
     """Submit a topology to a remote Storm cluster."""
     config = get_config(config_file=config_file)
@@ -208,8 +208,8 @@ def submit_topology(
         warn("Ignoring local_jar_path because given remote_jar_path")
         local_jar_path = None
 
-    # Setup the fabric env dictionary
-    activate_env(env_name)
+    # Get the env config dictionary
+    env_dict = get_config_dict(env_name)
 
     # Handle option conflicts
     options = resolve_options(options, env_config, topology_class, override_name)
@@ -236,9 +236,10 @@ def submit_topology(
                 config_file=config_file,
                 overwrite_virtualenv=overwrite_virtualenv,
                 user=user,
+                pool_size=pool_size,
             )
         streamparse_run_path = "/".join(
-            [env.virtualenv_root, virtualenv_name, "bin", "streamparse_run"]
+            [env_dict["virtualenv_root"], virtualenv_name, "bin", "streamparse_run"]
         )
         # Update python paths in bolts
         for thrift_bolt in itervalues(topology_class.thrift_bolts):
@@ -375,7 +376,6 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Submit a Storm topology to Nimbus. """
-    env.pool_size = args.pool_size
     submit_topology(
         name=args.name,
         env_name=args.environment,
@@ -392,4 +392,6 @@ def main(args):
         overwrite_virtualenv=args.overwrite_virtualenv,
         user=args.user,
         active=args.active,
+        pool_size=args.pool_size,
     )
+

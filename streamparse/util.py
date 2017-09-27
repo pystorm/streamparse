@@ -1,5 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+try:
+    FileNotFoundError
+except NameError:
+    # py2
+    FileNotFoundError = IOError
+
 import importlib
 import os
 import re
@@ -16,8 +22,6 @@ from socket import error as SocketError
 
 import requests
 import simplejson as json
-from fabric.api import env, hide, local, settings
-from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from texttable import Texttable
 from six import iteritems, itervalues
@@ -115,10 +119,9 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
         yield host, remote_port
 
 
-def activate_env(env_name=None, options=None, config_file=None):
-    """Activate a particular environment from a streamparse project's
-    config.json file and populate fabric's env dictionary with appropriate
-    values.
+def get_config_dict(env_name=None, options=None, config_file=None):
+    """Get config for a particular environment from a streamparse project's
+    config.json file and populate a dictionary with appropriate values.
 
     :param env_name: a `str` corresponding to the key within the config file's
                      "envs" dictionary.
@@ -127,26 +130,29 @@ def activate_env(env_name=None, options=None, config_file=None):
                         ``config.json`` in the working directory.
     """
     env_name, env_config = get_env_config(env_name, config_file=config_file)
+    env_dict = {}
 
     if options and options.get("storm.workers.list"):
-        env.storm_workers = options["storm.workers.list"]
+        env_dict["storm_workers"] = options["storm.workers.list"]
     else:
-        env.storm_workers = get_storm_workers(env_config)
-    env.user = env_config.get("user")
-    env.log_path = (
+        env_dict["storm_workers"] = get_storm_workers(env_config)
+    env_dict["user"] = env_config.get("user")
+    env_dict["log_path"] = (
         env_config.get("log_path")
         or env_config.get("log", {}).get("path")
         or get_nimbus_config(env_config).get("storm.log.dir")
     )
-    env.virtualenv_root = env_config.get("virtualenv_root") or env_config.get(
+    env_dict["virtualenv_root"] = env_config.get("virtualenv_root") or env_config.get(
         "virtualenv_path"
     )
-    env.disable_known_hosts = True
-    env.forward_agent = True
-    env.use_ssh_config = True
+    env_dict["disable_known_hosts"] = True
+    env_dict["forward_agent"] = True
+    env_dict["use_ssh_config"] = True
     # fix for config file load issue
     if env_config.get("ssh_password"):
-        env.password = env_config.get("ssh_password")
+        env_dict["password"] = env_config.get("ssh_password")
+
+    return env_dict
 
 
 def die(msg, error_code=1):
@@ -374,17 +380,14 @@ def local_storm_version():
     :returns: The Storm library available on the users PATH
     :rtype: pkg_resources.Version
     """
-    with hide("running"), settings(warn_only=True):
+    try:
         cmd = "storm version"
-        res = local(cmd, capture=True)
-        if not res.succeeded:
-            raise RuntimeError(
-                "Unable to run '{}'!\nSTDOUT:\n{}"
-                "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr)
-            )
+        res = subprocess.check_output([cmd], stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Unable to run '{}'!\n STDERR:\n{}".format(cmd, e.output))
 
     pattern = r"Storm ([0-9.]+)"
-    return parse_version(re.findall(pattern, res.stdout, flags=re.MULTILINE)[0])
+    return parse_version(re.findall(pattern, res, flags=re.MULTILINE)[0])
 
 
 def nimbus_storm_version(nimbus_client):
@@ -410,15 +413,13 @@ def storm_lib_version():
     :returns: The Storm library version specified in project.clj
     :rtype: pkg_resources.Version
     """
-    with hide("running"), settings(warn_only=True):
+    try:
         cmd = "lein deps :tree"
-        res = local(cmd, capture=True)
-        if not res.succeeded:
-            raise RuntimeError(
-                "Unable to run '{}'!\nSTDOUT:\n{}"
-                "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr)
-            )
-    deps_tree = res.stdout
+        res = subprocess.check_output([cmd], stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Unable to run '{}'!\nSTDERR:\n{}".format(cmd, e.output))
+
+    deps_tree = res
     pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
     versions = set(re.findall(pattern, deps_tree))
 
@@ -502,6 +503,7 @@ def get_logfiles_cmd(
     include_worker_logs=True,
     is_old_storm=False,
     include_all_artifacts=False,
+    log_path=None,
 ):
     """ Returns a string representing a command to run on the Storm workers that
     will yield all of the logfiles for the given topology that meet the given
@@ -517,13 +519,14 @@ def get_logfiles_cmd(
     # list log files found
     if include_worker_logs:
         log_name_patterns.extend(["worker*", "supervisor*", "access*", "metrics*"])
-    if env.log_path is None:
+    if log_path is None:
         raise ValueError(
             "Cannot find log files if you do not set `log_path` "
             "or the `path` key in the `log` dict for your "
             "environment in your config.json."
         )
-    ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
+
+    ls_cmd = _get_file_names_command(log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
     return ls_cmd
@@ -599,3 +602,33 @@ def set_topology_serializer(env_config, config, topology_class):
             inner_shell = thrift_spout.spout_object.shell
             if inner_shell is not None:
                 inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)
+
+
+def print_ssh_output(output, print_stderr=False):
+    """Helper for printing output for all hosts from ParallelSSH"""
+    for host, host_output in output.items():
+        for line in host_output.stdout:
+            print("[%s] out: %s" % (host, line))
+        if host_output.exit_code:
+            print("Command failed on %s" % host)
+        if host_output.exit_code or print_stderr:
+            for msg in host_output.stderr:
+                print("[%s] err: %s" % (host, line))
+
+
+def _colorize(code):
+    """
+    Function akin to fabric.colors to colorize output
+    """
+
+    def inner(text):
+        return "\033[%sm%s\033[0m" % (code, text)
+
+    return inner
+
+
+red = _colorize("31")
+green = _colorize("32")
+yellow = _colorize("33")
+blue = _colorize("34")
+

@@ -9,8 +9,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 
-from fabric.api import env, execute, parallel, prefix, put, puts, run, show, sudo
-from fabric.contrib.files import exists
+from gevent import joinall
+from pssh.pssh2_client import ParallelSSHClient
 from six import string_types
 
 from .common import (
@@ -26,58 +26,90 @@ from .common import (
     resolve_options,
 )
 from ..util import (
-    activate_env,
     die,
+    get_config_dict,
     get_config,
     get_env_config,
     get_topology_definition,
     get_topology_from_file,
+    print_ssh_output,
 )
 
 
-@parallel
 def _create_or_update_virtualenv(
     virtualenv_root,
     virtualenv_name,
     requirements_paths,
+    hosts=None,
     virtualenv_flags=None,
     overwrite_virtualenv=False,
     user="root",
+    env_user="root",
+    pool_size=10,
 ):
-    with show("output"):
-        virtualenv_path = "/".join((virtualenv_root, virtualenv_name))
-        if overwrite_virtualenv:
-            puts("Removing virtualenv if it exists in {}".format(virtualenv_root))
-            cmd = "rm -rf {}".format(virtualenv_path)
-            if user == env.user:
-                run(cmd, warn_only=True)
-            else:
-                sudo(cmd, warn_only=True, user=user)
-        if not exists(virtualenv_path):
-            if virtualenv_flags is None:
-                virtualenv_flags = ""
-            puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-            run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
+    virtualenv_path = "/".join((virtualenv_root, virtualenv_name))
+    ssh_client = ParallelSSHClient(hosts, pool_size=pool_size)
+    virtualenv_exists_output = ssh_client.run_command(
+        'if [ -d {} ]; then echo "present"; fi'.format(virtualenv_path)
+    )
 
-        if isinstance(requirements_paths, string_types):
-            requirements_paths = [requirements_paths]
-        for requirements_path in requirements_paths:
-            puts("Uploading {} to temporary file.".format(requirements_path))
-            temp_req = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
-            put(requirements_path, temp_req)
+    if overwrite_virtualenv:
+        run_kwargs = {} if user == env_user else {"user": user, "sudo": True}
+        output = ssh_client.run_command(
+            "rm -rf {}".format(virtualenv_path), **run_kwargs
+        )
+        ssh_client.join(output)
+    else:
+        hosts_without_virtualenv = []
+        for host, host_output in virtualenv_exists_output.items():
+            try:
+                next(host_output.stdout)
+            except StopIteration:
+                if virtualenv_flags is None:
+                    virtualenv_flags = ""
+                hosts_without_virtualenv.append(host)
+        ssh_client.hosts = hosts_without_virtualenv
 
-            puts("Updating virtualenv: {}".format(virtualenv_name))
-            cmd = "source {}".format(os.path.join(virtualenv_path, "bin/activate"))
-            with prefix(cmd):
-                # Make sure we're using latest pip so options work as expected
-                run("pip install --upgrade 'pip>=9.0'", pty=False)
-                run(
-                    "pip install -r {} --exists-action w --upgrade "
-                    "--upgrade-strategy only-if-needed".format(temp_req),
-                    pty=False,
-                )
+    print("Creating virtualenvs as necessary...")
+    output = ssh_client.run_command(
+        "virtualenv {} {}".format(virtualenv_path, virtualenv_flags)
+    )
+    ssh_client.join(output)
+    ssh_client.hosts = hosts
 
-            run("rm {}".format(temp_req))
+    if isinstance(requirements_paths, string_types):
+        requirements_paths = [requirements_paths]
+
+    for requirements_path in requirements_paths:
+        output = ssh_client.run_command(
+            "mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt"
+        )
+        temp_req = next(output[hosts[0]].stdout)
+        greenlets = ssh_client.copy_file(requirements_path, temp_req)
+        joinall(greenlets)
+
+        virtualenv_activate = "source {}".format(
+            os.path.join(virtualenv_path, "bin/activate")
+        )
+        pip_upgrade = "pip install --upgrade 'pip>=9.0'"
+        pip_requirements_install = (
+            "pip install -r {} --exists-action w --upgrade --upgrade-strategy "
+            "only-if-needed".format(temp_req)
+        )
+
+        output = ssh_client.run_command(
+            "{} && {} && {}".format(
+                virtualenv_activate, pip_upgrade, pip_requirements_install
+            )
+        )
+        ssh_client.join(output)
+        print_ssh_output(output)
+        ssh_client.join(output)
+        output = ssh_client.run_command("rm {}".format(temp_req))
+        ssh_client.join(output)
+        print_ssh_output(output)
+
+    print("Updated virtualenvs on all Storm workers.")
 
 
 def create_or_update_virtualenvs(
@@ -89,6 +121,7 @@ def create_or_update_virtualenvs(
     config_file=None,
     overwrite_virtualenv=False,
     user="root",
+    pool_size=10,
 ):
     """Create or update virtualenvs on remote servers.
 
@@ -103,6 +136,7 @@ def create_or_update_virtualenvs(
     :param overwrite_virtualenv: Force the creation of a fresh virtualenv, even
                                  if it already exists.
     :param user: Who to delete virtualenvs as when using overwrite_virtualenv
+    :param pool_size: Number of simultaneous ssh connections to use.
     """
     config = get_config()
     topology_name, topology_file = get_topology_definition(
@@ -139,18 +173,19 @@ def create_or_update_virtualenvs(
 
     # Setup the fabric env dictionary
     storm_options = resolve_options(options, env_config, topology_class, topology_name)
-    activate_env(env_name, storm_options, config_file=config_file)
+    env_dict = get_config_dict(env_name, storm_options, config_file=config_file)
 
     # Actually create or update virtualenv on worker nodes
-    execute(
-        _create_or_update_virtualenv,
-        env.virtualenv_root,
+    _create_or_update_virtualenv(
+        env_dict["virtualenv_root"],
         virtualenv_name,
         requirements_paths,
         virtualenv_flags=options.get("virtualenv_flags"),
-        hosts=env.storm_workers,
+        hosts=env_dict["storm_workers"],
         overwrite_virtualenv=overwrite_virtualenv,
         user=user,
+        env_user=env_dict["user"],
+        pool_size=pool_size,
     )
 
 
@@ -173,7 +208,6 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Create or update a virtualenv on Storm workers. """
-    env.pool_size = args.pool_size
     create_or_update_virtualenvs(
         args.environment,
         args.name,
@@ -183,4 +217,5 @@ def main(args):
         config_file=args.config,
         overwrite_virtualenv=args.overwrite_virtualenv,
         user=args.user,
+        pool_size=args.pool_size,
     )
