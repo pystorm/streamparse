@@ -2,3 +2,5 @@ recursive-include streamparse *
 include *.rst
 include *.md
 include *.txt
+global-exclude *.pyc
+global-exclude __pycache__
