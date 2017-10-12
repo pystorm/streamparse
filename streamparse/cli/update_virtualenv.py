@@ -96,7 +96,7 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
     # Actually create or update virtualenv on worker nodes
     execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,
             requirements_paths,
-            virtualenv_flags=env_config.get('virtualenv_flags'),
+            virtualenv_flags=options.get('virtualenv_flags'),
             hosts=env.storm_workers)
 
 
