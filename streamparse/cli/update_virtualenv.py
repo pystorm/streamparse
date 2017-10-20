@@ -13,7 +13,7 @@ from gevent import joinall
 from fabric.api import env
 from six import string_types
 
-from . import ParallelSSHClient
+from pssh.pssh2_client import ParallelSSHClient
 from .common import (add_environment, add_name, add_override_name,
                      add_pool_size, add_requirements)
 from ..util import (activate_env, die, get_config, get_env_config,
