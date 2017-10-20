@@ -16,7 +16,6 @@ from socket import error as SocketError
 
 import requests
 import simplejson as json
-from fabric.api import env, hide, local, settings
 from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from prettytable import PrettyTable
@@ -110,32 +109,34 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
         yield host, remote_port
 
 
-def activate_env(env_name=None, options=None):
-    """Activate a particular environment from a streamparse project's
-    config.json file and populate fabric's env dictionary with appropriate
-    values.
+def get_config_dict(env_name=None, options=None):
+    """Get config for a particular environment from a streamparse project's
+    config.json file and populate a dictionary with appropriate values.
 
     :param env_name: a `str` corresponding to the key within the config file's
                      "envs" dictionary.
     """
     env_name, env_config = get_env_config(env_name)
+    env_dict = {}
 
     if options and options.get('storm.workers.list'):
-        env.storm_workers = options['storm.workers.list']
+        env_dict['storm_workers'] = options['storm.workers.list']
     else:
-        env.storm_workers = get_storm_workers(env_config)
-    env.user = env_config.get("user")
-    env.log_path = (env_config.get("log_path") or
+        env_dict['storm_workers'] = get_storm_workers(env_config)
+    env_dict['user'] = env_config.get("user")
+    env_dict['log_path'] = (env_config.get("log_path") or
                     env_config.get("log", {}).get("path") or
                     get_nimbus_config(env_config).get('storm.log.dir'))
-    env.virtualenv_root = env_config.get("virtualenv_root") or \
+    env_dict['virtualenv_root'] = env_config.get("virtualenv_root") or \
                           env_config.get("virtualenv_path")
-    env.disable_known_hosts = True
-    env.forward_agent = True
-    env.use_ssh_config = True
+    env_dict['disable_known_hosts'] = True
+    env_dict['forward_agent'] = True
+    env_dict['use_ssh_config'] = True
     # fix for config file load issue
     if env_config.get("ssh_password"):
-        env.password = env_config.get("ssh_password")
+        env_dict['password'] = env_config.get("ssh_password")
+
+    return env_dict
 
 
 def die(msg, error_code=1):
@@ -346,16 +347,14 @@ def local_storm_version():
     :returns: The Storm library available on the users PATH
     :rtype: pkg_resources.Version
     """
-    with hide('running'), settings(warn_only=True):
+    try:
         cmd = 'storm version'
-        res = local(cmd, capture=True)
-        if not res.succeeded:
-            raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
-                               "\nSTDERR:\n{}".format(cmd, res.stdout,
-                                                      res.stderr))
+        res = subprocess.check_output([cmd], stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Unable to run '{}'!\n STDERR:\n{}".format(cmd, e.output))
 
     pattern = r'Storm ([0-9.]+)'
-    return parse_version(re.findall(pattern, res.stdout, flags=re.MULTILINE)[0])
+    return parse_version(re.findall(pattern, res, flags=re.MULTILINE)[0])
 
 
 def nimbus_storm_version(nimbus_client):
@@ -381,14 +380,13 @@ def storm_lib_version():
     :returns: The Storm library version specified in project.clj
     :rtype: pkg_resources.Version
     """
-    with hide('running'), settings(warn_only=True):
+    try:
         cmd = 'lein deps :tree'
-        res = local(cmd, capture=True)
-        if not res.succeeded:
-            raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
-                               "\nSTDERR:\n{}".format(cmd, res.stdout,
-                                                      res.stderr))
-    deps_tree = res.stdout
+        res = subprocess.check_output([cmd], stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Unable to run '{}'!\nSTDERR:\n{}".format(cmd, e.output))
+
+    deps_tree = res
     pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
     versions = set(re.findall(pattern, deps_tree))
 

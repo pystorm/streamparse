@@ -9,14 +9,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 from gevent import joinall
-
-from fabric.api import env
 from six import string_types
 
 from pssh.pssh2_client import ParallelSSHClient
 from .common import (add_environment, add_name, add_override_name,
                      add_pool_size, add_requirements)
-from ..util import (activate_env, die, get_config, get_env_config,
+from ..util import (get_config_dict, die, get_config, get_env_config,
                     get_topology_definition)
 
 
@@ -46,7 +44,7 @@ def _create_or_update_virtualenv(virtualenv_root, virtualenv_name, requirements_
 
     for requirements_path in requirements_paths:
         output = ssh_client.run_command('mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt')
-        temp_req = output[hosts[0]].stdout.next()
+        temp_req = next(output[hosts[0]].stdout)
         greenlets = ssh_client.copy_file(requirements_path, temp_req)
         joinall(greenlets)
 
@@ -102,14 +100,14 @@ def create_or_update_virtualenvs(env_name, topology_name, options=None, virtuale
             .format(requirements_paths))
 
     # Setup the fabric env dictionary
-    activate_env(env_name, options)
+    env_dict = get_config_dict(env_name, options)
 
     # Actually create or update virtualenv on worker nodes
-    _create_or_update_virtualenv(env.virtualenv_root,
+    _create_or_update_virtualenv(env_dict['virtualenv_root'],
                                  virtualenv_name,
                                  requirements_paths,
                                  virtualenv_flags=env_config.get('virtualenv_flags'),
-                                 hosts=env.storm_workers)
+                                 hosts=env_dict['storm_workers'])
 
 
 def subparser_hook(subparsers):
@@ -127,7 +125,6 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Create or update a virtualenv on Storm workers. """
-    env.pool_size = args.pool_size
     create_or_update_virtualenvs(args.environment, args.name,
                                  virtualenv_name=args.override_name,
                                  requirements_paths=args.requirements)
