@@ -464,7 +464,7 @@ def _get_file_names_command(path, patterns):
 
 
 def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True,
-                     is_old_storm=False, include_all_artifacts=False):
+                     is_old_storm=False, include_all_artifacts=False, log_path=None):
     """ Returns a string representing a command to run on the Storm workers that
     will yield all of the logfiles for the given topology that meet the given
     pattern (if specified).
@@ -480,11 +480,8 @@ def get_logfiles_cmd(topology_name=None, pattern=None, include_worker_logs=True,
     if include_worker_logs:
         log_name_patterns.extend(["worker*", "supervisor*", "access*",
                                   "metrics*"])
-    if env.log_path is None:
-        raise ValueError('Cannot find log files if you do not set `log_path` '
-                         'or the `path` key in the `log` dict for your '
-                         'environment in your config.json.')
-    ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
+
+    ls_cmd = _get_file_names_command(log_path, log_name_patterns)
     if pattern is not None:
         ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
     return ls_cmd
