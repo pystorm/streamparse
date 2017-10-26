@@ -27,7 +27,7 @@ def _create_or_update_virtualenv(virtualenv_root, virtualenv_name, requirements_
     hosts_without_virtualenv = []
     for host, host_output in virtualenv_exists_output.items():
         try:
-            host_output.stdout.next()
+            next(host_output.stdout)
         except StopIteration:
             if virtualenv_flags is None:
                 virtualenv_flags = ''
