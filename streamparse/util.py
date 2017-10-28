@@ -22,7 +22,6 @@ from socket import error as SocketError
 
 import requests
 import simplejson as json
-from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from prettytable import PrettyTable
 from six import iteritems, itervalues
@@ -560,3 +559,18 @@ def set_topology_serializer(env_config, config, topology_class):
             if inner_shell is not None:
                 inner_shell.script = '-s {} {}'.format(serializer,
                                                        inner_shell.script)
+
+
+def _colorize(code):
+    """
+    Function akin to fabric.colors to colorize output
+    """
+
+    def inner(text):
+        return "\033[%sm%s\033[0m" % (code, text)
+    return inner
+
+red = _colorize('31')
+green = _colorize('32')
+yellow = _colorize('33')
+blue = _colorize('34')
