@@ -1,5 +1,4 @@
 jinja2
-fabric3
 six>=1.5
 requests
 prettytable

@@ -32,7 +32,6 @@ def readme():
 
 
 install_requires = [
-    'fabric3',
     'jinja2',
     'requests',
     'prettytable',
