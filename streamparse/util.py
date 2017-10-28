@@ -1,5 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+try:
+    FileNotFoundError
+except NameError:
+    #py2
+    FileNotFoundError = IOError
+
 import importlib
 import os
 import re
