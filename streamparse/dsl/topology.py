@@ -246,7 +246,7 @@ class Topology(object):
                 elif key == 'custom_object':
                     grouping_dict['type'] = 'CUSTOM'
                     class_dict = {'className': val.full_class_name,
-                                  'args': to_python_arg_list(val.arg_list)}
+                                  'constructorArgs': to_python_arg_list(val.args_list)}
                     grouping_dict['customClass'] = class_dict
         flux_dict['grouping'] = grouping_dict
         return flux_dict
