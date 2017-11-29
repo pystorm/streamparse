@@ -33,7 +33,7 @@ Style Guidelines
 We'll work with you to get pull requests merged into streamparse. But to help us out, generally
 following PEP8 guidelines will result in less back and forth.
 
-Parse.ly's CTO, Andrew Montalenti has published on Github an `Elements of Python Style`_ with 
+Parse.ly's CTO, Andrew Montalenti, has published on Github an `Elements of Python Style`_ with 
 style suggestions for Python beyond PEP8.
 
 
