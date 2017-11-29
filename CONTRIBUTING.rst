@@ -24,7 +24,7 @@ we'll review.
 Environment Setup
 -----------------
 
-Please see `Developing Streamparse <http://streamparse.readthedocs.io/en/master/develop.html>`
+Please see `Developing Streamparse <http://streamparse.readthedocs.io/en/master/develop.html>`_
 in the docs for environment setup. Python and Leiningen are required.
 
 
