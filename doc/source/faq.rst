@@ -34,25 +34,10 @@ which we use in our `unit tests`_.
 How can I contribute to streamparse?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Thanks for your interest in contributing to streamparse. We think
-you'll find the core maintainers great to work with and will help you along the
-way when contributing pull requests.
+Please see the `CONTRIBUTING`_ document in Github
 
-If you already know what you'd like to add to streamparse then by all means,
-feel free to submit a pull request and we'll review it.
+.. _CONTRIBUTING: https://github.com/Parsely/streamparse/blob/master/CONTRIBUTING.rst
 
-If you're unsure about how to contribute, check out our `open issues`_ and find
-one that looks interesting to you (we particularly need help on all issues
-marked with the "help wanted" label).
-
-If you're not sure how to start or have some questions, shoot us an email in
-the `streamparse user group`_ and we'll give you a hand.
-
-From there, get to work on your fix and submit a pull request when ready which
-we'll review.
-
-.. _open issues: https://github.com/Parsely/streamparse/issues?state=open
-.. _streamparse user group: https://groups.google.com/forum/#!forum/streamparse
 
 How do I trigger some code before or after I submit my topology?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
