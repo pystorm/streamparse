@@ -16,7 +16,7 @@ from six import string_types
 from .common import (add_config, add_environment, add_name, add_options, add_override_name,
                      add_pool_size, add_requirements, resolve_options)
 from ..util import (activate_env, die, get_config, get_env_config,
-                    get_topology_definition)
+                    get_topology_definition, get_topology_from_file)
 
 
 @parallel
@@ -92,7 +92,7 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
             .format(requirements_paths))
 
     # Setup the fabric env dictionary
-    storm_options = resolve_options(options, env_config, topology_class, name,)
+    storm_options = resolve_options(options, env_config, topology_class, topology_name)
     activate_env(env_name, storm_options, config_file=config_file)
 
     # Actually create or update virtualenv on worker nodes

@@ -20,7 +20,7 @@ def kill_topology(topology_name=None, env_name=None, wait=None, timeout=None, co
     # should be able to kill topologies not in their local branch
     if topology_name is None:
         topology_name = get_topology_definition(topology_name, config_file=config_file)[0]
-    env_name, env_config = get_env_config(env_name, config_file=config)
+    env_name, env_config = get_env_config(env_name, config_file=config_file)
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port,

@@ -8,13 +8,12 @@ import sys
 from itertools import chain
 
 from pkg_resources import parse_version
-from six import iteritems, string_types
+from six import string_types
 from six.moves import map, zip
 
 from ..util import (get_env_config, get_ui_json, get_ui_jsons,
                     print_stats_table, storm_lib_version)
 from .common import add_config, add_environment, add_name
-
 
 
 def display_stats(env_name, topology_name=None, component_name=None,
