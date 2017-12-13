@@ -14,7 +14,7 @@ from fabric.contrib.files import exists
 from six import string_types
 
 from .common import (add_config, add_environment, add_name, add_options, add_override_name,
-                     add_pool_size, add_requirements)
+                     add_pool_size, add_requirements, resolve_options)
 from ..util import (activate_env, die, get_config, get_env_config,
                     get_topology_definition)
 
@@ -65,7 +65,8 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
                                create virtualenv
     """
     config = get_config()
-    topology_name = get_topology_definition(topology_name, config_file=config_file)[0]
+    topology_name, topology_file = get_topology_definition(topology_name, config_file=config_file)
+    topology_class = get_topology_from_file(topology_file)
     env_name, env_config = get_env_config(env_name, config_file=config_file)
     if virtualenv_name is None:
         virtualenv_name = topology_name
@@ -91,7 +92,8 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
             .format(requirements_paths))
 
     # Setup the fabric env dictionary
-    activate_env(env_name, options, config_file=config_file)
+    storm_options = resolve_options(options, env_config, topology_class, name,)
+    activate_env(env_name, storm_options, config_file=config_file)
 
     # Actually create or update virtualenv on worker nodes
     execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,
@@ -118,7 +120,7 @@ def subparser_hook(subparsers):
 def main(args):
     """ Create or update a virtualenv on Storm workers. """
     env.pool_size = args.pool_size
-    create_or_update_virtualenvs(args.environment, args.name, args.options
+    create_or_update_virtualenvs(args.environment, args.name, args.options,
                                  virtualenv_name=args.override_name,
                                  requirements_paths=args.requirements,
                                  config_file=args.config)

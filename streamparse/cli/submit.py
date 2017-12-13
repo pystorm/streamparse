@@ -280,5 +280,5 @@ def main(args):
                     requirements_paths=args.requirements,
                     local_jar_path=args.local_jar_path,
                     remote_jar_path=args.remote_jar_path,
-                    timeout=args.timeout
+                    timeout=args.timeout,
                     config_file=args.config)

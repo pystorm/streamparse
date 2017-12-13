@@ -75,5 +75,5 @@ def main(args):
     env.pool_size = args.pool_size
     tail_topology(topology_name=args.name, env_name=args.environment,
                   pattern=args.pattern, follow=args.follow,
-                  num_lines=args.num_lines, override_name=args.override_name
+                  num_lines=args.num_lines, override_name=args.override_name,
                   config_file=args.config)
