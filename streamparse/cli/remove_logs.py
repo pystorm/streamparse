@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function
 from fabric.api import env, execute, parallel, run, sudo
 from pkg_resources import parse_version
 
-from .common import (add_environment, add_name, add_override_name, add_pattern,
+from .common import (add_config, add_environment, add_name, add_override_name, add_pattern,
                      add_pool_size)
 from ..util import (activate_env, get_env_config, get_topology_definition,
                     get_logfiles_cmd, get_nimbus_client, nimbus_storm_version,
@@ -32,13 +32,13 @@ def _remove_logs(topology_name, pattern, remove_worker_logs, user, is_old_storm,
 
 def remove_logs(topology_name=None, env_name=None, pattern=None,
                 remove_worker_logs=False, user='root', override_name=None,
-                remove_all_artifacts=False, options=None):
+                remove_all_artifacts=False, options=None, config_file=None):
     """Remove all Python logs on Storm workers in the log.path directory."""
     if override_name is not None:
         topology_name = override_name
     else:
-        topology_name = get_topology_definition(topology_name)[0]
-    env_name, env_config = get_env_config(env_name)
+        topology_name = get_topology_definition(topology_name, config_file=config_file)[0]
+    env_name, env_config = get_env_config(env_name, config_file=config_file)
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         is_old_storm = nimbus_storm_version(nimbus_client) < parse_version('1.0')
@@ -58,6 +58,7 @@ def subparser_hook(subparsers):
                                 'also any other files for the topology in its '
                                 'workers-artifacts subdirectories.',
                            action='store_true')
+    add_config(subparser)
     add_environment(subparser)
     add_name(subparser)
     add_override_name(subparser)
@@ -80,4 +81,5 @@ def main(args):
                 pattern=args.pattern,
                 remove_worker_logs=args.remove_worker_logs,
                 user=args.user, override_name=args.override_name,
-                remove_all_artifacts=args.remove_all_artifacts)
+                remove_all_artifacts=args.remove_all_artifacts,
+                config_file=args.config)

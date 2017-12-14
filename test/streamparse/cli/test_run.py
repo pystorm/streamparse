@@ -34,7 +34,8 @@ class RunTestCase(unittest.TestCase):
         run_local_mock.assert_called_with(name='my_topo',
                                           options={'topology.acker.executors': 1},
                                           env_name='my_env',
-                                          time=0)
+                                          time=0,
+                                          config_file=None)
 
 
 if __name__ == '__main__':
