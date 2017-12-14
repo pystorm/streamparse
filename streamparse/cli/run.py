@@ -17,16 +17,16 @@ import subprocess
 from ..util import (get_config, get_env_config, get_topology_definition,
                     get_topology_from_file, local_storm_version,
                     set_topology_serializer, storm_lib_version)
-from .common import (add_ackers, add_debug, add_environment, add_name,
+from .common import (add_ackers, add_config, add_debug, add_environment, add_name,
                      add_options, add_workers, resolve_options)
 from .jar import jar_for_deploy
 
 
-def run_local_topology(name=None, env_name=None, time=0, options=None):
+def run_local_topology(name=None, env_name=None, time=0, options=None, config_file=None):
     """Run a topology locally using Flux and `storm jar`."""
-    name, topology_file = get_topology_definition(name)
-    config = get_config()
-    env_name, env_config = get_env_config(env_name)
+    name, topology_file = get_topology_definition(name, config_file=config_file)
+    config = get_config(config_file=config_file)
+    env_name, env_config = get_env_config(env_name, config_file=config_file)
     topology_class = get_topology_from_file(topology_file)
 
     set_topology_serializer(env_config, config, topology_class)
@@ -82,6 +82,7 @@ def subparser_hook(subparsers):
                                       formatter_class=RawDescriptionHelpFormatter)
     subparser.set_defaults(func=main)
     add_ackers(subparser)
+    add_config(subparser)
     add_debug(subparser)
     add_environment(subparser)
     add_name(subparser)
@@ -98,4 +99,4 @@ def subparser_hook(subparsers):
 def main(args):
     """Run the local topology with the given arguments"""
     run_local_topology(name=args.name, time=args.time, options=args.options,
-                       env_name=args.environment)
+                       env_name=args.environment, config_file=args.config)

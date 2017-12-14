@@ -121,8 +121,8 @@ class Grouping(object):
     def custom_object(cls, java_class_name, arg_list):
         """Tuples will be assigned to tasks by the given Java class."""
         java_object = JavaObject(full_class_name=java_class_name,
-                                 arg_list=[to_java_arg(arg)
-                                           for arg in arg_list])
+                                 args_list=[to_java_arg(arg)
+                                            for arg in arg_list])
         return _Grouping(custom_object=java_object)
 
     @classmethod

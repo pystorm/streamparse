@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function
 from pkg_resources import parse_version
 from pssh.pssh2_client import ParallelSSHClient
 
-from .common import (add_environment, add_name, add_override_name, add_pattern,
+from .common import (add_config, add_environment, add_name, add_override_name, add_pattern,
                      add_pool_size)
 from ..util import (get_config_dict, get_env_config, get_logfiles_cmd,
                     get_topology_definition, get_nimbus_client,
@@ -30,9 +30,9 @@ def _tail_logs(topology_name, pattern, follow, num_lines, is_old_storm, log_path
         for line in host_output.stdout:
             print(line)
 
-
-def tail_topology(topology_name=None, env_name=None, pattern=None, follow=True,
-                  num_lines=10, override_name=None):
+            
+def tail_topology(topology_name=None, env_name=None, pattern=None, follow=False,
+                  num_lines=10, override_name=None, config_file=None):
     """Follow (tail -f) the log files on remote Storm workers.
 
     Will use the `log_path` and `workers` properties from config.json.
@@ -40,8 +40,8 @@ def tail_topology(topology_name=None, env_name=None, pattern=None, follow=True,
     if override_name is not None:
         topology_name = override_name
     else:
-        topology_name = get_topology_definition(topology_name)[0]
-    env_name, env_config = get_env_config(env_name)
+        topology_name = get_topology_definition(topology_name, config_file=config_file)[0]
+    env_name, env_config = get_env_config(env_name, config_file=config_file)
 
     env_dict = get_config_dict(env_name)
     log_path = env_dict['log_path']
@@ -65,6 +65,7 @@ def subparser_hook(subparsers):
                                       description=__doc__,
                                       help=main.__doc__)
     subparser.set_defaults(func=main)
+    add_config(subparser)
     add_environment(subparser)
     subparser.add_argument('-f', '--follow',
                            action='store_true',
@@ -86,4 +87,5 @@ def main(args):
     """ Tail logs for specified Storm topology. """
     tail_topology(topology_name=args.name, env_name=args.environment,
                   pattern=args.pattern, follow=args.follow,
-                  num_lines=args.num_lines, override_name=args.override_name)
+                  num_lines=args.num_lines, override_name=args.override_name,
+                  config_file=args.config)

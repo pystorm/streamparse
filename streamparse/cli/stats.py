@@ -8,32 +8,32 @@ import sys
 from itertools import chain
 
 from pkg_resources import parse_version
-from six import iteritems, string_types
+from six import string_types
 from six.moves import map, zip
 
 from ..util import (get_env_config, get_ui_json, get_ui_jsons,
                     print_stats_table, storm_lib_version)
-from .common import add_environment, add_name
-
+from .common import add_config, add_environment, add_name
 
 
 def display_stats(env_name, topology_name=None, component_name=None,
-                  all_components=None):
+                  all_components=None, config_file=None):
     env_name = env_name
     if topology_name and all_components:
-        _print_all_components(env_name, topology_name)
+        _print_all_components(env_name, topology_name, config_file=config_file)
     elif topology_name and component_name:
-        _print_component_status(env_name, topology_name, component_name)
+        _print_component_status(env_name, topology_name, component_name, config_file=config_file)
     elif topology_name:
-        _print_topology_status(env_name, topology_name)
+        _print_topology_status(env_name, topology_name, config_file=config_file)
     else:
-        _print_cluster_status(env_name)
+        _print_cluster_status(env_name, config_file=config_file)
 
 
-def _print_cluster_status(env_name):
+def _print_cluster_status(env_name, config_file=None):
     jsons = get_ui_jsons(env_name, ["/api/v1/cluster/summary",
                                     "/api/v1/topology/summary",
-                                    "/api/v1/supervisor/summary"])
+                                    "/api/v1/supervisor/summary"],
+                         config_file=config_file)
     # Print Cluster Summary
     ui_cluster_summary = jsons["/api/v1/cluster/summary"]
     columns = ['stormVersion', 'nimbusUptime', 'supervisors', 'slotsTotal',
@@ -53,16 +53,16 @@ def _print_cluster_status(env_name):
                       {'host': 'l', 'uptime': 'l'})
 
 
-def _get_topology_ui_detail(env_name, topology_name):
-    env_name = get_env_config(env_name)[0]
+def _get_topology_ui_detail(env_name, topology_name, config_file=None):
+    env_name = get_env_config(env_name, config_file=config_file)[0]
     topology_id = _get_topology_id(env_name, topology_name)
     detail_url = '/api/v1/topology/%s' % topology_id
-    detail = get_ui_json(env_name, detail_url)
+    detail = get_ui_json(env_name, detail_url, config_file=config_file)
     return detail
 
 
-def _print_topology_status(env_name, topology_name):
-    ui_detail = _get_topology_ui_detail(env_name, topology_name)
+def _print_topology_status(env_name, topology_name, config_file=None):
+    ui_detail = _get_topology_ui_detail(env_name, topology_name, config_file=config_file)
     # Print topology summary
     columns = ['name', 'id', 'status', 'uptime', 'workersTotal',
                'executorsTotal', 'tasksTotal']
@@ -86,41 +86,42 @@ def _print_topology_status(env_name, topology_name):
                       {'boltId': 'l'})
 
 
-def _get_component_ui_detail(env_name, topology_name, component_names):
+def _get_component_ui_detail(env_name, topology_name, component_names, config_file=None):
     if isinstance(component_names, string_types):
         component_names = [component_names]
-    env_name = get_env_config(env_name)[0]
-    topology_id = _get_topology_id(env_name, topology_name)
+    env_name = get_env_config(env_name, config_file=config_file)[0]
+    topology_id = _get_topology_id(env_name, topology_name, config_file=config_file)
     base_url = '/api/v1/topology/%s/component/%s'
     detail_urls = [base_url % (topology_id, name) for name in component_names]
-    detail = get_ui_jsons(env_name, detail_urls)
+    detail = get_ui_jsons(env_name, detail_urls, config_file=config_file)
     if len(detail) == 1:
         return list(detail.values())[0]
     else:
         return detail
 
 
-def _print_all_components(env_name, topology_name):
+def _print_all_components(env_name, topology_name, config_file=None):
     topology_ui_detail = _get_topology_ui_detail(env_name, topology_name)
     spouts = map(lambda spout: (spout['spoutId'],
                                 topology_ui_detail.get('spouts', {})))
     bolts = map(lambda spout: (spout['boltId'],
                                topology_ui_detail.get('bolts', {})))
     ui_details = _get_component_ui_detail(env_name, topology_name, chain(spouts,
-                                                                         bolts))
+                                                                         bolts),
+                                          config_file=config_file)
     names_and_keys = zip(map(lambda ui_detail: (ui_detail['name'],
                                                 ui_details.values())),
                          ui_details.keys())
     for component_name, key in names_and_keys:
         _print_component_status(env_name, topology_name,
-                                component_name, ui_details[key])
+                                component_name, ui_details[key], config_file=config_file)
 
 
 def _print_component_status(env_name, topology_name, component_name,
-                            ui_detail=None):
+                            ui_detail=None, config_file=None):
     if not ui_detail:
         ui_detail = _get_component_ui_detail(env_name, topology_name,
-                                             component_name)
+                                             component_name, config_file=config_file)
     _print_component_summary(ui_detail)
     if ui_detail.get("componentType") == "spout":
         _print_spout_stats(ui_detail)
@@ -181,11 +182,11 @@ def _print_spout_executors(ui_detail):
                       columns, 'r', {'host': 'l'})
 
 
-def _get_topology_id(env_name, topology_name):
+def _get_topology_id(env_name, topology_name, config_file=None):
     """Get toplogy ID from summary json provided by UI api
     """
     summary_url = '/api/v1/topology/summary'
-    topology_summary = get_ui_json(env_name, summary_url)
+    topology_summary = get_ui_json(env_name, summary_url, config_file=config_file)
     for topology in topology_summary["topologies"]:
         if topology_name == topology["name"]:
             return topology["id"]
@@ -203,6 +204,7 @@ def subparser_hook(subparsers):
     subparser.add_argument('-c', '--component',
                            help='Topology component (bolt/spout) name as '
                                 'specified in Clojure topology specification')
+    add_config(subparser)
     add_environment(subparser)
     add_name(subparser)
 
@@ -212,7 +214,8 @@ def main(args):
     storm_version = storm_lib_version()
     if storm_version >= parse_version('0.9.2-incubating'):
         display_stats(args.environment, topology_name=args.name,
-                      component_name=args.component, all_components=args.all)
+                      component_name=args.component, all_components=args.all,
+                      config_file=args.config)
     else:
         print("ERROR: Storm {0} does not support this command."
               .format(storm_version))

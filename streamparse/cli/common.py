@@ -62,6 +62,13 @@ def add_ackers(parser):
                         dest='options')
 
 
+def add_config(parser):
+    """ Add --config option to parser """
+    parser.add_argument('--config',
+                        help='Specify path to config.json',
+                        type=argparse.FileType('r'))
+
+
 def add_debug(parser):
     """ Add --debug option to parser """
     parser.add_argument('-d', '--debug',

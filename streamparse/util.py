@@ -114,14 +114,17 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
         yield host, remote_port
 
 
-def get_config_dict(env_name=None, options=None):
+def get_config_dict(env_name=None, options=None, config_file=None):
     """Get config for a particular environment from a streamparse project's
     config.json file and populate a dictionary with appropriate values.
 
     :param env_name: a `str` corresponding to the key within the config file's
                      "envs" dictionary.
+    :param config_file: a `file`-like object that contains the config.json
+                        contents. If `None`, we look for a file named
+                        ``config.json`` in the working directory.
     """
-    env_name, env_config = get_env_config(env_name)
+    env_name, env_config = get_env_config(env_name, config_file=config_file)
     env_dict = {}
 
     if options and options.get('storm.workers.list'):
@@ -404,11 +407,11 @@ def storm_lib_version():
         return parse_version(versions.pop())
 
 
-def get_ui_jsons(env_name, api_paths):
+def get_ui_jsons(env_name, api_paths, config_file=None):
     """Take env_name as a string and api_paths that should
     be a list of strings like '/api/v1/topology/summary'
     """
-    _, env_config = get_env_config(env_name)
+    _, env_config = get_env_config(env_name, config_file=config_file)
     host, _ = get_nimbus_host_port(env_config)
     # TODO: Get remote_ui_port from storm?
     remote_ui_port = env_config.get('ui.port', 8080)
@@ -438,11 +441,11 @@ def get_ui_jsons(env_name, api_paths):
     raise RuntimeError("Cannot find local port for SSH tunnel to Storm Head.")
 
 
-def get_ui_json(env_name, api_path):
+def get_ui_json(env_name, api_path, config_file=None):
     """Take env_name as a string and api_path that should
     be a string like '/api/v1/topology/summary'
     """
-    return get_ui_jsons(env_name, [api_path])[api_path]
+    return get_ui_jsons(env_name, [api_path], config_file=config_file)[api_path]
 
 
 def prepare_topology():
