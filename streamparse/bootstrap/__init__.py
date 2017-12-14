@@ -9,7 +9,7 @@ import sys
 import shutil
 
 import pkg_resources
-from fabric.colors import green, red, blue
+from ..util import green, red, blue
 from jinja2 import Environment, FileSystemLoader
 
 

@@ -4,29 +4,33 @@ Tail the specified log files.
 
 from __future__ import absolute_import, print_function
 
-from fabric.api import env, execute, parallel, run
 from pkg_resources import parse_version
+from pssh.pssh2_client import ParallelSSHClient
 
 from .common import (add_config, add_environment, add_name, add_override_name, add_pattern,
                      add_pool_size)
-from ..util import (activate_env, get_env_config, get_logfiles_cmd,
+from ..util import (get_config_dict, get_env_config, get_logfiles_cmd,
                     get_topology_definition, get_nimbus_client,
                     nimbus_storm_version, ssh_tunnel)
 
 
-@parallel
-def _tail_logs(topology_name, pattern, follow, num_lines, is_old_storm):
+def _tail_logs(topology_name, pattern, follow, num_lines, is_old_storm, log_path, hosts):
     """
     Actual task to run tail on all servers in parallel.
     """
     ls_cmd = get_logfiles_cmd(topology_name=topology_name, pattern=pattern,
-                              is_old_storm=is_old_storm)
+                              is_old_storm=is_old_storm, log_path=log_path)
     tail_pipe = " | xargs tail -n {}".format(num_lines)
     if follow:
         tail_pipe += " -f"
-    run(ls_cmd + tail_pipe)
 
+    ssh_client = ParallelSSHClient(hosts)
+    output = ssh_client.run_command(ls_cmd + tail_pipe)
+    for host, host_output in output.items():
+        for line in host_output.stdout:
+            print(line)
 
+            
 def tail_topology(topology_name=None, env_name=None, pattern=None, follow=False,
                   num_lines=10, override_name=None, config_file=None):
     """Follow (tail -f) the log files on remote Storm workers.
@@ -38,12 +42,21 @@ def tail_topology(topology_name=None, env_name=None, pattern=None, follow=False,
     else:
         topology_name = get_topology_definition(topology_name, config_file=config_file)[0]
     env_name, env_config = get_env_config(env_name, config_file=config_file)
+
+    env_dict = get_config_dict(env_name)
+    log_path = env_dict['log_path']
+    if log_path is None:
+        raise ValueError('Cannot find log files if you do not set `log_path` '
+                         'or the `path` key in the `log` dict for your '
+                         'environment in your config.json.')
+
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         is_old_storm = nimbus_storm_version(nimbus_client) < parse_version('1.0')
-    activate_env(env_name)
-    execute(_tail_logs, topology_name, pattern, follow, num_lines, is_old_storm,
-            hosts=env.storm_workers)
+    get_config_dict(env_name)
+
+    _tail_logs(topology_name, pattern, follow, num_lines, is_old_storm, log_path,
+               hosts=env_dict['storm_workers'])
 
 
 def subparser_hook(subparsers):
@@ -72,7 +85,6 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Tail logs for specified Storm topology. """
-    env.pool_size = args.pool_size
     tail_topology(topology_name=args.name, env_name=args.environment,
                   pattern=args.pattern, follow=args.follow,
                   num_lines=args.num_lines, override_name=args.override_name,

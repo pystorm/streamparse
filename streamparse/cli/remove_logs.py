@@ -4,30 +4,37 @@ Remove all logs from Storm workers for the specified Storm topology.
 
 from __future__ import absolute_import, print_function
 
-from fabric.api import env, execute, parallel, run, sudo
 from pkg_resources import parse_version
+from pssh.pssh2_client import ParallelSSHClient
 
 from .common import (add_config, add_environment, add_name, add_override_name, add_pattern,
                      add_pool_size)
-from ..util import (activate_env, get_env_config, get_topology_definition,
+from ..util import (get_config_dict, get_env_config, get_topology_definition,
                     get_logfiles_cmd, get_nimbus_client, nimbus_storm_version,
                     ssh_tunnel)
 
 
-@parallel
-def _remove_logs(topology_name, pattern, remove_worker_logs, user, is_old_storm,
-                 remove_all_artifacts):
+def _remove_logs(topology_name, pattern, remove_worker_logs, user, env_user, is_old_storm,
+                 remove_all_artifacts, log_path, hosts):
     """
     Actual task to remove logs on all servers in parallel.
     """
     ls_cmd = get_logfiles_cmd(topology_name=topology_name, pattern=pattern,
                               include_worker_logs=remove_worker_logs,
-                              include_all_artifacts=remove_all_artifacts)
+                              include_all_artifacts=remove_all_artifacts, log_path=log_path)
     rm_pipe = " | xargs rm -f"
-    if user == env.user:
-        run(ls_cmd + rm_pipe, warn_only=True)
+    ssh_client = ParallelSSHClient(hosts)
+    if user == env_user:
+        output = ssh_client.run_command(ls_cmd + rm_pipe)
     else:
-        sudo(ls_cmd + rm_pipe, warn_only=True, user=user)
+        output = ssh_client.run_command(ls_cmd + rm_pipe, sudo=True, user=user)
+
+    ssh_client.join(output)
+    for host, host_output in output.items():
+        if host_output.exit_code:
+            print("Error in removing logs on %s" % host)
+            for msg in host_output.stderr:
+                print(msg)
 
 
 def remove_logs(topology_name=None, env_name=None, pattern=None,
@@ -38,13 +45,14 @@ def remove_logs(topology_name=None, env_name=None, pattern=None,
         topology_name = override_name
     else:
         topology_name = get_topology_definition(topology_name, config_file=config_file)[0]
-    env_name, env_config = get_env_config(env_name, config_file=config_file)
+    env_name, env_config = get_env_config(env_name)
+    env_dict = get_config_dict(env_name)
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
         is_old_storm = nimbus_storm_version(nimbus_client) < parse_version('1.0')
-    activate_env(env_name, options=options)
-    execute(_remove_logs, topology_name, pattern, remove_worker_logs, user,
-            is_old_storm, remove_all_artifacts, hosts=env.storm_workers)
+    get_config_dict(env_name, options=options)
+    _remove_logs(topology_name, pattern, remove_worker_logs, user, env_dict['user'],
+            is_old_storm, remove_all_artifacts, env_dict['log_path'], hosts=env_dict['storm_workers'])
 
 
 def subparser_hook(subparsers):
@@ -76,7 +84,6 @@ def subparser_hook(subparsers):
 
 def main(args):
     """ Remove logs from Storm workers. """
-    env.pool_size = args.pool_size
     remove_logs(topology_name=args.name, env_name=args.environment,
                 pattern=args.pattern,
                 remove_worker_logs=args.remove_worker_logs,

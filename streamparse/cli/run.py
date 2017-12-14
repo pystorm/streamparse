@@ -10,9 +10,9 @@ from __future__ import absolute_import, print_function
 
 from argparse import RawDescriptionHelpFormatter
 from tempfile import NamedTemporaryFile
-
-from fabric.api import local, show
 from ruamel import yaml
+
+import subprocess
 
 from ..util import (get_config, get_env_config, get_topology_definition,
                     get_topology_from_file, local_storm_version,
@@ -57,22 +57,21 @@ def run_local_topology(name=None, env_name=None, time=0, options=None, config_fi
         time = 9223372036854775807  # Max long value in Java
 
     # Write YAML file
-    with show('output'):
-        with NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as yaml_file:
-            topology_flux_dict = topology_class.to_flux_dict(name)
-            topology_flux_dict['config'] = storm_options
-            if yaml.version_info < (0, 15):
-                yaml.safe_dump(topology_flux_dict, yaml_file,
-                               default_flow_style=False)
-            else:
-                yml = yaml.YAML(typ='safe', pure=True)
-                yml.default_flow_style = False
-                yml.dump(topology_flux_dict, yaml_file)
-            cmd = ('storm jar {jar} org.apache.storm.flux.Flux --local --no-splash '
-                   '--sleep {time} {yaml}'.format(jar=topology_jar,
-                                                  time=time,
-                                                  yaml=yaml_file.name))
-            local(cmd)
+    with NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as yaml_file:
+        topology_flux_dict = topology_class.to_flux_dict(name)
+        topology_flux_dict['config'] = storm_options
+        if yaml.version_info < (0, 15):
+            yaml.safe_dump(topology_flux_dict, yaml_file,
+                           default_flow_style=False)
+        else:
+            yml = yaml.YAML(typ='safe', pure=True)
+            yml.default_flow_style = False
+            yml.dump(topology_flux_dict, yaml_file)
+        cmd = ('storm jar {jar} org.apache.storm.flux.Flux --local --no-splash '
+               '--sleep {time} {yaml}'.format(jar=topology_jar,
+                                              time=time,
+                                              yaml=yaml_file.name))
+        subprocess.call([cmd], shell=True)
 
 
 def subparser_hook(subparsers):
