@@ -1,6 +1,6 @@
 cython
 jinja2
-parallel-ssh>=1.2.0
+parallel-ssh>=1.2.1.post3
 pystorm>=3.1.1
 requests
 ruamel.yaml

@@ -41,11 +41,11 @@ def jar_for_deploy(simple_jar=False):
     lines = output.splitlines()
     for line in lines:
         line = line.strip()
-        if not line.startswith("Created"):
+        if not line.startswith(b"Created"):
             continue
-        line = line.replace("Created ", "")
+        line = line.replace(b"Created ", b"")
         # != is XOR
-        if simple_jar != line.endswith("standalone.jar"):
+        if simple_jar != line.endswith(b"standalone.jar"):
             jar = line
             break
     else:

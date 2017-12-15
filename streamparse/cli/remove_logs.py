@@ -90,7 +90,7 @@ def remove_logs(
         ]
     env_name, env_config = get_env_config(env_name, config_file=config_file)
 
-    options = resolve_options(options, env_config, topology_class, override_name)
+    options = resolve_options(options, env_config, topology_class, topology_name)
     env_dict = get_config_dict(env_name, options=options, config_file=config_file)
     log_path = env_dict["log_path"]
 

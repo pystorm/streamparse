@@ -212,7 +212,8 @@ def submit_topology(
     env_dict = get_config_dict(env_name)
 
     # Handle option conflicts
-    options = resolve_options(options, env_config, topology_class, override_name)
+    # TODO: Double-check that this should be env_dict and not env_config
+    options = resolve_options(options, env_dict, topology_class, override_name)
 
     # Check if we need to maintain virtualenv during the process
     use_venv = options.get("use_virtualenv", True)
