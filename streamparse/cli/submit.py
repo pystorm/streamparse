@@ -12,6 +12,7 @@ from itertools import chain
 
 import simplejson as json
 from fabric.api import env
+from pkg_resources import parse_version
 from six import itervalues
 
 from ..dsl.component import JavaComponentSpec
@@ -19,10 +20,10 @@ from ..thrift import ShellComponent
 
 from ..util import (activate_env, get_config, get_env_config,
                     get_nimbus_client, get_topology_definition,
-                    get_topology_from_file, set_topology_serializer,
-                    ssh_tunnel, warn)
-from .common import (add_ackers, add_config, add_debug, add_environment, add_name,
-                     add_options, add_override_name, add_pool_size,
+                    get_topology_from_file, nimbus_storm_version,
+                    set_topology_serializer, ssh_tunnel, warn)
+from .common import (add_ackers, add_config, add_debug, add_environment,
+                     add_name, add_options, add_override_name, add_pool_size,
                      add_requirements, add_timeout, add_wait, add_workers,
                      resolve_options)
 from .jar import jar_for_deploy
@@ -79,6 +80,12 @@ def _submit_topology(topology_name, topology_class, remote_jar_path, config,
         sys.stdout.flush()
 
     set_topology_serializer(env_config, config, topology_class)
+
+    # Check if topology name is okay on Storm versions that support that
+    if nimbus_storm_version(nimbus_client) >= parse_version('1.1.0'):
+        if not nimbus_client.isTopologyNameAllowed(topology_name):
+            raise ValueError('Nimbus says {} is an invalid name for a '
+                             'Storm topology.'.format(topology_name))
 
     print("Submitting {} topology to nimbus...".format(topology_name), end='')
     sys.stdout.flush()
