@@ -35,7 +35,7 @@ install_requires = [
     'fabric3',
     'jinja2',
     'requests',
-    'prettytable',
+    'texttable',
     'six>=1.5',
     'simplejson',
     'pystorm>=3.1.1',

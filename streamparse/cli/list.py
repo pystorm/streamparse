@@ -28,7 +28,25 @@ def list_topologies(env_name, timeout=None, config_file=None):
         print('No topologies found.')
     else:
         columns = [field for field, default in TopologySummary.default_spec]
-        print_stats_table('Topologies', topologies, columns, 'l')
+        # Find values that are the same for all topologies and list those
+        # separately to prevent table from being too wide
+        if len(topologies) > 1:
+            identical_vals = dict(vars(topologies[0]))
+            for topology in topologies:
+                for column in columns:
+                    if column in identical_vals:
+                        cur_val = getattr(topology, column)
+                        if cur_val != identical_vals[column]:
+                            identical_vals.pop(column)
+            if identical_vals:
+                for key in identical_vals.keys():
+                    columns.remove(key)
+                print_stats_table('Values identical for all topologies',
+                                  identical_vals,
+                                  list(identical_vals.keys()),
+                                  'l')
+
+        print_stats_table('Topology-specific values', topologies, columns, 'l')
 
 
 def subparser_hook(subparsers):

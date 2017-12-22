@@ -1,10 +1,10 @@
-jinja2
 fabric3
-six>=1.5
+jinja2
+pystorm>=3.1.1
 requests
-prettytable
+ruamel.yaml
 setuptools
 simplejson
-pystorm>=3.1.1
+six>=1.5
+texttable
 thriftpy>=0.3.2
-ruamel.yaml

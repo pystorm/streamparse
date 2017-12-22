@@ -19,7 +19,7 @@ import simplejson as json
 from fabric.api import env, hide, local, settings
 from fabric.colors import red, yellow
 from pkg_resources import parse_version
-from prettytable import PrettyTable
+from texttable import Texttable
 from six import iteritems, itervalues
 from six.moves.socketserver import UDPServer, TCPServer
 from thriftpy.protocol import TBinaryProtocolFactory
@@ -507,19 +507,23 @@ def print_stats_table(header, data, columns, default_alignment='l',
     :param data:   List of dictionaries (or objects )
     """
     print("# %s" % header)
-    table = PrettyTable(columns)
-    table.align = default_alignment
+    table = Texttable(max_width=115)
+    table.header(columns)
+    table.set_cols_align(default_alignment * len(columns))
     if not isinstance(data, list):
         data = [data]
     for row in data:
-        # Treat all objects like dicts to make life easier
-        if not isinstance(row, dict):
-            row = row.__dict__
-        table.add_row([row.get(key, "MISSING") for key in columns])
+        # Treat all non-list/tuple objects like dicts to make life easier
+        if not isinstance(row, (list, tuple, dict)):
+            row = vars(row)
+        if isinstance(row, dict):
+            row = [row.get(key, "MISSING") for key in columns]
+        table.add_row(row)
     if custom_alignment:
-        for column, alignment in iteritems(custom_alignment):
-            table.align[column] = alignment
-    print(table)
+        table.set_cols_align([custom_alignment.get(column,
+                                                   default_alignment)
+                              for column in columns])
+    print(table.draw())
 
 
 def get_topology_from_file(topology_file):

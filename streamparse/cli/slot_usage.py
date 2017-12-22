@@ -7,11 +7,11 @@ from __future__ import absolute_import, print_function
 from collections import Counter, defaultdict
 
 from pkg_resources import parse_version
-from prettytable import PrettyTable
 from six import iteritems
 
 from .common import add_config, add_environment
-from ..util import get_ui_json, get_ui_jsons, storm_lib_version
+from ..util import (get_ui_json, get_ui_jsons, print_stats_table,
+                    storm_lib_version)
 
 
 def subparser_hook(subparsers):
@@ -62,17 +62,16 @@ def display_slot_usage(env_name, config_file=None):
             topology_executor_counts[worker['host']][topology_detail_json['name']] += 1
             topology_names.add(topology_detail_json['name'])
 
-    print("# Slot (and Executor) Counts by Topology")
     topology_names = sorted(topology_names)
-    table = PrettyTable(["Host"] + topology_names)
-    table.align = 'l'
-    for host, host_dict in sorted(iteritems(topology_worker_ports)):
-        row = [host] + ['{} ({})'.format(len(host_dict.get(topology, set())),
-                                         topology_executor_counts[host][topology])
-                        for topology in topology_names]
-        table.add_row(row)
-    print(table)
-    print()
+    columns = ["Host"] + topology_names
+    rows = [([host] +
+             ['{} ({})'.format(len(host_dict.get(topology, set())),
+                               topology_executor_counts[host][topology])
+              for topology in topology_names])
+            for host, host_dict in sorted(iteritems(topology_worker_ports))]
+    print_stats_table('Slot (and Executor) Counts by Topology',
+                      rows,
+                      columns)
 
 
 def main(args):
