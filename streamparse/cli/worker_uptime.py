@@ -5,11 +5,11 @@ Display uptime for workers in running Storm topologies.
 from __future__ import absolute_import, print_function
 
 from pkg_resources import parse_version
-from prettytable import PrettyTable
 from six import iteritems, itervalues
 
 from .common import add_config, add_environment
-from ..util import get_ui_json, get_ui_jsons, storm_lib_version
+from ..util import (get_ui_json, get_ui_jsons, print_stats_table,
+                    storm_lib_version)
 
 
 def subparser_hook(subparsers):
@@ -54,14 +54,10 @@ def display_worker_uptime(env_name, config_file=None):
                          comp_detail['executorStats']]
     worker_stats = sorted(set(worker_stats))
 
-    print("# Worker Stats")
-    table = PrettyTable(["Host", "Worker ID", "Uptime", "Log URL"])
-    table.align = 'l'
-    table.align['Uptime'] = 'r'
-    for row in worker_stats:
-        table.add_row(row)
-    print(table)
-    print()
+    print_stats_table('Worker Stats',
+                      worker_stats,
+                      ["Host", "Worker ID", "Uptime", "Log URL"],
+                      custom_alignment={'Uptime': 'r'})
 
 
 def main(args):
