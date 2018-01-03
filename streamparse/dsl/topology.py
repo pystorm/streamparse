@@ -135,7 +135,9 @@ class TopologyType(type):
 
     def __repr__(cls):
         """:returns: A string representation of the topology"""
-        return repr(getattr(cls, "_topology", None))
+        # TODO: Come up with a better repr that makes it clear the class is not
+        #       actually a StormTopology object
+        return repr(getattr(cls, "thrift_topology", None))
 
 
 @add_metaclass(TopologyType)
@@ -156,7 +158,7 @@ class Topology(object):
         def write_it(stream):
             transport_out = TMemoryBuffer()
             protocol_out = TBinaryProtocol(transport_out)
-            cls._topology.write(protocol_out)
+            cls.thrift_topology.write(protocol_out)
             transport_bytes = transport_out.getvalue()
             stream.write(transport_bytes)
 
@@ -181,7 +183,7 @@ class Topology(object):
             protocol_in = TBinaryProtocol(transport_in)
             topology = StormTopology()
             topology.read(protocol_in)
-            cls._topology = topology
+            cls.thrift_topology = topology
             cls.thrift_bolts = topology.bolts
             cls.thrift_spouts = topology.spouts
             # Can't reconstruct Python specs from Thrift.
