@@ -23,9 +23,9 @@ from ..util import (activate_env, get_config, get_env_config,
                     get_topology_from_file, nimbus_storm_version,
                     set_topology_serializer, ssh_tunnel, warn)
 from .common import (add_ackers, add_config, add_debug, add_environment,
-                     add_name, add_options, add_override_name, add_pool_size,
-                     add_requirements, add_timeout, add_wait, add_workers,
-                     resolve_options)
+                     add_name, add_options, add_override_name,
+                     add_overwrite_virtualenv, add_pool_size, add_requirements,
+                     add_timeout, add_wait, add_workers, resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -143,7 +143,8 @@ def _upload_jar(nimbus_client, local_path):
 def submit_topology(name=None, env_name=None, options=None, force=False,
                     wait=None, simple_jar=True, override_name=None,
                     requirements_paths=None, local_jar_path=None,
-                    remote_jar_path=None, timeout=None, config_file=None):
+                    remote_jar_path=None, timeout=None, config_file=None,
+                    overwrite_virtualenv=False):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name, config_file=config_file)
@@ -178,7 +179,8 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
             create_or_update_virtualenvs(env_name, name, options,
                                          virtualenv_name=virtualenv_name,
                                          requirements_paths=requirements_paths,
-                                         config_file=config_file)
+                                         config_file=config_file,
+                                         overwrite_virtualenv=overwrite_virtualenv)
         streamparse_run_path = '/'.join([env.virtualenv_root, virtualenv_name,
                                          'bin', 'streamparse_run'])
         # Update python paths in bolts
@@ -259,6 +261,7 @@ def subparser_hook(subparsers):
     add_name(subparser)
     add_options(subparser)
     add_override_name(subparser)
+    add_overwrite_virtualenv(subparser)
     add_pool_size(subparser)
     add_requirements(subparser)
     subparser.add_argument('-R', '--remote_jar_path',
@@ -288,4 +291,5 @@ def main(args):
                     local_jar_path=args.local_jar_path,
                     remote_jar_path=args.remote_jar_path,
                     timeout=args.timeout,
-                    config_file=args.config)
+                    config_file=args.config,
+                    overwrite_virtualenv=args.overwrite_virtualenv)

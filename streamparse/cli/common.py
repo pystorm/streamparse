@@ -120,6 +120,15 @@ def add_override_name(parser):
                              'duplicate the topology file.')
 
 
+def add_overwrite_virtualenv(parser):
+    """ Add --overwrite_virtualenv option to parser """
+    parser.add_argument('--overwrite_virtualenv',
+                        help='Create the virtualenv even if it already exists.'
+                             ' This is useful when you have changed your '
+                             'virtualenv_flags.',
+                        action='store_true')
+
+
 def add_pattern(parser):
     """ Add --pattern option to parser """
     parser.add_argument('--pattern',
