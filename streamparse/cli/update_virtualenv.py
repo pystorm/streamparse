@@ -13,7 +13,8 @@ from fabric.api import env, execute, parallel, prefix, put, puts, run, show
 from fabric.contrib.files import exists
 from six import string_types
 
-from .common import (add_config, add_environment, add_name, add_options, add_override_name,
+from .common import (add_config, add_environment, add_name, add_options,
+                     add_override_name, add_overwrite_virtualenv,
                      add_pool_size, add_requirements, resolve_options)
 from ..util import (activate_env, die, get_config, get_env_config,
                     get_topology_definition, get_topology_from_file)
@@ -23,9 +24,13 @@ from ..util import (activate_env, die, get_config, get_env_config,
 def _create_or_update_virtualenv(virtualenv_root,
                                  virtualenv_name,
                                  requirements_paths,
-                                 virtualenv_flags=None):
+                                 virtualenv_flags=None,
+                                 overwrite_virtualenv=False):
     with show('output'):
         virtualenv_path = '/'.join((virtualenv_root, virtualenv_name))
+        if overwrite_virtualenv:
+            puts("Removing virtualenv if it exists in {}".format(virtualenv_root))
+            run('rm -rf {}'.format(virtualenv_path))
         if not exists(virtualenv_path):
             if virtualenv_flags is None:
                 virtualenv_flags = ''
@@ -51,8 +56,9 @@ def _create_or_update_virtualenv(virtualenv_root,
             run("rm {}".format(temp_req))
 
 
-def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_name=None,
-                                 requirements_paths=None, config_file=None):
+def create_or_update_virtualenvs(env_name, topology_name, options,
+                                 virtualenv_name=None, requirements_paths=None,
+                                 config_file=None, overwrite_virtualenv=False):
     """Create or update virtualenvs on remote servers.
 
     Assumes that virtualenv is on the path of the remote server(s).
@@ -63,6 +69,8 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
                           though the topology file has a different name.
     :param requirements_paths: a list of paths to requirements files to use to
                                create virtualenv
+    :param overwrite_virtualenv: Force the creation of a fresh virtualenv, even
+                                 if it already exists.
     """
     config = get_config()
     topology_name, topology_file = get_topology_definition(topology_name, config_file=config_file)
@@ -99,7 +107,8 @@ def create_or_update_virtualenvs(env_name, topology_name, options, virtualenv_na
     execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,
             requirements_paths,
             virtualenv_flags=options.get('virtualenv_flags'),
-            hosts=env.storm_workers)
+            hosts=env.storm_workers,
+            overwrite_virtualenv=overwrite_virtualenv)
 
 
 def subparser_hook(subparsers):
@@ -110,6 +119,7 @@ def subparser_hook(subparsers):
     subparser.set_defaults(func=main)
     add_config(subparser)
     add_environment(subparser)
+    add_overwrite_virtualenv(subparser)
     add_name(subparser)
     add_options(subparser)
     add_override_name(subparser)
@@ -123,4 +133,5 @@ def main(args):
     create_or_update_virtualenvs(args.environment, args.name, args.options,
                                  virtualenv_name=args.override_name,
                                  requirements_paths=args.requirements,
-                                 config_file=args.config)
+                                 config_file=args.config,
+                                 overwrite_virtualenv=args.overwrite_virtualenv)
