@@ -64,6 +64,7 @@ def subparser_hook(subparsers):
     add_override_name(subparser)
     add_pattern(subparser)
     add_pool_size(subparser)
+    # Not using add_user because we need -u for backward compatibility
     subparser.add_argument('-u', '--user',
                            help="User argument to sudo when deleting logs.",
                            default='root')

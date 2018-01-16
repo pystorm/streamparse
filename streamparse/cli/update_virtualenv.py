@@ -16,7 +16,8 @@ from six import string_types
 
 from .common import (add_config, add_environment, add_name, add_options,
                      add_override_name, add_overwrite_virtualenv,
-                     add_pool_size, add_requirements, resolve_options)
+                     add_pool_size, add_requirements, add_user,
+                     resolve_options)
 from ..util import (activate_env, die, get_config, get_env_config,
                     get_topology_definition, get_topology_from_file)
 
@@ -134,10 +135,7 @@ def subparser_hook(subparsers):
     add_override_name(subparser)
     add_pool_size(subparser)
     add_requirements(subparser)
-    subparser.add_argument('-u', '--user',
-                           help="User argument to sudo when deleting "
-                                "virtualenv for --overwrite_virtualenv.",
-                           default='root')
+    add_user(subparser)
 
 
 def main(args):

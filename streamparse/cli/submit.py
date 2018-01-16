@@ -25,7 +25,8 @@ from ..util import (activate_env, get_config, get_env_config,
 from .common import (add_ackers, add_config, add_debug, add_environment,
                      add_name, add_options, add_override_name,
                      add_overwrite_virtualenv, add_pool_size, add_requirements,
-                     add_timeout, add_wait, add_workers, resolve_options)
+                     add_timeout, add_user, add_wait, add_workers,
+                     resolve_options)
 from .jar import jar_for_deploy
 from .kill import _kill_topology
 from .list import _list_topologies
@@ -144,7 +145,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                     wait=None, simple_jar=True, override_name=None,
                     requirements_paths=None, local_jar_path=None,
                     remote_jar_path=None, timeout=None, config_file=None,
-                    overwrite_virtualenv=False):
+                    overwrite_virtualenv=False, user='root'):
     """Submit a topology to a remote Storm cluster."""
     config = get_config()
     name, topology_file = get_topology_definition(name, config_file=config_file)
@@ -180,7 +181,8 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                                          virtualenv_name=virtualenv_name,
                                          requirements_paths=requirements_paths,
                                          config_file=config_file,
-                                         overwrite_virtualenv=overwrite_virtualenv)
+                                         overwrite_virtualenv=overwrite_virtualenv,
+                                         user=user)
         streamparse_run_path = '/'.join([env.virtualenv_root, virtualenv_name,
                                          'bin', 'streamparse_run'])
         # Update python paths in bolts
@@ -276,6 +278,7 @@ def subparser_hook(subparsers):
                                 'components in your topology.  Useful if you '
                                 'are providing your own seriailzer class.',
                            dest='simple_jar', action='store_false')
+    add_user(subparser)
     add_wait(subparser)
     add_workers(subparser)
 
@@ -292,4 +295,5 @@ def main(args):
                     remote_jar_path=args.remote_jar_path,
                     timeout=args.timeout,
                     config_file=args.config,
-                    overwrite_virtualenv=args.overwrite_virtualenv)
+                    overwrite_virtualenv=args.overwrite_virtualenv,
+                    user=args.user)

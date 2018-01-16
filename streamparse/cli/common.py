@@ -177,6 +177,13 @@ def add_timeout(parser):
                              '(default: %(default)s)')
 
 
+def add_user(parser):
+    """ Add --user option to parser """
+    parser.add_argument('--user',
+                        help='User argument to sudo when deleting files.',
+                        default='root')
+
+
 def add_wait(parser):
     """ Add --wait option to parser """
     parser.add_argument('--wait',
