@@ -9,7 +9,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 
-from fabric.api import env, execute, parallel, prefix, put, puts, run, show
+from fabric.api import (env, execute, parallel, prefix, put, puts, run, show,
+                        sudo)
 from fabric.contrib.files import exists
 from six import string_types
 
@@ -25,12 +26,17 @@ def _create_or_update_virtualenv(virtualenv_root,
                                  virtualenv_name,
                                  requirements_paths,
                                  virtualenv_flags=None,
-                                 overwrite_virtualenv=False):
+                                 overwrite_virtualenv=False,
+                                 user='root'):
     with show('output'):
         virtualenv_path = '/'.join((virtualenv_root, virtualenv_name))
         if overwrite_virtualenv:
             puts("Removing virtualenv if it exists in {}".format(virtualenv_root))
-            run('rm -rf {}'.format(virtualenv_path))
+            cmd = 'rm -rf {}'.format(virtualenv_path)
+            if user == env.user:
+                run(cmd, warn_only=True)
+            else:
+                sudo(cmd, warn_only=True, user=user)
         if not exists(virtualenv_path):
             if virtualenv_flags is None:
                 virtualenv_flags = ''
@@ -58,7 +64,8 @@ def _create_or_update_virtualenv(virtualenv_root,
 
 def create_or_update_virtualenvs(env_name, topology_name, options,
                                  virtualenv_name=None, requirements_paths=None,
-                                 config_file=None, overwrite_virtualenv=False):
+                                 config_file=None, overwrite_virtualenv=False,
+                                 user='root'):
     """Create or update virtualenvs on remote servers.
 
     Assumes that virtualenv is on the path of the remote server(s).
@@ -71,6 +78,7 @@ def create_or_update_virtualenvs(env_name, topology_name, options,
                                create virtualenv
     :param overwrite_virtualenv: Force the creation of a fresh virtualenv, even
                                  if it already exists.
+    :param user: Who to delete virtualenvs as when using overwrite_virtualenv
     """
     config = get_config()
     topology_name, topology_file = get_topology_definition(topology_name, config_file=config_file)
@@ -108,7 +116,8 @@ def create_or_update_virtualenvs(env_name, topology_name, options,
             requirements_paths,
             virtualenv_flags=options.get('virtualenv_flags'),
             hosts=env.storm_workers,
-            overwrite_virtualenv=overwrite_virtualenv)
+            overwrite_virtualenv=overwrite_virtualenv,
+            user=user)
 
 
 def subparser_hook(subparsers):
@@ -125,6 +134,10 @@ def subparser_hook(subparsers):
     add_override_name(subparser)
     add_pool_size(subparser)
     add_requirements(subparser)
+    subparser.add_argument('-u', '--user',
+                           help="User argument to sudo when deleting "
+                                "virtualenv for --overwrite_virtualenv.",
+                           default='root')
 
 
 def main(args):
@@ -134,4 +147,5 @@ def main(args):
                                  virtualenv_name=args.override_name,
                                  requirements_paths=args.requirements,
                                  config_file=args.config,
-                                 overwrite_virtualenv=args.overwrite_virtualenv)
+                                 overwrite_virtualenv=args.overwrite_virtualenv,
+                                 user=args.user)
