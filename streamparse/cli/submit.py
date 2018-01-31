@@ -147,7 +147,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                     remote_jar_path=None, timeout=None, config_file=None,
                     overwrite_virtualenv=False, user='root'):
     """Submit a topology to a remote Storm cluster."""
-    config = get_config()
+    config = get_config(config_file=config_file)
     name, topology_file = get_topology_definition(name, config_file=config_file)
     env_name, env_config = get_env_config(env_name, config_file=config_file)
     topology_class = get_topology_from_file(topology_file)
