@@ -13,6 +13,11 @@ python:
   - "pypy2.7-5.10.0"
   - "pypy3.5-5.10.1"
 
+matrix:
+  fast_finish: true
+  allow_failures:
+    - python: '3.7-dev'
+
 install:
   - travis_retry pip install --upgrade pip setuptools
   - travis_retry pip install -r requirements.txt
