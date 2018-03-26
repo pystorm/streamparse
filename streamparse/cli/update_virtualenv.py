@@ -112,10 +112,12 @@ def create_or_update_virtualenvs(env_name, topology_name, options,
     storm_options = resolve_options(options, env_config, topology_class, topology_name)
     activate_env(env_name, storm_options, config_file=config_file)
 
+    virtualenv_flags = options.get('virtualenv_flags', env_config.get('virtualenv_flags'))
+
     # Actually create or update virtualenv on worker nodes
     execute(_create_or_update_virtualenv, env.virtualenv_root, virtualenv_name,
             requirements_paths,
-            virtualenv_flags=options.get('virtualenv_flags'),
+            virtualenv_flags=virtualenv_flags,
             hosts=env.storm_workers,
             overwrite_virtualenv=overwrite_virtualenv,
             user=user)
