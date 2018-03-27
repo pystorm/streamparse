@@ -145,8 +145,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
                     wait=None, simple_jar=True, override_name=None,
                     requirements_paths=None, local_jar_path=None,
                     remote_jar_path=None, timeout=None, config_file=None,
-                    overwrite_virtualenv=False, skip_virtualenv=False,
-                    user='root'):
+                    overwrite_virtualenv=False, user='root'):
     """Submit a topology to a remote Storm cluster."""
     config = get_config(config_file=config_file)
     name, topology_file = get_topology_definition(name, config_file=config_file)
@@ -162,7 +161,7 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     use_venv = env_config.get('use_virtualenv', True)
 
     # Check if user wants to install virtualenv during the process
-    install_venv = env_config.get('install_virtualenv', not skip_virtualenv)
+    install_venv = env_config.get('install_virtualenv', use_venv)
 
     # Setup the fabric env dictionary
     activate_env(env_name)
@@ -265,12 +264,6 @@ def subparser_hook(subparsers):
     add_options(subparser)
     add_override_name(subparser)
     add_overwrite_virtualenv(subparser)
-    subparser.add_argument( '--skip-virtualenv',
-                           action='store_true',
-                           help='Skip the installation of virtualenv requirements. '
-                                'This is useful when submitting a topology multiple times '
-                                'but its virtualenv already exists and no requirements have '
-                                'changed, so requirement installation can be safely skipped.')
     add_pool_size(subparser)
     add_requirements(subparser)
     subparser.add_argument('-R', '--remote_jar_path',
@@ -303,5 +296,4 @@ def main(args):
                     timeout=args.timeout,
                     config_file=args.config,
                     overwrite_virtualenv=args.overwrite_virtualenv,
-                    skip_virtualenv=args.skip_virtualenv,
                     user=args.user)
