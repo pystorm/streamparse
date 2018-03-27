@@ -157,12 +157,6 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
         warn('Ignoring local_jar_path because given remote_jar_path')
         local_jar_path = None
 
-    # Check if we need to maintain virtualenv during the process
-    use_venv = env_config.get('use_virtualenv', True)
-
-    # Check if user wants to install virtualenv during the process
-    install_venv = env_config.get('install_virtualenv', use_venv)
-
     # Setup the fabric env dictionary
     activate_env(env_name)
 
@@ -170,12 +164,18 @@ def submit_topology(name=None, env_name=None, options=None, force=False,
     options = resolve_options(options, env_config, topology_class,
                               override_name)
 
+    # Check if we need to maintain virtualenv during the process
+    use_venv = options.get('use_virtualenv', True)
+
+    # Check if user wants to install virtualenv during the process
+    install_venv = options.get('install_virtualenv', use_venv)
+
     # Run pre_submit actions provided by project
     _pre_submit_hooks(override_name, env_name, env_config, options)
 
     # If using virtualenv, set it up, and make sure paths are correct in specs
     if use_venv:
-        virtualenv_name = env_config.get('virtualenv_name', override_name)
+        virtualenv_name = options.get('virtualenv_name', override_name)
         if install_venv:
             create_or_update_virtualenvs(env_name, name, options,
                                          virtualenv_name=virtualenv_name,
