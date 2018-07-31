@@ -25,6 +25,8 @@ class WordCountBolt(Bolt):
 
 
 class RedisWordCountBolt(Bolt):
+    outputs = ['word', 'count']
+
     def initialize(self, conf, ctx):
         self.redis = StrictRedis()
         self.total = 0
