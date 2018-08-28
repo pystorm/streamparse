@@ -44,13 +44,14 @@ How do I trigger some code before or after I submit my topology?
 
 After you create a streamparse project using ``sparse quickstart``, you'll have
 a ``fabfile.py`` in that directory. In that file, you can specify two
-functions (``pre_submit`` and ``post_submit``) which are expected to accept three arguments:
+functions (``pre_submit`` and ``post_submit``) which are expected to accept four arguments:
 
 * ``topology_name``: the name of the topology being submitted
 * ``env_name``: the name of the environment where the topology is being
   submitted (e.g. ``"prod"``)
 * ``env_config``: the relevant config portion from the ``config.json`` file for
   the environment you are submitting the topology to
+* ``options``: the fully resolved Storm options
 
 Here is a sample ``fabfile.py`` file that sends a message to IRC after a
 topology is successfully submitted to prod.
