@@ -2,10 +2,9 @@
 Word count topology (in Redis)
 """
 
+from src.bolts import RedisWordCountBolt
+from src.spouts import WordSpout
 from streamparse import Topology
-
-from bolts import RedisWordCountBolt
-from spouts import WordSpout
 
 
 class WordCount(Topology):
