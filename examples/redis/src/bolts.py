@@ -6,7 +6,7 @@ from streamparse import Bolt
 
 
 class WordCountBolt(Bolt):
-    outputs = ['word', 'count']
+    outputs = ["word", "count"]
 
     def initialize(self, conf, ctx):
         self.counter = Counter()
@@ -25,7 +25,7 @@ class WordCountBolt(Bolt):
 
 
 class RedisWordCountBolt(Bolt):
-    outputs = ['word', 'count']
+    outputs = ["word", "count"]
 
     def initialize(self, conf, ctx):
         self.redis = StrictRedis()

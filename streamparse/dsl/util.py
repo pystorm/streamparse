@@ -24,10 +24,11 @@ def to_java_arg(arg):
     elif isinstance(arg, float):
         java_arg = JavaObjectArg(double_arg=arg)
     else:
-        raise TypeError('Only basic data types can be specified'
-                        ' as arguments to JavaObject '
-                        'constructors.  Given: {!r}'
-                        .format(arg))
+        raise TypeError(
+            "Only basic data types can be specified"
+            " as arguments to JavaObject "
+            "constructors.  Given: {!r}".format(arg)
+        )
     return java_arg
 
 

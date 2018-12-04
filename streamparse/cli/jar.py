@@ -22,20 +22,23 @@ def jar_for_deploy(simple_jar=False):
     jar_type = "JAR" if simple_jar else "Uber-JAR"
     print("Cleaning from prior builds...")
     sys.stdout.flush()
-    with hide('running', 'stdout'):
+    with hide("running", "stdout"):
         res = local("lein clean")
     if not res.succeeded:
-        raise RuntimeError("Unable to run 'lein clean'!\nSTDOUT:\n{}"
-                           "\nSTDERR:\n{}".format(res.stdout, res.stderr))
+        raise RuntimeError(
+            "Unable to run 'lein clean'!\nSTDOUT:\n{}"
+            "\nSTDERR:\n{}".format(res.stdout, res.stderr)
+        )
     print("Creating topology {}...".format(jar_type))
     sys.stdout.flush()
     cmd = "lein jar" if simple_jar else "lein uberjar"
-    with hide('running'), settings(warn_only=True):
+    with hide("running"), settings(warn_only=True):
         res = local(cmd, capture=True)
         if not res.succeeded:
-            raise RuntimeError("Unable to run '{}'!\nSTDOUT:\n{}"
-                               "\nSTDERR:\n{}".format(cmd, res.stdout,
-                                                      res.stderr))
+            raise RuntimeError(
+                "Unable to run '{}'!\nSTDOUT:\n{}"
+                "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr)
+            )
     # XXX: This will fail if more than one JAR is built
     lines = res.stdout.splitlines()
     for line in lines:
@@ -48,24 +51,24 @@ def jar_for_deploy(simple_jar=False):
             jar = line
             break
     else:
-        raise RuntimeError("Failed to find JAR in '{}' output\STDOUT:\n{}"
-                           "STDERR:\n{}".format(cmd, res.stdout, res.stderr))
+        raise RuntimeError(
+            "Failed to find JAR in '{}' output\nSTDOUT:\n{}"
+            "STDERR:\n{}".format(cmd, res.stdout, res.stderr)
+        )
     print("{} created: {}".format(jar_type, jar))
     sys.stdout.flush()
-    print('Removing _resources temporary directory...', end='')
+    print("Removing _resources temporary directory...", end="")
     sys.stdout.flush()
     resources_dir = os.path.join("_resources", "resources")
     if os.path.isdir(resources_dir):
         shutil.rmtree(resources_dir)
-    print('done')
+    print("done")
     return jar
 
 
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
-    subparser = subparsers.add_parser('jar',
-                                      description=__doc__,
-                                      help=main.__doc__)
+    subparser = subparsers.add_parser("jar", description=__doc__, help=main.__doc__)
     subparser.set_defaults(func=main)
     add_simple_jar(subparser)
 

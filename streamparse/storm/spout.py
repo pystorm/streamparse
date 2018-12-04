@@ -10,8 +10,16 @@ from .component import Component
 
 class JavaSpout(Component):
     @classmethod
-    def spec(cls, name=None, serialized_java=None, full_class_name=None,
-             args_list=None, par=1, config=None, outputs=None):
+    def spec(
+        cls,
+        name=None,
+        serialized_java=None,
+        full_class_name=None,
+        args_list=None,
+        par=1,
+        config=None,
+        outputs=None,
+    ):
         """Create a :class:`JavaSpoutSpec` for a Java Spout.
 
         This spec represents this Spout in a :class:`~streamparse.Topology`.
@@ -45,16 +53,23 @@ class JavaSpout(Component):
                         2.  A `list` of `str` representing the fields output on
                             the ``default`` stream.
         """
-        return JavaSpoutSpec(cls, name=name, serialized_java=serialized_java,
-                             full_class_name=full_class_name,
-                             args_list=args_list, par=par,
-                             config=config, outputs=outputs)
+        return JavaSpoutSpec(
+            cls,
+            name=name,
+            serialized_java=serialized_java,
+            full_class_name=full_class_name,
+            args_list=args_list,
+            par=par,
+            config=config,
+            outputs=outputs,
+        )
 
 
 class ShellSpout(Component):
     @classmethod
-    def spec(cls, name=None, command=None, script=None, par=None, config=None,
-             outputs=None):
+    def spec(
+        cls, name=None, command=None, script=None, par=None, config=None, outputs=None
+    ):
         """Create a :class:`ShellSpoutSpec` for a non-Java, non-Python Spout.
 
         If you want to create a spec for a Python Spout, use
@@ -86,12 +101,20 @@ class ShellSpout(Component):
                         2.  A `list` of `str` representing the fields output on
                             the ``default`` stream.
         """
-        return ShellSpoutSpec(cls, command=command, script=script, name=name,
-                              par=par, config=config, outputs=outputs)
+        return ShellSpoutSpec(
+            cls,
+            command=command,
+            script=script,
+            name=name,
+            par=par,
+            config=config,
+            outputs=outputs,
+        )
 
 
 class Spout(pystorm.spout.Spout, ShellSpout):
     """pystorm Spout with streamparse-specific additions"""
+
     @classmethod
     def spec(cls, name=None, par=None, config=None):
         """Create a :class:`~ShellBoltSpec` for a Python Spout.
@@ -124,13 +147,18 @@ class Spout(pystorm.spout.Spout, ShellSpout):
             This method does not take a ``outputs`` argument because
             ``outputs`` should be an attribute of your :class:`~Spout` subclass.
         """
-        return ShellSpoutSpec(cls, command='streamparse_run',
-                              script='{}.{}'.format(cls.__module__,
-                                                    cls.__name__),
-                              name=name, par=par, config=config,
-                              outputs=cls.outputs)
+        return ShellSpoutSpec(
+            cls,
+            command="streamparse_run",
+            script="{}.{}".format(cls.__module__, cls.__name__),
+            name=name,
+            par=par,
+            config=config,
+            outputs=cls.outputs,
+        )
 
 
 class ReliableSpout(pystorm.spout.ReliableSpout, Spout):
     """pystorm ReliableSpout with streamparse-specific additions"""
+
     pass

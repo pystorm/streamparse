@@ -6,7 +6,6 @@ from test.streamparse.test_streamparse_run import StreamparseRunTests
 
 
 class StreamparseRunTarget(object):
-
     def __init__(self, serializer):
         self.serializer = serializer
 

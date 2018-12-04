@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import psutil
 
 
@@ -21,10 +23,11 @@ def pidmonitor():
                             details.append("[bolt]")
                 elif main_proc == "redis-server":
                     details.append("[redis]")
-                print main_proc, " ".join(details)
-                print "=> CPU% {}".format(proc.cpu_percent(interval=0.2))
+                print(main_proc, " ".join(details))
+                print("=> CPU% {}".format(proc.cpu_percent(interval=0.2)))
 
 
 try:
     pidmonitor()
-except: pass
+except:
+    pass

@@ -21,75 +21,76 @@ from setuptools import setup, find_packages
 
 # Get version without importing, which avoids dependency issues
 def get_version():
-    with open('streamparse/version.py') as version_file:
-        return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
-                         version_file.read()).group('version')
+    with open("streamparse/version.py") as version_file:
+        return re.search(
+            r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""", version_file.read()
+        ).group("version")
+
 
 def readme():
-    ''' Returns README.rst contents as str '''
-    with open('README.rst') as f:
+    """ Returns README.rst contents as str """
+    with open("README.rst") as f:
         return f.read()
 
 
 install_requires = [
-    'fabric3',
-    'jinja2',
-    'requests',
-    'texttable',
-    'six>=1.5',
-    'simplejson',
-    'pystorm>=3.1.1',
-    'thriftpy>=0.3.2',
-    'ruamel.yaml'
+    "fabric3",
+    "jinja2",
+    "requests",
+    "texttable",
+    "six>=1.5",
+    "simplejson",
+    "pystorm>=3.1.1",
+    "thriftpy>=0.3.2",
+    "ruamel.yaml",
 ]
 
 if sys.version_info.major < 3:
-    install_requires.append('contextlib2')
+    install_requires.append("contextlib2")
 
-lint_requires = [
-    'pep8',
-    'pyflakes'
-]
+lint_requires = ["pep8", "pyflakes"]
 
 if sys.version_info.major < 3:
-    tests_require = ['graphviz', 'mock', 'nose', 'unittest2']
+    tests_require = ["graphviz", "mock", "nose", "unittest2"]
 else:
-    tests_require = ['graphviz', 'mock', 'nose']
+    tests_require = ["graphviz", "mock", "nose"]
 
 dependency_links = []
 setup_requires = []
-if 'nosetests' in sys.argv[1:]:
-    setup_requires.append('nose')
+if "nosetests" in sys.argv[1:]:
+    setup_requires.append("nose")
 
 setup(
-    name='streamparse',
+    name="streamparse",
     version=get_version(),
-    author='Parsely, Inc.',
-    author_email='hello@parsely.com',
-    url='https://github.com/Parsely/streamparse',
-    description=('streamparse lets you run Python code against real-time '
-                 'streams of data. Integrates with Apache Storm.'),
+    author="Parsely, Inc.",
+    author_email="hello@parsely.com",
+    url="https://github.com/Parsely/streamparse",
+    description=(
+        "streamparse lets you run Python code against real-time "
+        "streams of data. Integrates with Apache Storm."
+    ),
     long_description=readme(),
-    license='Apache License 2.0',
+    license="Apache License 2.0",
     packages=find_packages(),
     entry_points={
-        'console_scripts': [
-            'sparse = streamparse.cli.sparse:main',
-            'streamparse = streamparse.cli.sparse:main',
-            'streamparse_run = streamparse.run:main'
+        "console_scripts": [
+            "sparse = streamparse.cli.sparse:main",
+            "streamparse = streamparse.cli.sparse:main",
+            "streamparse_run = streamparse.run:main",
         ]
     },
     install_requires=install_requires,
     tests_require=tests_require,
     setup_requires=setup_requires,
     extras_require={
-        'test': tests_require,
-        'all': install_requires + tests_require,
-        'docs': ['sphinx'] + tests_require,
-        'lint': lint_requires
+        "test": tests_require,
+        "all": install_requires + tests_require,
+        "docs": ["sphinx"] + tests_require,
+        "lint": lint_requires,
     },
     dependency_links=dependency_links,
     zip_safe=False,
-    test_suite='nose.collector',
+    test_suite="nose.collector",
     include_package_data=True,
 )

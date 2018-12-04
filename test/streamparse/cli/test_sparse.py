@@ -9,7 +9,6 @@ from nose.tools import ok_
 
 
 class SparseTestCase(unittest.TestCase):
-
     def test_load_subparsers(self):
         parser = argparse.ArgumentParser()
         subparsers = parser.add_subparsers()
@@ -17,8 +16,8 @@ class SparseTestCase(unittest.TestCase):
         # grab subcommands from subparsers
         subcommands = parser._optionals._actions[1].choices.keys()
         # we know quickstart will be a subcommand test others as needed
-        ok_('quickstart' in subcommands)
+        ok_("quickstart" in subcommands)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

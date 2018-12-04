@@ -13,7 +13,8 @@ class Stream(StreamInfo):
     """
     A Storm output stream
     """
-    def __init__(self, fields=None, name='default', direct=False):
+
+    def __init__(self, fields=None, name="default", direct=False):
         """
         :param fields: Field names for this stream.
         :type fields:  `list` or `tuple` of `str`
@@ -29,35 +30,39 @@ class Stream(StreamInfo):
             fields = list(fields)
             for field in fields:
                 if not isinstance(field, string_types):
-                    raise TypeError('All field names must be strings; given: '
-                                    '{!r}'.format(field))
+                    raise TypeError(
+                        "All field names must be strings; given: " "{!r}".format(field)
+                    )
         else:
-            raise TypeError('Stream fields must be a list, tuple, or None; '
-                            'given: {!r}'.format(fields))
+            raise TypeError(
+                "Stream fields must be a list, tuple, or None; "
+                "given: {!r}".format(fields)
+            )
         self.fields = fields
         if isinstance(name, string_types):
             self.name = name
         else:
-            raise TypeError('Stream name must be a string; given: {!r}'
-                            .format(name))
+            raise TypeError("Stream name must be a string; given: {!r}".format(name))
         if isinstance(direct, bool):
             self.direct = direct
         else:
-            raise TypeError('"direct" must be either True or False; given: {!r}'
-                            .format(direct))
+            raise TypeError(
+                '"direct" must be either True or False; given: {!r}'.format(direct)
+            )
 
 
 class _Grouping(storm_thrift.Grouping):
     """
     Version of `storm_thrift.Grouping` that has better __str__.
     """
+
     def __repr__(self):
         for name, val in iteritems(vars(self)):
-            if not name.startswith('_') and val is not None:
+            if not name.startswith("_") and val is not None:
                 if isinstance(val, NullStruct):
-                    return '{}'.format(name.upper())
+                    return "{}".format(name.upper())
                 else:
-                    return '{}({!r})'.format(name, val)
+                    return "{}({!r})".format(name, val)
 
 
 class Grouping(object):
@@ -93,6 +98,7 @@ class Grouping(object):
                             just those in-process tasks. Otherwise, this acts
                             like a normal shuffle grouping.
     """
+
     __slots__ = ()
 
     SHUFFLE = _Grouping(shuffle=NullStruct())
@@ -114,15 +120,16 @@ class Grouping(object):
         else:
             fields = list(fields)
         if not fields:
-            raise ValueError('List cannot be empty for fields grouping')
+            raise ValueError("List cannot be empty for fields grouping")
         return _Grouping(fields=fields)
 
     @classmethod
     def custom_object(cls, java_class_name, arg_list):
         """Tuples will be assigned to tasks by the given Java class."""
-        java_object = JavaObject(full_class_name=java_class_name,
-                                 args_list=[to_java_arg(arg)
-                                            for arg in arg_list])
+        java_object = JavaObject(
+            full_class_name=java_class_name,
+            args_list=[to_java_arg(arg) for arg in arg_list],
+        )
         return _Grouping(custom_object=java_object)
 
     @classmethod
@@ -130,7 +137,8 @@ class Grouping(object):
         """Tuples will be assigned to tasks by the given Java serialized class.
         """
         if not isinstance(java_serialized, bytes):
-            return TypeError('Argument to custom_serialized must be a '
-                             'serialized Java class as bytes.  Given: {!r}'
-                             .format(java_serialized))
+            return TypeError(
+                "Argument to custom_serialized must be a "
+                "serialized Java class as bytes.  Given: {!r}".format(java_serialized)
+            )
         return _Grouping(custom_serialized=java_serialized)

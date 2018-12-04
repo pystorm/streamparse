@@ -10,8 +10,17 @@ from .component import Component
 
 class JavaBolt(Component):
     @classmethod
-    def spec(cls, name=None, serialized_java=None, full_class_name=None,
-             args_list=None, inputs=None, par=1, config=None, outputs=None):
+    def spec(
+        cls,
+        name=None,
+        serialized_java=None,
+        full_class_name=None,
+        args_list=None,
+        inputs=None,
+        par=1,
+        config=None,
+        outputs=None,
+    ):
         """Create a :class:`JavaBoltSpec` for a Java Bolt.
 
         This spec represents this Bolt in a :class:`~streamparse.Topology`.
@@ -57,18 +66,33 @@ class JavaBolt(Component):
                         2.  A `list` of `str` representing the fields output on
                             the ``default`` stream.
         """
-        return JavaBoltSpec(cls, name=name, serialized_java=serialized_java,
-                            full_class_name=full_class_name,
-                            args_list=args_list, inputs=inputs, par=par,
-                            config=config, outputs=outputs)
+        return JavaBoltSpec(
+            cls,
+            name=name,
+            serialized_java=serialized_java,
+            full_class_name=full_class_name,
+            args_list=args_list,
+            inputs=inputs,
+            par=par,
+            config=config,
+            outputs=outputs,
+        )
 
 
 class ShellBolt(Component):
     """A Bolt that is started by running a command with a script argument."""
 
     @classmethod
-    def spec(cls, name=None, command=None, script=None, inputs=None,
-             par=None, config=None, outputs=None):
+    def spec(
+        cls,
+        name=None,
+        command=None,
+        script=None,
+        inputs=None,
+        par=None,
+        config=None,
+        outputs=None,
+    ):
         """Create a :class:`ShellBoltSpec` for a non-Java, non-Python Bolt.
 
         If you want to create a spec for a Python Bolt, use
@@ -109,13 +133,21 @@ class ShellBolt(Component):
                         2.  A `list` of `str` representing the fields output on
                             the ``default`` stream.
         """
-        return ShellBoltSpec(cls, command=command, script=script, name=name,
-                             inputs=inputs, par=par,
-                             config=config, outputs=outputs)
+        return ShellBoltSpec(
+            cls,
+            command=command,
+            script=script,
+            name=name,
+            inputs=inputs,
+            par=par,
+            config=config,
+            outputs=outputs,
+        )
 
 
 class Bolt(pystorm.bolt.Bolt, ShellBolt):
     """pystorm Bolt with streamparse-specific additions"""
+
     @classmethod
     def spec(cls, name=None, inputs=None, par=None, config=None):
         """Create a :class:`~ShellBoltSpec` for a Python Bolt.
@@ -157,18 +189,25 @@ class Bolt(pystorm.bolt.Bolt, ShellBolt):
             This method does not take a ``outputs`` argument because
             ``outputs`` should be an attribute of your :class:`~Bolt` subclass.
         """
-        return ShellBoltSpec(cls, command='streamparse_run',
-                             script='{}.{}'.format(cls.__module__,
-                                                   cls.__name__),
-                             name=name, inputs=inputs, par=par,
-                             config=config, outputs=cls.outputs)
+        return ShellBoltSpec(
+            cls,
+            command="streamparse_run",
+            script="{}.{}".format(cls.__module__, cls.__name__),
+            name=name,
+            inputs=inputs,
+            par=par,
+            config=config,
+            outputs=cls.outputs,
+        )
 
 
 class BatchingBolt(pystorm.bolt.BatchingBolt, Bolt):
     """pystorm BatchingBolt with streamparse-specific additions"""
+
     pass
 
 
 class TicklessBatchingBolt(pystorm.bolt.TicklessBatchingBolt, BatchingBolt):
     """pystorm TicklessBatchingBolt with streamparse-specific additions"""
+
     pass

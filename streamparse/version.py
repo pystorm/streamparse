@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''
+"""
 This module exists solely for version information so we only have to change it
 in one place. Based on the suggestion `here. <http://bit.ly/16LbuJF>`_
 
 :organization: Parsely
-'''
+"""
 
 
 def _safe_int(string):
@@ -30,5 +30,5 @@ def _safe_int(string):
         return string
 
 
-__version__ = '3.14.0'
-VERSION = tuple(_safe_int(x) for x in __version__.split('.'))
+__version__ = "3.14.0"
+VERSION = tuple(_safe_int(x) for x in __version__.split("."))

@@ -5,7 +5,7 @@ from streamparse import Bolt
 
 
 class WordCountBolt(Bolt):
-    outputs = ['word', 'count']
+    outputs = ["word", "count"]
 
     def initialize(self, conf, ctx):
         self.counter = Counter()
@@ -20,6 +20,7 @@ class WordCountBolt(Bolt):
         word = tup.values[0]
         self._increment(word, 10 if word == "dog" else 1)
         if self.total % 1000 == 0:
-            self.logger.info("counted [{:,}] words [pid={}]".format(self.total,
-                                                                    self.pid))
+            self.logger.info(
+                "counted [{:,}] words [pid={}]".format(self.total, self.pid)
+            )
         self.emit([word, self.counter[word]])

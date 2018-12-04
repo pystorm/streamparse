@@ -15,43 +15,53 @@ from .common import add_name
 
 try:
     import graphviz
+
     HAVE_GRAPHVIZ = True
 except:
     HAVE_GRAPHVIZ = False
 
 
-IPYTHON_IMAGE_FORMATS = frozenset(['jpeg', 'png'])
-IPYTHON_NO_DISPLAY_FORMATS = frozenset(['dot', 'pdf'])
+IPYTHON_IMAGE_FORMATS = frozenset(["jpeg", "png"])
+IPYTHON_NO_DISPLAY_FORMATS = frozenset(["dot", "pdf"])
 
 
 def to_graphviz(topology_class, node_attr=None, edge_attr=None, **kwargs):
     """Convert a Topology into a DiGraph"""
     if not HAVE_GRAPHVIZ:
-        raise ImportError('The visualize command requires the `graphviz` Python'
-                          ' library and `graphviz` system library to be '
-                          'installed.')
-    attributes = {'fontsize': '16',
-                  'fontcolor': 'white',
-                  'bgcolor': '#333333',
-                  'rankdir': 'LR'}
-    node_attributes = {'fontname': 'Helvetica',
-                       'fontcolor': 'white',
-                       'color': 'white',
-                       'style': 'filled',
-                       'fillcolor': '#006699'}
-    edge_attributes = {'style': 'solid',
-                       'color': 'white',
-                       'arrowhead': 'open',
-                       'fontname': 'Helvetica',
-                       'fontsize': '12',
-                       'fontcolor': 'white'}
+        raise ImportError(
+            "The visualize command requires the `graphviz` Python"
+            " library and `graphviz` system library to be "
+            "installed."
+        )
+    attributes = {
+        "fontsize": "16",
+        "fontcolor": "white",
+        "bgcolor": "#333333",
+        "rankdir": "LR",
+    }
+    node_attributes = {
+        "fontname": "Helvetica",
+        "fontcolor": "white",
+        "color": "white",
+        "style": "filled",
+        "fillcolor": "#006699",
+    }
+    edge_attributes = {
+        "style": "solid",
+        "color": "white",
+        "arrowhead": "open",
+        "fontname": "Helvetica",
+        "fontsize": "12",
+        "fontcolor": "white",
+    }
     attributes.update(kwargs)
     if node_attr is not None:
         node_attributes.update(node_attr)
     if edge_attr is not None:
         edge_attributes.update(edge_attr)
-    g = graphviz.Digraph(graph_attr=attributes, node_attr=node_attributes,
-                         edge_attr=edge_attributes)
+    g = graphviz.Digraph(
+        graph_attr=attributes, node_attr=node_attributes, edge_attr=edge_attributes
+    )
 
     all_specs = {}
     all_specs.update(topology_class.thrift_bolts)
@@ -61,19 +71,20 @@ def to_graphviz(topology_class, node_attr=None, edge_attr=None, **kwargs):
 
     for spec in topology_class.specs:
         if isinstance(spec, (JavaSpoutSpec, ShellSpoutSpec)):
-            shape = 'box'
+            shape = "box"
         else:
             shape = None
         g.node(spec.name, label=spec.name, shape=shape)
         for stream_id, grouping in list(iteritems(spec.inputs)):
             parent = stream_id.componentId
             outputs = all_specs[parent].common.streams[stream_id.streamId].output_fields
-            label = ('Stream: {}\lFields: {}\lGrouping: {}\l'
-                     .format(stream_id.streamId, outputs, grouping))
-            sametail = '{}-{}'.format(parent, stream_id.streamId)
+            label = "Stream: {}\lFields: {}\lGrouping: {}\l".format(
+                stream_id.streamId, outputs, grouping
+            )
+            sametail = "{}-{}".format(parent, stream_id.streamId)
             if sametail not in sametail_nodes:
-                g.node(sametail, shape='point', width='0')
-                g.edge(parent, sametail, label=label, dir='none')
+                g.node(sametail, shape="point", width="0")
+                g.edge(parent, sametail, label=label, dir="none")
                 sametail_nodes.add(sametail)
             g.edge(sametail, spec.name, samehead=str(outputs))
 
@@ -104,7 +115,7 @@ def _get_display_cls(format):
         # Partially apply `format` so that `Image` and `SVG` supply a uniform
         # interface to the caller.
         return partial(display.Image, format=format)
-    elif format == 'svg':
+    elif format == "svg":
         return display.SVG
     else:
         raise ValueError("Unknown format '%s' passed to `dot_graph`" % format)
@@ -151,29 +162,31 @@ def visualize_topology(name=None, filename=None, format=None, **kwargs):
 
     g = to_graphviz(topology_class, **kwargs)
 
-    fmts = ['.png', '.pdf', '.dot', '.svg', '.jpeg', '.jpg']
+    fmts = [".png", ".pdf", ".dot", ".svg", ".jpeg", ".jpg"]
     if format is None and any(filename.lower().endswith(fmt) for fmt in fmts):
         filename, format = os.path.splitext(filename)
         format = format[1:].lower()
 
     if format is None:
-        format = 'png'
+        format = "png"
 
     data = g.pipe(format=format)
     if not data:
-        raise RuntimeError("Graphviz failed to properly produce an image. "
-                           "This probably means your installation of graphviz "
-                           "is missing png support. See: "
-                           "https://github.com/ContinuumIO/anaconda-issues/"
-                           "issues/485 for more information.")
+        raise RuntimeError(
+            "Graphviz failed to properly produce an image. "
+            "This probably means your installation of graphviz "
+            "is missing png support. See: "
+            "https://github.com/ContinuumIO/anaconda-issues/"
+            "issues/485 for more information."
+        )
 
     display_cls = _get_display_cls(format)
 
     if not filename:
         return display_cls(data=data)
 
-    full_filename = '.'.join([filename, format])
-    with open(full_filename, 'wb') as f:
+    full_filename = ".".join([filename, format])
+    with open(full_filename, "wb") as f:
         f.write(data)
 
     return display_cls(filename=full_filename)
@@ -181,18 +194,19 @@ def visualize_topology(name=None, filename=None, format=None, **kwargs):
 
 def subparser_hook(subparsers):
     """ Hook to add subparser for this command. """
-    subparser = subparsers.add_parser('visualize',
-                                      description=__doc__,
-                                      help=main.__doc__)
+    subparser = subparsers.add_parser(
+        "visualize", description=__doc__, help=main.__doc__
+    )
     subparser.set_defaults(func=main)
     add_name(subparser)
-    subparser.add_argument('-f', '--format',
-                           help='File extension for graph file. Defaults to PNG')
-    subparser.add_argument('-o', '--output_file',
-                           help='Name of output file. Defaults to NAME.FORMAT')
+    subparser.add_argument(
+        "-f", "--format", help="File extension for graph file. Defaults to PNG"
+    )
+    subparser.add_argument(
+        "-o", "--output_file", help="Name of output file. Defaults to NAME.FORMAT"
+    )
 
 
 def main(args):
     """Create a Graphviz visualization of the topology"""
-    visualize_topology(name=args.name, format=args.format,
-                       filename=args.output_file)
+    visualize_topology(name=args.name, format=args.format, filename=args.output_file)

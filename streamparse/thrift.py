@@ -784,11 +784,11 @@ exception HBExecutionException {
 """
 
 io_class = io.StringIO if six.PY3 else io.BytesIO
-storm_thrift = thriftpy.load_fp(io_class(_THRIFT_STR),
-                                module_name='storm_thrift')
+storm_thrift = thriftpy.load_fp(io_class(_THRIFT_STR), module_name="storm_thrift")
 # Fix a lovely issue where GlobalStreamIds didn't have consistent hash values
-storm_thrift.GlobalStreamId.__hash__ = lambda self: (hash(self.componentId) ^
-                                                     hash(self.streamId))
+storm_thrift.GlobalStreamId.__hash__ = lambda self: (
+    hash(self.componentId) ^ hash(self.streamId)
+)
 
 # Import everything so it's actually available within this module
 from storm_thrift import *
