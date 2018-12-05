@@ -251,6 +251,14 @@ def add_workers(parser):
     )
 
 
+VIRTUALENV_OPTIONS = (
+    "install_virtualenv",
+    "use_virtualenv",
+    "virtualenv_flags",
+    "virtualenv_root",
+)
+
+
 def resolve_options(
     cli_options, env_config, topology_class, topology_name, local_only=False
 ):
@@ -289,6 +297,11 @@ def resolve_options(
         storm_options["pystorm.log.backup_count"] = log_config["backup_count"]
     if isinstance(log_config.get("level"), string_types):
         storm_options["pystorm.log.level"] = log_config["level"].lower()
+
+    # Make sure virtualenv options are present here
+    for venv_option in VIRTUALENV_OPTIONS:
+        if venv_option in env_config:
+            storm_options[venv_option] = env_config[venv_option]
 
     # Override options with topology options
     storm_options.update(topology_class.config)
