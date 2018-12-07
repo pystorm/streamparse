@@ -9,7 +9,7 @@ try:
 except ImportError:
     import json
 from pkg_resources import parse_version
-from pssh.pssh2_client import ParallelSSHClient
+from pssh.clients.native import ParallelSSHClient
 
 from .common import (
     add_config,

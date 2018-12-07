@@ -43,7 +43,7 @@ install_requires = [
     "pystorm>=3.1.1",
     "thriftpy>=0.3.2",
     "ruamel.yaml",
-    "parallel-ssh>=1.2.1.post1",
+    "parallel-ssh>=1.9.0",
 ]
 
 if sys.version_info.major < 3:

@@ -10,7 +10,7 @@ import os
 from io import open
 
 from gevent import joinall
-from pssh.pssh2_client import ParallelSSHClient
+from pssh.clients.native import ParallelSSHClient
 from six import string_types
 
 from .common import (
