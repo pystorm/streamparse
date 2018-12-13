@@ -612,7 +612,7 @@ def print_ssh_output(output, print_stderr=False):
         if host_output.exit_code:
             print("Command failed on %s" % host)
         if host_output.exit_code or print_stderr:
-            for msg in host_output.stderr:
+            for line in host_output.stderr:
                 print("[%s] err: %s" % (host, line))
 
 
