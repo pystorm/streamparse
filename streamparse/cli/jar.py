@@ -13,6 +13,13 @@ from ..util import prepare_topology
 from .common import add_simple_jar
 
 
+try:
+    FileNotFoundError
+except NameError:
+    # py2
+    FileNotFoundError = IOError
+
+
 def jar_for_deploy(simple_jar=False):
     """ Build a jar to use for deploying the topology. """
     # Create _resources folder which will contain Python code in JAR
