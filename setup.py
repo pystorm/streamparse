@@ -34,7 +34,7 @@ def readme():
 
 
 install_requires = [
-    "fabric3",
+    "cython",
     "jinja2",
     "requests",
     "texttable",
@@ -43,6 +43,7 @@ install_requires = [
     "pystorm>=3.1.1",
     "thriftpy>=0.3.2",
     "ruamel.yaml",
+    "fabric3",
 ]
 
 if sys.version_info.major < 3:
@@ -51,14 +52,9 @@ if sys.version_info.major < 3:
 lint_requires = ["pep8", "pyflakes"]
 
 if sys.version_info.major < 3:
-    tests_require = ["graphviz", "mock", "nose", "unittest2"]
+    tests_require = ["graphviz", "mock", "pytest", "unittest2"]
 else:
-    tests_require = ["graphviz", "mock", "nose"]
-
-dependency_links = []
-setup_requires = []
-if "nosetests" in sys.argv[1:]:
-    setup_requires.append("nose")
+    tests_require = ["graphviz", "pytest"]
 
 setup(
     name="streamparse",
@@ -82,15 +78,12 @@ setup(
     },
     install_requires=install_requires,
     tests_require=tests_require,
-    setup_requires=setup_requires,
     extras_require={
         "test": tests_require,
         "all": install_requires + tests_require,
         "docs": ["sphinx"] + tests_require,
         "lint": lint_requires,
     },
-    dependency_links=dependency_links,
     zip_safe=False,
-    test_suite="nose.collector",
     include_package_data=True,
 )
