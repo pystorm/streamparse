@@ -1,5 +1,6 @@
-fabric3
+cython
 jinja2
+fabric3
 pystorm>=3.1.1
 requests
 ruamel.yaml
@@ -8,3 +9,4 @@ simplejson
 six>=1.5
 texttable
 thriftpy>=0.3.2
+contextlib2; python_version < '3'

@@ -1,4 +1,4 @@
 graphviz
-mock
-nose
-unittest2
+mock; python_version < '3'
+unittest2; python_version < '3'
+pytest
