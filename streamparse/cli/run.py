@@ -91,7 +91,7 @@ def run_local_topology(
                 jar=topology_jar, time=time, yaml=yaml_file.name
             )
         )
-        subprocess.call([cmd], shell=True)
+        subprocess.call(cmd.split())
 
 
 def subparser_hook(subparsers):

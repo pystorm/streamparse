@@ -382,7 +382,9 @@ def local_storm_version():
     """
     try:
         cmd = "storm version"
-        res = subprocess.check_output([cmd], stderr=subprocess.STDOUT, shell=True)
+        res = subprocess.check_output(
+            cmd.split(), stderr=subprocess.STDOUT, encoding="utf-8"
+        )
     except subprocess.CalledProcessError as e:
         raise RuntimeError("Unable to run '{}'!\n STDERR:\n{}".format(cmd, e.output))
 
@@ -415,7 +417,9 @@ def storm_lib_version():
     """
     try:
         cmd = "lein deps :tree"
-        res = subprocess.check_output([cmd], stderr=subprocess.STDOUT, shell=True)
+        res = subprocess.check_output(
+            cmd.split(), stderr=subprocess.STDOUT, encoding="utf-8"
+        )
     except subprocess.CalledProcessError as e:
         raise RuntimeError("Unable to run '{}'!\nSTDERR:\n{}".format(cmd, e.output))
 
