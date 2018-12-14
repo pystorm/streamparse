@@ -2,8 +2,8 @@
 Word count topology (in memory)
 """
 
-from src.bolts import WordCountBolt
-from src.spouts import WordSpout
+from bolts import WordCountBolt
+from spouts import WordSpout
 from streamparse import Grouping, Topology
 
 
