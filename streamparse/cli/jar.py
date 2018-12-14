@@ -19,43 +19,34 @@ def jar_for_deploy(simple_jar=False):
     prepare_topology()
     # Use Leiningen to clean up and build JAR
     jar_type = "JAR" if simple_jar else "Uber-JAR"
-    print("Cleaning from prior builds...")
-    sys.stdout.flush()
+    print("Cleaning from prior builds...", flush=True)
     try:
-        subprocess.check_output(["lein clean"], shell=True)
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(
-            "Unable to run 'lein clean'!\nSTDERR:\n{}".format(exc.output)
-        )
+        subprocess.check_output(["lein", "clean"])
+    except FileNotFoundError:
+        raise RuntimeError("Unable to find 'lein' in PATH. Is leiningen installed?")
 
-    print("Creating topology {}...".format(jar_type))
-    sys.stdout.flush()
+    print("Creating topology {}...".format(jar_type), flush=True)
     cmd = "lein jar" if simple_jar else "lein uberjar"
 
-    try:
-        output = subprocess.check_output([cmd], shell=True)
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError("Unable to run '{}'!\nSTDERR:\n{}".format(cmd, exc.output))
+    output = subprocess.check_output(cmd.split(), encoding="utf-8")
 
     # XXX: This will fail if more than one JAR is built
     lines = output.splitlines()
     for line in lines:
         line = line.strip()
-        if not line.startswith(b"Created"):
+        if not line.startswith("Created"):
             continue
-        line = line.replace(b"Created ", b"")
+        line = line.replace("Created ", "")
         # != is XOR
-        if simple_jar != line.endswith(b"standalone.jar"):
+        if simple_jar != line.endswith("standalone.jar"):
             jar = line
             break
     else:
         raise RuntimeError(
             "Failed to find JAR in '{}' output\nSTDOUT:\n{}".format(cmd, output)
         )
-    print("{} created: {}".format(jar_type, jar))
-    sys.stdout.flush()
-    print("Removing _resources temporary directory...", end="")
-    sys.stdout.flush()
+    print("{} created: {}".format(jar_type, jar), flush=True)
+    print("Removing _resources temporary directory...", end="", flush=True)
     resources_dir = os.path.join("_resources", "resources")
     if os.path.isdir(resources_dir):
         shutil.rmtree(resources_dir)

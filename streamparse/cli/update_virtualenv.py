@@ -11,6 +11,7 @@ from io import open
 
 from gevent import joinall
 from pssh.clients.native import ParallelSSHClient
+from pssh.utils import enable_host_logger
 from six import string_types
 
 from .common import (
@@ -32,7 +33,6 @@ from ..util import (
     get_env_config,
     get_topology_definition,
     get_topology_from_file,
-    print_ssh_output,
 )
 
 
@@ -48,6 +48,7 @@ def _create_or_update_virtualenv(
     pool_size=10,
 ):
     virtualenv_path = "/".join((virtualenv_root, virtualenv_name))
+    enable_host_logger()
     ssh_client = ParallelSSHClient(hosts, pool_size=pool_size)
     virtualenv_exists_output = ssh_client.run_command(
         'if [ -d {} ]; then echo "present"; fi'.format(virtualenv_path)
@@ -65,49 +66,49 @@ def _create_or_update_virtualenv(
             try:
                 next(host_output.stdout)
             except StopIteration:
-                if virtualenv_flags is None:
-                    virtualenv_flags = ""
                 hosts_without_virtualenv.append(host)
         ssh_client.hosts = hosts_without_virtualenv
+
+    if virtualenv_flags is None:
+        virtualenv_flags = ""
 
     print("Creating virtualenvs as necessary...")
     output = ssh_client.run_command(
         "virtualenv {} {}".format(virtualenv_path, virtualenv_flags)
     )
-    ssh_client.join(output)
+    ssh_client.join(output, consume_output=True)
     ssh_client.hosts = hosts
 
     if isinstance(requirements_paths, string_types):
         requirements_paths = [requirements_paths]
 
+    temp_req_paths = []
     for requirements_path in requirements_paths:
         output = ssh_client.run_command(
             "mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt"
         )
         temp_req = next(output[hosts[0]].stdout)
+        temp_req_paths.append(temp_req)
         greenlets = ssh_client.copy_file(requirements_path, temp_req)
-        joinall(greenlets)
+        joinall(greenlets, raise_error=True)
 
-        virtualenv_activate = "source {}".format(
-            os.path.join(virtualenv_path, "bin/activate")
-        )
-        pip_upgrade = "pip install --upgrade 'pip>=9.0'"
-        pip_requirements_install = (
-            "pip install -r {} --exists-action w --upgrade --upgrade-strategy "
-            "only-if-needed".format(temp_req)
-        )
+    virtualenv_activate = "source {}".format(
+        os.path.join(virtualenv_path, "bin/activate")
+    )
+    pip_upgrade = "pip install --upgrade 'pip>=9.0'"
+    pip_requirements_install = (
+        "pip install --exists-action w --upgrade --upgrade-strategy "
+        "only-if-needed -r {}".format(" -r ".join(temp_req_paths))
+    )
 
-        output = ssh_client.run_command(
-            "{} && {} && {}".format(
-                virtualenv_activate, pip_upgrade, pip_requirements_install
-            )
+    output = ssh_client.run_command(
+        "{} && {} && {}".format(
+            virtualenv_activate, pip_upgrade, pip_requirements_install
         )
-        ssh_client.join(output)
-        print_ssh_output(output)
-        ssh_client.join(output)
-        output = ssh_client.run_command("rm {}".format(temp_req))
-        ssh_client.join(output)
-        print_ssh_output(output)
+    )
+    ssh_client.join(output, consume_output=True)
+    output = ssh_client.run_command("rm {}".format(" ".join(temp_req_paths)))
+    ssh_client.join(output, consume_output=True)
 
     print("Updated virtualenvs on all Storm workers.")
 
@@ -180,7 +181,7 @@ def create_or_update_virtualenvs(
         env_dict["virtualenv_root"],
         virtualenv_name,
         requirements_paths,
-        virtualenv_flags=options.get("virtualenv_flags"),
+        virtualenv_flags=storm_options.get("virtualenv_flags"),
         hosts=env_dict["storm_workers"],
         overwrite_virtualenv=overwrite_virtualenv,
         user=user,

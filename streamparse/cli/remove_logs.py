@@ -10,6 +10,8 @@ except ImportError:
     import json
 from pkg_resources import parse_version
 from pssh.clients.native import ParallelSSHClient
+from pssh.utils import enable_host_logger
+
 
 from .common import (
     add_config,
@@ -29,7 +31,6 @@ from ..util import (
     get_topology_definition,
     get_topology_from_file,
     nimbus_storm_version,
-    print_ssh_output,
     ssh_tunnel,
 )
 
@@ -57,12 +58,12 @@ def _remove_logs(
         log_path=log_path,
     )
     rm_pipe = " | xargs rm -f"
+    enable_host_logger()
     ssh_client = ParallelSSHClient(hosts, pool_size=pool_size)
     run_kwargs = {} if user == env_user else {"user": user, "sudo": True}
     output = ssh_client.run_command(ls_cmd + rm_pipe, **run_kwargs)
 
-    ssh_client.join(output)
-    print_ssh_output(output)
+    ssh_client.join(output, consume_output=True)
 
 
 def remove_logs(

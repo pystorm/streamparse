@@ -10,6 +10,7 @@ except ImportError:
     import json
 from pkg_resources import parse_version
 from pssh.clients.native import ParallelSSHClient
+from pssh.utils import enable_host_logger
 
 from .common import (
     add_config,
@@ -29,7 +30,6 @@ from ..util import (
     get_topology_from_file,
     get_nimbus_client,
     nimbus_storm_version,
-    print_ssh_output,
     ssh_tunnel,
 )
 
@@ -49,10 +49,10 @@ def _tail_logs(
     tail_pipe = " | xargs tail -n {}".format(num_lines)
     if follow:
         tail_pipe += " -f"
-
+    enable_host_logger()
     ssh_client = ParallelSSHClient(hosts, pool_size=pool_size)
     output = ssh_client.run_command(ls_cmd + tail_pipe)
-    print_ssh_output(output)
+    ssh_client.join(output, consume_output=True)
 
 
 def tail_topology(

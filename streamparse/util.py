@@ -604,18 +604,6 @@ def set_topology_serializer(env_config, config, topology_class):
                 inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)
 
 
-def print_ssh_output(output, print_stderr=False):
-    """Helper for printing output for all hosts from ParallelSSH"""
-    for host, host_output in output.items():
-        for line in host_output.stdout:
-            print("[%s] out: %s" % (host, line))
-        if host_output.exit_code:
-            print("Command failed on %s" % host)
-        if host_output.exit_code or print_stderr:
-            for line in host_output.stderr:
-                print("[%s] err: %s" % (host, line))
-
-
 def _colorize(code):
     """
     Function akin to fabric.colors to colorize output
