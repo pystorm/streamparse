@@ -35,11 +35,11 @@ from ..util import (
 )
 
 
-def _run_cmd(cmd, user, warn_only=False):
-    if user == env.user:
-        run(cmd, warn_only=warn_only)
-    else:
-        sudo(cmd, warn_only=warn_only, user=user)
+def _run_cmd(cmd, user, **kwargs):
+    with show("everything"):
+        return (
+            run(cmd, **kwargs) if user == env.user else sudo(cmd, user=user, **kwargs)
+        )
 
 
 @parallel
@@ -73,19 +73,20 @@ def _create_or_update_virtualenv(
             puts("Uploading {} to temporary file.".format(requirements_path))
             temp_req = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
             temp_req_paths.append(temp_req)
-            put(requirements_path, temp_req)
+            put(requirements_path, temp_req, mode="0666")
 
         puts("Updating virtualenv: {}".format(virtualenv_name))
         pip_path = "/".join((virtualenv_path, "bin", "pip"))
         # Make sure we're using latest pip so options work as expected
-        run("{} install --upgrade 'pip>=9.0,!=19.0'".format(pip_path), pty=False)
-        run(
+        _run_cmd("{} install --upgrade 'pip>=9.0,!=19.0'".format(pip_path), user)
+        _run_cmd(
             (
                 "{} install -r {} --exists-action w --upgrade "
                 "--upgrade-strategy only-if-needed --progress-bar off"
             ).format(pip_path, " -r ".join(temp_req_paths)),
-            pty=False,
+            user,
         )
+
         run("rm -f {}".format(" ".join(temp_req_paths)))
 
 
