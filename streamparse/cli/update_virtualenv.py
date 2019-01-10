@@ -35,6 +35,13 @@ from ..util import (
 )
 
 
+def _run_cmd(cmd, user, warn_only=False):
+    if user == env.user:
+        run(cmd, warn_only=warn_only)
+    else:
+        sudo(cmd, warn_only=warn_only, user=user)
+
+
 @parallel
 def _create_or_update_virtualenv(
     virtualenv_root,
@@ -49,15 +56,13 @@ def _create_or_update_virtualenv(
         if overwrite_virtualenv:
             puts("Removing virtualenv if it exists in {}".format(virtualenv_root))
             cmd = "rm -rf {}".format(virtualenv_path)
-            if user == env.user:
-                run(cmd, warn_only=True)
-            else:
-                sudo(cmd, warn_only=True, user=user)
+            _run_cmd(cmd, user, warn_only=True)
         if not exists(virtualenv_path):
             if virtualenv_flags is None:
                 virtualenv_flags = ""
             puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-            run("virtualenv {} {}".format(virtualenv_path, virtualenv_flags))
+            cmd = "virtualenv {} {}".format(virtualenv_path, virtualenv_flags)
+            _run_cmd(cmd, user)
 
         if isinstance(requirements_paths, string_types):
             requirements_paths = [requirements_paths]
