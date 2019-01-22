@@ -61,7 +61,9 @@ def _create_or_update_virtualenv(
             if virtualenv_flags is None:
                 virtualenv_flags = ""
             puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-            cmd = "virtualenv {} {}".format(virtualenv_path, virtualenv_flags)
+            cmd = "virtualenv --never-download {} {}".format(
+                virtualenv_path, virtualenv_flags
+            )
             _run_cmd(cmd, user)
 
         if isinstance(requirements_paths, string_types):
