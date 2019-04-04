@@ -68,23 +68,25 @@ def _create_or_update_virtualenv(
 
         if isinstance(requirements_paths, string_types):
             requirements_paths = [requirements_paths]
+        temp_req_paths = []
         for requirements_path in requirements_paths:
             puts("Uploading {} to temporary file.".format(requirements_path))
             temp_req = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
+            temp_req_paths.append(temp_req)
             put(requirements_path, temp_req)
 
-            puts("Updating virtualenv: {}".format(virtualenv_name))
-            cmd = "source {}".format(os.path.join(virtualenv_path, "bin/activate"))
-            with prefix(cmd):
-                # Make sure we're using latest pip so options work as expected
-                run("pip install --upgrade 'pip>=9.0,!=19.0'", pty=False)
-                run(
-                    "pip install -r {} --exists-action w --upgrade "
-                    "--upgrade-strategy only-if-needed".format(temp_req),
-                    pty=False,
-                )
-
-            run("rm {}".format(temp_req))
+        puts("Updating virtualenv: {}".format(virtualenv_name))
+        pip_path = "/".join((virtualenv_path, "bin", "pip"))
+        # Make sure we're using latest pip so options work as expected
+        run("{} install --upgrade 'pip>=9.0,!=19.0'".format(pip_path), pty=False)
+        run(
+            (
+                "{} install -r {} --exists-action w --upgrade "
+                "--upgrade-strategy only-if-needed --progress-bar off"
+            ).format(pip_path, " -r ".join(temp_req_paths)),
+            pty=False,
+        )
+        run("rm -f {}".format(" ".join(temp_req_paths)))
 
 
 def create_or_update_virtualenvs(
