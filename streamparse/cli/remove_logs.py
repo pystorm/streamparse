@@ -14,21 +14,24 @@ from .common import (
     add_override_name,
     add_pattern,
     add_pool_size,
+    resolve_options,
+    warn_about_deprecated_user,
 )
 from ..util import (
     activate_env,
     get_env_config,
     get_topology_definition,
+    get_topology_from_file,
     get_logfiles_cmd,
-    get_nimbus_client,
     nimbus_storm_version,
+    run_cmd,
     ssh_tunnel,
 )
 
 
 @parallel
 def _remove_logs(
-    topology_name, pattern, remove_worker_logs, user, is_old_storm, remove_all_artifacts
+    topology_name, pattern, remove_worker_logs, user, remove_all_artifacts
 ):
     """
     Actual task to remove logs on all servers in parallel.
@@ -75,7 +78,6 @@ def remove_logs(
         pattern,
         remove_worker_logs,
         user,
-        is_old_storm,
         remove_all_artifacts,
         hosts=env.storm_workers,
     )
