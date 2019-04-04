@@ -378,6 +378,14 @@ This implies a few requirements about the user you specify per environment:
 2. Must have write access to the ``virtualenv_root`` on all servers in your
    Storm cluster
 
+If you would like to use your system user for creating the SSH connection to
+the Storm cluster, you can omit the ``user`` setting from your ``config.json``.
+
+By default the ``root`` user is used for creating virtualenvs when you do not
+specify a ``user`` in your ``config.json``. To override this, set the
+``sudo_user`` option in your ``config.json``. ``sudo_user`` will default to
+``user`` if one is specified.
+
 streamparse also assumes that virtualenv is installed on all Storm servers.
 
 Once an environment is configured, we could deploy our wordcount topology like
