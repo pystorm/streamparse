@@ -156,7 +156,7 @@ def create_or_update_virtualenvs(
         env.virtualenv_root,
         virtualenv_name,
         requirements_paths,
-        virtualenv_flags=options.get("virtualenv_flags"),
+        virtualenv_flags=storm_options.get("virtualenv_flags"),
         hosts=env.storm_workers,
         overwrite_virtualenv=overwrite_virtualenv,
         user=user,
