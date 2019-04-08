@@ -3,6 +3,7 @@ Functions for adding common CLI arguments to argparse sub-commands.
 """
 import argparse
 import copy
+import warnings
 
 from ruamel import yaml
 from six import integer_types, string_types
@@ -220,11 +221,24 @@ def add_timeout(parser):
     )
 
 
-def add_user(parser):
-    """ Add --user option to parser """
-    parser.add_argument(
-        "--user", help="User argument to sudo when deleting files.", default="root"
-    )
+def add_user(parser, allow_short=False):
+    """ Add --user option to parser
+
+    Set allow_short to add -u as well.
+    """
+    args = ["--user"]
+    if allow_short:
+        args.insert(0, "-u")
+
+    kwargs = {
+        "help": "User argument to sudo when creating and deleting virtualenvs.",
+        "default": None,
+        "type": option_alias("sudo_user"),
+        "dest": "options",
+        "action": _StoreDictAction,
+    }
+
+    parser.add_argument(*args, **kwargs)
 
 
 def add_wait(parser):
@@ -303,6 +317,9 @@ def resolve_options(
         if venv_option in env_config:
             storm_options[venv_option] = env_config[venv_option]
 
+    # Set sudo_user default to SSH user if we have one
+    storm_options["sudo_user"] = env_config.get("user", None)
+
     # Override options with topology options
     storm_options.update(topology_class.config)
 
@@ -330,4 +347,20 @@ def resolve_options(
     if storm_options.get("topology.workers") is None:
         storm_options["topology.workers"] = num_storm_workers
 
+    # If sudo_user was not present anywhere, set it to "root"
+    storm_options.setdefault("sudo_user", "root")
+
     return storm_options
+
+
+def warn_about_deprecated_user(user, func_name):
+    if user is not None:
+        warnings.warn(
+            (
+                "The 'user' argument to '{}' will be removed in the next "
+                "major release of streamparse. Provide the 'sudo_user' key to"
+                " the 'options' dict argument instead."
+            ).format(func_name),
+            DeprecationWarning,
+        )
+

@@ -4,8 +4,7 @@ Remove all logs from Storm workers for the specified Storm topology.
 
 from __future__ import absolute_import, print_function
 
-from fabric.api import env, execute, parallel, run, sudo
-from pkg_resources import parse_version
+from fabric.api import env, execute, parallel
 
 from .common import (
     add_config,
@@ -14,21 +13,23 @@ from .common import (
     add_override_name,
     add_pattern,
     add_pool_size,
+    add_user,
+    resolve_options,
+    warn_about_deprecated_user,
 )
 from ..util import (
     activate_env,
     get_env_config,
     get_topology_definition,
+    get_topology_from_file,
     get_logfiles_cmd,
-    get_nimbus_client,
-    nimbus_storm_version,
-    ssh_tunnel,
+    run_cmd,
 )
 
 
 @parallel
 def _remove_logs(
-    topology_name, pattern, remove_worker_logs, user, is_old_storm, remove_all_artifacts
+    topology_name, pattern, remove_worker_logs, user, remove_all_artifacts
 ):
     """
     Actual task to remove logs on all servers in parallel.
@@ -40,10 +41,7 @@ def _remove_logs(
         include_all_artifacts=remove_all_artifacts,
     )
     rm_pipe = " | xargs rm -f"
-    if user == env.user:
-        run(ls_cmd + rm_pipe, warn_only=True)
-    else:
-        sudo(ls_cmd + rm_pipe, warn_only=True, user=user)
+    run_cmd(ls_cmd + rm_pipe, user, warn_only=True)
 
 
 def remove_logs(
@@ -51,31 +49,28 @@ def remove_logs(
     env_name=None,
     pattern=None,
     remove_worker_logs=False,
-    user="root",
+    user=None,
     override_name=None,
     remove_all_artifacts=False,
     options=None,
     config_file=None,
 ):
     """Remove all Python logs on Storm workers in the log.path directory."""
-    if override_name is not None:
-        topology_name = override_name
-    else:
-        topology_name = get_topology_definition(topology_name, config_file=config_file)[
-            0
-        ]
+    warn_about_deprecated_user(user, "remove_logs")
+    topology_name, topology_file = get_topology_definition(
+        override_name or topology_name, config_file=config_file
+    )
+    topology_class = get_topology_from_file(topology_file)
     env_name, env_config = get_env_config(env_name, config_file=config_file)
-    with ssh_tunnel(env_config) as (host, port):
-        nimbus_client = get_nimbus_client(env_config, host=host, port=port)
-        is_old_storm = nimbus_storm_version(nimbus_client) < parse_version("1.0")
-    activate_env(env_name, options=options)
+    storm_options = resolve_options(options, env_config, topology_class, topology_name)
+    activate_env(env_name, storm_options, config_file=config_file)
     execute(
         _remove_logs,
         topology_name,
         pattern,
         remove_worker_logs,
-        user,
-        is_old_storm,
+        # TODO: Remove "user" in next major version
+        user or storm_options["sudo_user"],
         remove_all_artifacts,
         hosts=env.storm_workers,
     )
@@ -101,10 +96,7 @@ def subparser_hook(subparsers):
     add_override_name(subparser)
     add_pattern(subparser)
     add_pool_size(subparser)
-    # Not using add_user because we need -u for backward compatibility
-    subparser.add_argument(
-        "-u", "--user", help="User argument to sudo when deleting logs.", default="root"
-    )
+    add_user(subparser, allow_short=True)
     subparser.add_argument(
         "-w",
         "--remove_worker_logs",
@@ -123,7 +115,7 @@ def main(args):
         env_name=args.environment,
         pattern=args.pattern,
         remove_worker_logs=args.remove_worker_logs,
-        user=args.user,
+        options=args.options,
         override_name=args.override_name,
         remove_all_artifacts=args.remove_all_artifacts,
         config_file=args.config,

@@ -16,11 +16,11 @@ from socket import error as SocketError
 
 import requests
 import simplejson as json
-from fabric.api import env, hide, local, settings
+from fabric.api import env, hide, local, settings, show, run, sudo
 from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from texttable import Texttable
-from six import iteritems, itervalues
+from six import itervalues
 from six.moves.socketserver import UDPServer, TCPServer
 from thriftpy.protocol import TBinaryProtocolFactory
 from thriftpy.rpc import make_client
@@ -599,3 +599,10 @@ def set_topology_serializer(env_config, config, topology_class):
             inner_shell = thrift_spout.spout_object.shell
             if inner_shell is not None:
                 inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)
+
+
+def run_cmd(cmd, user, **kwargs):
+    with show("everything"):
+        return (
+            run(cmd, **kwargs) if user == env.user else sudo(cmd, user=user, **kwargs)
+        )

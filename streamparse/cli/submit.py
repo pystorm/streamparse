@@ -46,6 +46,7 @@ from .common import (
     add_wait,
     add_workers,
     resolve_options,
+    warn_about_deprecated_user,
 )
 from .jar import jar_for_deploy
 from .kill import _kill_topology
@@ -194,10 +195,11 @@ def submit_topology(
     timeout=None,
     config_file=None,
     overwrite_virtualenv=False,
-    user="root",
+    user=None,
     active=True,
 ):
     """Submit a topology to a remote Storm cluster."""
+    warn_about_deprecated_user(user, "submit_topology")
     config = get_config(config_file=config_file)
     name, topology_file = get_topology_definition(name, config_file=config_file)
     env_name, env_config = get_env_config(env_name, config_file=config_file)
@@ -390,6 +392,5 @@ def main(args):
         timeout=args.timeout,
         config_file=args.config,
         overwrite_virtualenv=args.overwrite_virtualenv,
-        user=args.user,
         active=args.active,
     )

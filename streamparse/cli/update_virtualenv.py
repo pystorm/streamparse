@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 from io import open
 
-from fabric.api import env, execute, parallel, prefix, put, puts, run, show, sudo
+from fabric.api import env, execute, parallel, put, puts, run, show
 from fabric.contrib.files import exists
 from six import string_types
 
@@ -24,6 +24,7 @@ from .common import (
     add_requirements,
     add_user,
     resolve_options,
+    warn_about_deprecated_user,
 )
 from ..util import (
     activate_env,
@@ -32,14 +33,8 @@ from ..util import (
     get_env_config,
     get_topology_definition,
     get_topology_from_file,
+    run_cmd,
 )
-
-
-def _run_cmd(cmd, user, warn_only=False):
-    if user == env.user:
-        run(cmd, warn_only=warn_only)
-    else:
-        sudo(cmd, warn_only=warn_only, user=user)
 
 
 @parallel
@@ -49,14 +44,14 @@ def _create_or_update_virtualenv(
     requirements_paths,
     virtualenv_flags=None,
     overwrite_virtualenv=False,
-    user="root",
+    user=None,
 ):
     with show("output"):
         virtualenv_path = "/".join((virtualenv_root, virtualenv_name))
         if overwrite_virtualenv:
             puts("Removing virtualenv if it exists in {}".format(virtualenv_root))
             cmd = "rm -rf {}".format(virtualenv_path)
-            _run_cmd(cmd, user, warn_only=True)
+            run_cmd(cmd, user, warn_only=True)
         if not exists(virtualenv_path):
             if virtualenv_flags is None:
                 virtualenv_flags = ""
@@ -64,7 +59,7 @@ def _create_or_update_virtualenv(
             cmd = "virtualenv --never-download {} {}".format(
                 virtualenv_path, virtualenv_flags
             )
-            _run_cmd(cmd, user)
+            run_cmd(cmd, user)
 
         if isinstance(requirements_paths, string_types):
             requirements_paths = [requirements_paths]
@@ -73,19 +68,20 @@ def _create_or_update_virtualenv(
             puts("Uploading {} to temporary file.".format(requirements_path))
             temp_req = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
             temp_req_paths.append(temp_req)
-            put(requirements_path, temp_req)
+            put(requirements_path, temp_req, mode="0666")
 
         puts("Updating virtualenv: {}".format(virtualenv_name))
         pip_path = "/".join((virtualenv_path, "bin", "pip"))
         # Make sure we're using latest pip so options work as expected
-        run("{} install --upgrade 'pip>=9.0,!=19.0'".format(pip_path), pty=False)
-        run(
+        run_cmd("{} install --upgrade 'pip>=9.0,!=19.0'".format(pip_path), user)
+        run_cmd(
             (
                 "{} install -r {} --exists-action w --upgrade "
                 "--upgrade-strategy only-if-needed --progress-bar off"
             ).format(pip_path, " -r ".join(temp_req_paths)),
-            pty=False,
+            user,
         )
+
         run("rm -f {}".format(" ".join(temp_req_paths)))
 
 
@@ -97,7 +93,7 @@ def create_or_update_virtualenvs(
     requirements_paths=None,
     config_file=None,
     overwrite_virtualenv=False,
-    user="root",
+    user=None,
 ):
     """Create or update virtualenvs on remote servers.
 
@@ -113,6 +109,7 @@ def create_or_update_virtualenvs(
                                  if it already exists.
     :param user: Who to delete virtualenvs as when using overwrite_virtualenv
     """
+    warn_about_deprecated_user(user, "create_or_update_virtualenvs")
     config = get_config()
     topology_name, topology_file = get_topology_definition(
         topology_name, config_file=config_file
@@ -159,7 +156,7 @@ def create_or_update_virtualenvs(
         virtualenv_flags=storm_options.get("virtualenv_flags"),
         hosts=env.storm_workers,
         overwrite_virtualenv=overwrite_virtualenv,
-        user=user,
+        user=user or storm_options["sudo_user"],
     )
 
 
@@ -191,5 +188,4 @@ def main(args):
         requirements_paths=args.requirements,
         config_file=args.config,
         overwrite_virtualenv=args.overwrite_virtualenv,
-        user=args.user,
     )
