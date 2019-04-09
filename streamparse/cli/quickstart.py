@@ -2,8 +2,6 @@
 Create new streamparse project template.
 """
 
-from __future__ import absolute_import
-
 from streamparse.bootstrap import quickstart
 
 

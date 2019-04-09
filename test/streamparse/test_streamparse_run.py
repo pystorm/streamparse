@@ -1,9 +1,6 @@
 """
 Tests for streamparse_run
 """
-
-import logging
-import os
 import sys
 import unittest
 
@@ -29,7 +26,7 @@ class StreamparseRunTests(unittest.TestCase):
         StreamparseRunTests.run_target_invoked_serializer = None
         run.main()
         self.assertTrue(StreamparseRunTests.run_target_invoked)
-        self.assertEquals("json", StreamparseRunTests.run_target_invoked_serializer)
+        self.assertEqual("json", StreamparseRunTests.run_target_invoked_serializer)
 
     def test_streamparse_run_storm_1_0_3(self):
         # patch streamparse_run resources path and sys argv
@@ -48,4 +45,4 @@ class StreamparseRunTests(unittest.TestCase):
         StreamparseRunTests.run_target_invoked_serializer = None
         run.main()
         self.assertTrue(StreamparseRunTests.run_target_invoked)
-        self.assertEquals("msgpack", StreamparseRunTests.run_target_invoked_serializer)
+        self.assertEqual("msgpack", StreamparseRunTests.run_target_invoked_serializer)

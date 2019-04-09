@@ -4,14 +4,10 @@ automatically upon submit, but this command is provided to help with testing
 and debugging.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import os
-from io import open
 
 from fabric.api import env, execute, parallel, put, puts, run, show
 from fabric.contrib.files import exists
-from six import string_types
 
 from .common import (
     add_config,
@@ -61,7 +57,7 @@ def _create_or_update_virtualenv(
             )
             run_cmd(cmd, user)
 
-        if isinstance(requirements_paths, string_types):
+        if isinstance(requirements_paths, str):
             requirements_paths = [requirements_paths]
         temp_req_paths = []
         for requirements_path in requirements_paths:

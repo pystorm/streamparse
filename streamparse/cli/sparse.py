@@ -6,8 +6,6 @@ in the streamparse/bin directory that have a "subparser_hook" method. The
 subparser as needed.
 """
 
-from __future__ import absolute_import
-
 import argparse
 import importlib
 import os

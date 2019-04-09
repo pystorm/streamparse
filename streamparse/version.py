@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2014-2017 Parsely, Inc.
+# Copyright 2014-2019 Parsely, Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,5 +30,5 @@ def _safe_int(string):
         return string
 
 
-__version__ = "3.16.0"
+__version__ = "4.0.0"
 VERSION = tuple(_safe_int(x) for x in __version__.split("."))

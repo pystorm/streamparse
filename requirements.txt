@@ -6,7 +6,5 @@ requests
 ruamel.yaml
 setuptools
 simplejson
-six>=1.5
 texttable
 thriftpy>=0.3.2
-contextlib2; python_version < '3'

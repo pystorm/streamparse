@@ -1,10 +1,6 @@
 """
 Streams and Groupings
 """
-from __future__ import absolute_import
-
-from six import iteritems, string_types
-
 from ..thrift import JavaObject, NullStruct, storm_thrift, StreamInfo
 from .util import to_java_arg
 
@@ -29,7 +25,7 @@ class Stream(StreamInfo):
         elif isinstance(fields, (list, tuple)):
             fields = list(fields)
             for field in fields:
-                if not isinstance(field, string_types):
+                if not isinstance(field, str):
                     raise TypeError(
                         "All field names must be strings; given: " "{!r}".format(field)
                     )
@@ -39,7 +35,7 @@ class Stream(StreamInfo):
                 "given: {!r}".format(fields)
             )
         self.fields = fields
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             self.name = name
         else:
             raise TypeError("Stream name must be a string; given: {!r}".format(name))
@@ -57,7 +53,7 @@ class _Grouping(storm_thrift.Grouping):
     """
 
     def __repr__(self):
-        for name, val in iteritems(vars(self)):
+        for name, val in vars(self).items():
             if not name.startswith("_") and val is not None:
                 if isinstance(val, NullStruct):
                     return "{}".format(name.upper())
@@ -65,7 +61,7 @@ class _Grouping(storm_thrift.Grouping):
                     return "{}({!r})".format(name, val)
 
 
-class Grouping(object):
+class Grouping:
     """
     A Grouping describes how Tuples should be distributed to the tasks of a
     Bolt listening on a particular stream.

@@ -2,8 +2,6 @@
 Submit a Storm topology to Nimbus.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import importlib
 import os
 import sys
@@ -13,7 +11,6 @@ from itertools import chain
 import simplejson as json
 from fabric.api import env
 from pkg_resources import parse_version
-from six import itervalues
 
 from ..dsl.component import JavaComponentSpec
 from ..thrift import ShellComponent, SubmitOptions, TopologyInitialStatus
@@ -243,13 +240,13 @@ def submit_topology(
             [env.virtualenv_root, virtualenv_name, "bin", "streamparse_run"]
         )
         # Update python paths in bolts
-        for thrift_bolt in itervalues(topology_class.thrift_bolts):
+        for thrift_bolt in topology_class.thrift_bolts.values():
             inner_shell = thrift_bolt.bolt_object.shell
             if isinstance(inner_shell, ShellComponent):
                 if "streamparse_run" in inner_shell.execution_command:
                     inner_shell.execution_command = streamparse_run_path
         # Update python paths in spouts
-        for thrift_spout in itervalues(topology_class.thrift_spouts):
+        for thrift_spout in topology_class.thrift_spouts.values():
             inner_shell = thrift_spout.spout_object.shell
             if isinstance(inner_shell, ShellComponent):
                 if "streamparse_run" in inner_shell.execution_command:
@@ -260,8 +257,7 @@ def submit_topology(
 
     # Set parallelism based on env_name if necessary
     for thrift_component in chain(
-        itervalues(topology_class.thrift_bolts),
-        itervalues(topology_class.thrift_spouts),
+        topology_class.thrift_bolts.values(), topology_class.thrift_spouts.values()
     ):
         par_hint = thrift_component.common.parallelism_hint
         if isinstance(par_hint, dict):

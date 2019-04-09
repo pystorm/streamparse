@@ -4,8 +4,6 @@ This package makes it easier to work with Storm and Python.
 :organization: Parsely
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 from . import bolt, cli, component, dsl, spout, storm
@@ -53,7 +51,7 @@ __all__ = [
 ]
 
 __license__ = """
-Copyright 2014-2017 Parsely, Inc.
+Copyright 2014-2019 Parsely, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

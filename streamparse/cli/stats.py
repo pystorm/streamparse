@@ -2,14 +2,10 @@
 Display stats about running Storm topologies.
 """
 
-from __future__ import absolute_import, print_function
-
 import sys
 from itertools import chain
 
 from pkg_resources import parse_version
-from six import string_types
-from six.moves import map, zip
 
 from ..util import (
     get_env_config,
@@ -159,7 +155,7 @@ def _print_topology_status(env_name, topology_name, config_file=None):
 def _get_component_ui_detail(
     env_name, topology_name, component_names, config_file=None
 ):
-    if isinstance(component_names, string_types):
+    if isinstance(component_names, str):
         component_names = [component_names]
     env_name = get_env_config(env_name, config_file=config_file)[0]
     topology_id = _get_topology_id(env_name, topology_name, config_file=config_file)

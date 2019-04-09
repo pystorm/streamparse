@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import importlib
 import os
 import re
@@ -13,6 +11,7 @@ from glob import glob
 from os.path import join
 from random import shuffle
 from socket import error as SocketError
+from socketserver import UDPServer, TCPServer
 
 import requests
 import simplejson as json
@@ -20,8 +19,6 @@ from fabric.api import env, hide, local, settings, show, run, sudo
 from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from texttable import Texttable
-from six import itervalues
-from six.moves.socketserver import UDPServer, TCPServer
 from thriftpy.protocol import TBinaryProtocolFactory
 from thriftpy.rpc import make_client
 from thriftpy.transport import TFramedTransportFactory
@@ -590,12 +587,12 @@ def set_topology_serializer(env_config, config, topology_class):
     serializer = env_config.get("serializer", config.get("serializer", None))
     if serializer is not None:
         # Set serializer arg in bolts
-        for thrift_bolt in itervalues(topology_class.thrift_bolts):
+        for thrift_bolt in topology_class.thrift_bolts.values():
             inner_shell = thrift_bolt.bolt_object.shell
             if inner_shell is not None:
                 inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)
         # Set serializer arg in spouts
-        for thrift_spout in itervalues(topology_class.thrift_spouts):
+        for thrift_spout in topology_class.thrift_spouts.values():
             inner_shell = thrift_spout.spout_object.shell
             if inner_shell is not None:
                 inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)

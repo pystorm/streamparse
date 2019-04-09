@@ -1,8 +1,6 @@
 """
 Utilities for bootstrapping streamparse projects.
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
 from contextlib import contextmanager
 import os
 import sys

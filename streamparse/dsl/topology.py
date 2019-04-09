@@ -1,11 +1,8 @@
 """
 Topology base class
 """
-from __future__ import absolute_import
-
 import simplejson as json
 from pystorm.component import Component
-from six import add_metaclass, iteritems, itervalues, string_types
 from thriftpy.transport import TMemoryBuffer
 from thriftpy.protocol import TBinaryProtocol
 
@@ -25,7 +22,7 @@ class TopologyType(type):
         # Copy ComponentSpec items out of class_dict
         specs = TopologyType.class_dict_to_specs(class_dict)
         # Perform checks
-        for spec in itervalues(specs):
+        for spec in specs.values():
             if isinstance(spec, (JavaBoltSpec, ShellBoltSpec)):
                 TopologyType.add_bolt_spec(spec, bolt_specs)
             elif isinstance(spec, (JavaSpoutSpec, ShellSpoutSpec)):
@@ -60,7 +57,7 @@ class TopologyType(type):
         """Extract valid `ComponentSpec` entries from `Topology.__dict__`."""
         specs = {}
         # Set spec names first
-        for name, spec in iteritems(class_dict):
+        for name, spec in class_dict.items():
             if isinstance(spec, ComponentSpec):
                 # Use the variable name as the specification name.
                 if spec.name is None:
@@ -110,7 +107,7 @@ class TopologyType(type):
         """
         if spec.inputs is None:
             spec.inputs = {}
-        for stream_id, grouping in list(iteritems(spec.inputs)):
+        for stream_id, grouping in spec.inputs.items():
             if isinstance(stream_id.componentId, ComponentSpec):
                 # Have to reinsert key after fix because hash changes
                 del spec.inputs[stream_id]
@@ -140,8 +137,7 @@ class TopologyType(type):
         return repr(getattr(cls, "thrift_topology", None))
 
 
-@add_metaclass(TopologyType)
-class Topology(object):
+class Topology(metaclass=TopologyType):
     """Class to define a Storm topology in a Python DSL."""
 
     @classmethod
@@ -162,7 +158,7 @@ class Topology(object):
             transport_bytes = transport_out.getvalue()
             stream.write(transport_bytes)
 
-        if isinstance(stream, string_types):
+        if isinstance(stream, str):
             with open(stream, "wb") as output_file:
                 write_it(output_file)
         else:
@@ -189,7 +185,7 @@ class Topology(object):
             # Can't reconstruct Python specs from Thrift.
             cls.specs = []
 
-        if isinstance(stream, string_types):
+        if isinstance(stream, str):
             with open(stream, "rb") as input_file:
                 return read_it(input_file)
         else:

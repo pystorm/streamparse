@@ -6,7 +6,6 @@ import copy
 import warnings
 
 from ruamel import yaml
-from six import integer_types, string_types
 
 from streamparse.util import get_storm_workers
 
@@ -305,11 +304,11 @@ def resolve_options(
         storm_options["pystorm.log.path"] = log_path
     if log_file:
         storm_options["pystorm.log.file"] = log_file
-    if isinstance(log_config.get("max_bytes"), integer_types):
+    if isinstance(log_config.get("max_bytes"), int):
         storm_options["pystorm.log.max_bytes"] = log_config["max_bytes"]
-    if isinstance(log_config.get("backup_count"), integer_types):
+    if isinstance(log_config.get("backup_count"), int):
         storm_options["pystorm.log.backup_count"] = log_config["backup_count"]
-    if isinstance(log_config.get("level"), string_types):
+    if isinstance(log_config.get("level"), str):
         storm_options["pystorm.log.level"] = log_config["level"].lower()
 
     # Make sure virtualenv options are present here
@@ -334,7 +333,7 @@ def resolve_options(
     if not local_only:
         if not storm_options.get("storm.workers.list"):
             storm_options["storm.workers.list"] = get_storm_workers(env_config)
-        elif isinstance(storm_options["storm.workers.list"], string_types):
+        elif isinstance(storm_options["storm.workers.list"], str):
             storm_options["storm.workers.list"] = storm_options[
                 "storm.workers.list"
             ].split(",")

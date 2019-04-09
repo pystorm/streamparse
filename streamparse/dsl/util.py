@@ -2,10 +2,6 @@
 Utility functions for the DSL
 """
 
-from __future__ import absolute_import
-
-from six import integer_types, text_type
-
 from ..thrift import JavaObjectArg
 
 
@@ -13,13 +9,13 @@ def to_java_arg(arg):
     """Converts Python objects to equivalent Thrift JavaObjectArgs"""
     if isinstance(arg, bool):
         java_arg = JavaObjectArg(bool_arg=arg)
-    elif isinstance(arg, integer_types):
+    elif isinstance(arg, int):
         # Just use long all the time since Python 3 doesn't
         # distinguish between long and int
         java_arg = JavaObjectArg(long_arg=arg)
     elif isinstance(arg, bytes):
         java_arg = JavaObjectArg(binary_arg=arg)
-    elif isinstance(arg, text_type):
+    elif isinstance(arg, str):
         java_arg = JavaObjectArg(string_arg=arg)
     elif isinstance(arg, float):
         java_arg = JavaObjectArg(double_arg=arg)

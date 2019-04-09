@@ -2,8 +2,6 @@
 Create a JAR that can be used to deploy a topology to Storm.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import os
 import shutil
 import sys
