@@ -9,12 +9,14 @@ python:
   - "3.6"
   - "3.7"
   - "3.7-dev"
+  - "3.8-dev"
   - "pypy3.5"
 
 matrix:
   fast_finish: true
   allow_failures:
     - python: '3.7-dev'
+    - python: '3.8-dev'
 
 dist:
   - xenial
