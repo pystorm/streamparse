@@ -2,8 +2,6 @@
 Kill the specified Storm topology.
 """
 
-from __future__ import absolute_import
-
 from ..thrift import KillOptions
 from ..util import (
     get_topology_definition,

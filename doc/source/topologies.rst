@@ -79,11 +79,6 @@ One limitation of the Thrift interface we use to send the topology to Storm is
 that the constructors for Java components can only be passed basic Python data
 types: `bool`, `bytes`, `float`, `int`,  and `str`.
 
-.. note::
-    If you are passing strings as constructor arguments to Java components via
-    the ``args_list`` parameter, you must use `unicode` literals to do so in
-    Python 2. Otherwise, Storm will raise an exception.
-
 Components in Other Languages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

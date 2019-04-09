@@ -2,12 +2,9 @@
 Display slots used by every topology on the cluster
 """
 
-from __future__ import absolute_import, print_function
-
 from collections import Counter, defaultdict
 
 from pkg_resources import parse_version
-from six import iteritems
 
 from .common import add_config, add_environment
 from ..util import get_ui_json, get_ui_jsons, print_stats_table, storm_lib_version
@@ -57,13 +54,13 @@ def display_slot_usage(env_name, config_file=None):
         env_name,
         (
             component_path.format(topology=topology, component=comp)
-            for topology, comp_list in iteritems(topology_components)
+            for topology, comp_list in topology_components.items()
             for comp in comp_list
         ),
         config_file=config_file,
     )
 
-    for request_url, comp_detail in iteritems(comp_details):
+    for request_url, comp_detail in comp_details.items():
         topology = request_url.split("/")[4]
         topology_detail_json = topology_detail_jsons[
             topology_detail_path.format(topology=topology)
@@ -88,7 +85,7 @@ def display_slot_usage(env_name, config_file=None):
                 for topology in topology_names
             ]
         )
-        for host, host_dict in sorted(iteritems(topology_worker_ports))
+        for host, host_dict in sorted(topology_worker_ports.items())
     ]
     print_stats_table("Slot (and Executor) Counts by Topology", rows, columns)
 

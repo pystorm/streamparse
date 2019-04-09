@@ -6,8 +6,6 @@ project.clj, this will fail. Temporarily remove it to use `sparse run`. You will
 also need to add [org.apache.storm/flux-core "1.0.1"] to dependencies.
 """
 
-from __future__ import absolute_import, print_function
-
 from argparse import RawDescriptionHelpFormatter
 from tempfile import NamedTemporaryFile
 

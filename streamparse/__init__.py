@@ -4,8 +4,6 @@ This package makes it easier to work with Storm and Python.
 :organization: Parsely
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 from . import bolt, cli, component, dsl, spout, storm

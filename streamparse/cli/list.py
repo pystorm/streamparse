@@ -2,8 +2,6 @@
 List the currently running Storm topologies.
 """
 
-from __future__ import absolute_import
-
 from ..util import get_env_config, get_nimbus_client, print_stats_table, ssh_tunnel
 from ..thrift import TopologySummary
 from .common import add_config, add_environment, add_timeout

@@ -2,8 +2,6 @@
 Tail the specified log files.
 """
 
-from __future__ import absolute_import, print_function
-
 from fabric.api import env, execute, parallel, run
 from pkg_resources import parse_version
 

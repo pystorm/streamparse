@@ -2,12 +2,8 @@
 Visualize a topology using Graphviz.
 """
 # This code is based on the code from Dask's dot module
-from __future__ import absolute_import, print_function
-
 import os
 from functools import partial
-
-from six import iteritems
 
 from ..dsl.spout import JavaSpoutSpec, ShellSpoutSpec
 from ..util import get_topology_definition, get_topology_from_file
@@ -75,7 +71,7 @@ def to_graphviz(topology_class, node_attr=None, edge_attr=None, **kwargs):
         else:
             shape = None
         g.node(spec.name, label=spec.name, shape=shape)
-        for stream_id, grouping in list(iteritems(spec.inputs)):
+        for stream_id, grouping in spec.inputs.items():
             parent = stream_id.componentId
             outputs = all_specs[parent].common.streams[stream_id.streamId].output_fields
             label = "Stream: {}\lFields: {}\lGrouping: {}\l".format(

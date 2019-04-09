@@ -2,10 +2,7 @@
 Display uptime for workers in running Storm topologies.
 """
 
-from __future__ import absolute_import, print_function
-
 from pkg_resources import parse_version
-from six import iteritems, itervalues
 
 from .common import add_config, add_environment
 from ..util import get_ui_json, get_ui_jsons, print_stats_table, storm_lib_version
@@ -49,13 +46,13 @@ def display_worker_uptime(env_name, config_file=None):
         env_name,
         (
             component_path.format(topology=topology, component=comp)
-            for topology, comp_list in iteritems(topology_components)
+            for topology, comp_list in topology_components.items()
             for comp in comp_list
         ),
         config_file=config_file,
     )
 
-    for comp_detail in itervalues(comp_details):
+    for comp_detail in comp_details.values():
         worker_stats += [
             (worker["host"], worker["id"], worker["uptime"], worker["workerLogLink"])
             for worker in comp_detail["executorStats"]

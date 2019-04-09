@@ -3,8 +3,6 @@ Spout Specification
 
 This module is called spout to mirror organization of storm package.
 """
-from __future__ import absolute_import
-
 from .component import JavaComponentSpec, ShellComponentSpec
 
 

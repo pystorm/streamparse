@@ -3,12 +3,9 @@ Component-level Specification
 
 This module is called component to mirror organization of pystorm package.
 """
-from __future__ import absolute_import
-
 from copy import deepcopy
 
 import simplejson as json
-from six import string_types
 
 from ..thrift import (
     ComponentCommon,
@@ -23,7 +20,7 @@ from .stream import Grouping, Stream
 from .util import to_java_arg
 
 
-class ComponentSpec(object):
+class ComponentSpec:
     """Describes the inputs, outputs, etc. for a Storm topology component.
 
     Generates some of the Thrift data structures that are needed to build a
@@ -53,7 +50,7 @@ class ComponentSpec(object):
             par = component_cls.par
         if isinstance(par, dict):
             for stage, par_hint in par.items():
-                if not (isinstance(stage, string_types) and isinstance(par_hint, int)):
+                if not (isinstance(stage, str) and isinstance(par_hint, int)):
                     raise TypeError(
                         "If par is a dict, it must map from "
                         "environment names to integers specifying "
@@ -166,7 +163,7 @@ class ComponentSpec(object):
                         output_fields=output.fields, direct=output.direct
                     )
                 # Strings are output fields for default stream
-                elif isinstance(output, string_types):
+                elif isinstance(output, str):
                     default = streams.setdefault(
                         "default", StreamInfo(output_fields=[], direct=False)
                     )

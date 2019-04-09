@@ -15,7 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import re
-import sys
 
 from setuptools import setup, find_packages
 
@@ -34,27 +33,15 @@ def readme():
 
 
 install_requires = [
-    "cython",
-    "jinja2",
-    "requests",
-    "texttable",
-    "six>=1.5",
-    "simplejson",
-    "pystorm>=3.1.1",
-    "thriftpy>=0.3.2",
-    "ruamel.yaml",
-    "fabric3",
+    l.split("#")[0].strip()
+    for l in open("requirements.txt").readlines()
+    if not l.startswith(("#", "-"))
 ]
 
-if sys.version_info.major < 3:
-    install_requires.append("contextlib2")
 
 lint_requires = ["pep8", "pyflakes"]
 
-if sys.version_info.major < 3:
-    tests_require = ["graphviz", "mock", "pytest", "unittest2"]
-else:
-    tests_require = ["graphviz", "pytest"]
+tests_require = ["graphviz", "pytest"]
 
 setup(
     name="streamparse",
@@ -86,4 +73,15 @@ setup(
     },
     zip_safe=False,
     include_package_data=True,
+    classifiers=[
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+    ],
 )
