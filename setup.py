@@ -38,9 +38,6 @@ install_requires = [
     if not l.startswith(("#", "-"))
 ]
 
-
-lint_requires = ["pep8", "pyflakes"]
-
 tests_require = ["graphviz", "pytest"]
 
 setup(
@@ -69,7 +66,6 @@ setup(
         "test": tests_require,
         "all": install_requires + tests_require,
         "docs": ["sphinx"] + tests_require,
-        "lint": lint_requires,
     },
     zip_safe=False,
     include_package_data=True,
