@@ -182,7 +182,8 @@ def get_config(config_file=None):
         with open("config.json") as fp:
             config = json.load(fp)
     else:
-        config = json.load(config_file)
+        with open(config_file) as fp:
+            config = json.load(fp)
     _config = config
     return config
 
