@@ -269,6 +269,7 @@ VIRTUALENV_OPTIONS = (
     "use_virtualenv",
     "virtualenv_flags",
     "virtualenv_root",
+    "virtualenv_name",
 )
 
 
