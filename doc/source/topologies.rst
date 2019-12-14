@@ -134,7 +134,7 @@ seen in the prototypical word count topology:
 Topology Cycles
 ^^^^^^^^^^^^^^^
 
-On rare occassions, you may want to create a cyclical topology. This may not
+On rare occasions, you may want to create a cyclical topology. This may not
 seem easily done with the current topology DSL, but there is a workaround you
 can use: manually declaring a temporary lower-level
 `:class:~streamparse.thrift.GlobalStreamId` that you can refer to in multiple
