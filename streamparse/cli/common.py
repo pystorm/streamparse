@@ -221,7 +221,7 @@ def add_timeout(parser):
 
 
 def add_user(parser, allow_short=False):
-    """ Add --user option to parser
+    """Add --user option to parser
 
     Set allow_short to add -u as well.
     """
@@ -363,4 +363,3 @@ def warn_about_deprecated_user(user, func_name):
             ).format(func_name),
             DeprecationWarning,
         )
-

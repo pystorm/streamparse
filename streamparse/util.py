@@ -360,8 +360,7 @@ def get_nimbus_config(env_config):
 
 
 def is_ssh_for_nimbus(env_config):
-    """Check if we need to use SSH access to Nimbus or not.
-    """
+    """Check if we need to use SSH access to Nimbus or not."""
     return env_config.get("use_ssh_for_nimbus", True)
 
 
@@ -500,7 +499,7 @@ def get_logfiles_cmd(
     is_old_storm=False,
     include_all_artifacts=False,
 ):
-    """ Returns a string representing a command to run on the Storm workers that
+    """Returns a string representing a command to run on the Storm workers that
     will yield all of the logfiles for the given topology that meet the given
     pattern (if specified).
     """

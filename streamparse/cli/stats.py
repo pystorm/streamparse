@@ -303,8 +303,7 @@ def _print_spout_executors(ui_detail):
 
 
 def _get_topology_id(env_name, topology_name, config_file=None):
-    """Get toplogy ID from summary json provided by UI api
-    """
+    """Get toplogy ID from summary json provided by UI api"""
     summary_url = "/api/v1/topology/summary"
     topology_summary = get_ui_json(env_name, summary_url, config_file=config_file)
     for topology in topology_summary["topologies"]:

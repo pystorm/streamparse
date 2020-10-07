@@ -89,8 +89,7 @@ class TopologyType(type):
 
     @classmethod
     def add_spout_spec(mcs, spec, spout_specs):
-        """Add valid Spout specs to `spout_specs`; raise exceptions for others.
-        """
+        """Add valid Spout specs to `spout_specs`; raise exceptions for others."""
         if not spec.outputs:
             cls_name = spec.component_cls.__name__
             raise ValueError(
@@ -103,8 +102,7 @@ class TopologyType(type):
 
     @classmethod
     def clean_spec_inputs(mcs, spec, specs):
-        """Convert `spec.inputs` to a dict mapping from stream IDs to groupings.
-        """
+        """Convert `spec.inputs` to a dict mapping from stream IDs to groupings."""
         if spec.inputs is None:
             spec.inputs = {}
         for stream_id, grouping in list(spec.inputs.items()):
