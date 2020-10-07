@@ -6,7 +6,6 @@ from fabric.api import puts, task
 from kafka.common import UnknownTopicOrPartitionError
 from kafka.client import KafkaClient
 from kafka.producer import SimpleProducer
-from six.moves import range
 
 
 def retry(tries, delay=3, backoff=2, safe_exc_types=None):
