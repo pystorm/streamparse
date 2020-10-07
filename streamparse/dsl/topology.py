@@ -107,7 +107,7 @@ class TopologyType(type):
         """
         if spec.inputs is None:
             spec.inputs = {}
-        for stream_id, grouping in spec.inputs.items():
+        for stream_id, grouping in list(spec.inputs.items()):
             if isinstance(stream_id.componentId, ComponentSpec):
                 # Have to reinsert key after fix because hash changes
                 del spec.inputs[stream_id]

@@ -78,7 +78,7 @@ class ComponentSpec:
     @staticmethod
     def _sanitize_inputs(inputs):
         if isinstance(inputs, dict):
-            for key, val in inputs.items():
+            for key, val in list(inputs.items()):
                 if not isinstance(key, GlobalStreamId):
                     if isinstance(key, ComponentSpec):
                         inputs[key["default"]] = val
