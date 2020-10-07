@@ -7,4 +7,4 @@ ruamel.yaml
 setuptools
 simplejson
 texttable
-thriftpy>=0.3.2
+thriftpy2

@@ -19,9 +19,9 @@ from fabric.api import env, hide, local, settings, show, run, sudo
 from fabric.colors import red, yellow
 from pkg_resources import parse_version
 from texttable import Texttable
-from thriftpy.protocol import TBinaryProtocolFactory
-from thriftpy.rpc import make_client
-from thriftpy.transport import TFramedTransportFactory
+from thriftpy2.protocol import TBinaryProtocolFactory
+from thriftpy2.rpc import make_client
+from thriftpy2.transport import TFramedTransportFactory
 
 from .dsl.topology import Topology, TopologyType
 from .thrift import Nimbus
