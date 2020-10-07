@@ -24,7 +24,7 @@ def pidmonitor():
                 elif main_proc == "redis-server":
                     details.append("[redis]")
                 print(main_proc, " ".join(details))
-                print("=> CPU% {}".format(proc.cpu_percent(interval=0.2)))
+                print(f"=> CPU% {proc.cpu_percent(interval=0.2)}")
 
 
 try:

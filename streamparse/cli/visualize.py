@@ -77,7 +77,7 @@ def to_graphviz(topology_class, node_attr=None, edge_attr=None, **kwargs):
             label = "Stream: {}\lFields: {}\lGrouping: {}\l".format(
                 stream_id.streamId, outputs, grouping
             )
-            sametail = "{}-{}".format(parent, stream_id.streamId)
+            sametail = f"{parent}-{stream_id.streamId}"
             if sametail not in sametail_nodes:
                 g.node(sametail, shape="point", width="0")
                 g.edge(parent, sametail, label=label, dir="none")
@@ -114,7 +114,7 @@ def _get_display_cls(format):
     elif format == "svg":
         return display.SVG
     else:
-        raise ValueError("Unknown format '%s' passed to `dot_graph`" % format)
+        raise ValueError(f"Unknown format '{format}' passed to `dot_graph`")
 
 
 def visualize_topology(name=None, filename=None, format=None, **kwargs):

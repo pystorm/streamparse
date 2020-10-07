@@ -23,7 +23,7 @@ def load_subparsers(subparsers):
     """
     for _, mod_name, is_pkg in pkgutil.iter_modules([os.path.dirname(__file__)]):
         if not is_pkg and mod_name not in sys.modules:
-            module = importlib.import_module("streamparse.cli.{}".format(mod_name))
+            module = importlib.import_module(f"streamparse.cli.{mod_name}")
             # check for the subparser hook
             if hasattr(module, "subparser_hook"):
                 module.subparser_hook(subparsers)
@@ -47,7 +47,7 @@ def main():
     )
     subparsers = parser.add_subparsers(title="sub-commands")
     parser.add_argument(
-        "--version", action="version", version="%(prog)s {}".format(__version__)
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
     load_subparsers(subparsers)
 

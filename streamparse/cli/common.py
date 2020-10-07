@@ -61,7 +61,7 @@ def option_alias(option):
     """Returns a function that will create option=val for _StoreDictAction."""
 
     def _create_key_val_str(val):
-        return "{}={}".format(option, val)
+        return f"{option}={val}"
 
     return _create_key_val_str
 

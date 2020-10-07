@@ -192,7 +192,7 @@ class Bolt(pystorm.bolt.Bolt, ShellBolt):
         return ShellBoltSpec(
             cls,
             command="streamparse_run",
-            script="{}.{}".format(cls.__module__, cls.__name__),
+            script=f"{cls.__module__}.{cls.__name__}",
             name=name,
             inputs=inputs,
             par=par,

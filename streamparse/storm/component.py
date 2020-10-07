@@ -20,6 +20,5 @@ class Component(pystorm.component.Component):
     def spec(cls, *args, **kwargs):
         """This method exists only to give a more informative error message."""
         raise TypeError(
-            "Specifications should either be bolts or spouts. "
-            "Given: {!r}".format(cls)
+            f"Specifications should either be bolts or spouts. Given: {cls!r}"
         )

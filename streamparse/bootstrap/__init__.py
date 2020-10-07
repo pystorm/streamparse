@@ -37,29 +37,29 @@ def _cd(path):
 
 
 def _mkdir(path):
-    path = "{}/{}".format(_path_prefix, path) if _path_prefix != "" else path
-    print("    {:<18} {}".format(green("create"), path))
+    path = f"{_path_prefix}/{path}" if _path_prefix != "" else path
+    print(f"    {green('create'):<18} {path}")
     os.makedirs(path)
 
 
 def _cp(src, dest):
-    dest = "{}/{}".format(_path_prefix, dest) if _path_prefix != "" else dest
-    print("    {:<18} {}".format(green("create"), dest))
+    dest = f"{_path_prefix}/{dest}" if _path_prefix != "" else dest
+    print(f"    {green('create'):<18} {dest}")
     shutil.copy(src, dest)
 
 
 def _touch(filename):
     filename = (
-        "{}/{}".format(_path_prefix, filename) if _path_prefix != "" else filename
+        f"{_path_prefix}/{filename}" if _path_prefix != "" else filename
     )
-    print("    {:<18} {}".format(green("create"), filename))
+    print(f"    {green('create'):<18} {filename}")
     with open(filename, "w"):
         pass
 
 
 def _generate(template_filename, dest):
-    dest = "{}/{}".format(_path_prefix, dest) if _path_prefix != "" else dest
-    print("    {:<18} {}".format(green("create"), dest))
+    dest = f"{_path_prefix}/{dest}" if _path_prefix != "" else dest
+    print(f"    {green('create'):<18} {dest}")
     template = _env.get_template(template_filename)
     with open(dest, "w") as fp:
         fp.write(template.render())
@@ -70,10 +70,10 @@ def quickstart(project_name):
     # glob.glob('project/**/*') and then we copy everything that's doesn't have
     # jinja2 in filename, generate the jinja2 stuff
     if os.path.exists(project_name):
-        print('{}: folder "{}" already exists'.format(red("error"), project_name))
+        print(f"{red('error')}: folder \"{project_name}\" already exists")
         sys.exit(1)
 
-    print("\nCreating your %s streamparse project..." % (blue(project_name)))
+    print(f"\nCreating your {blue(project_name)} streamparse project...")
     _env.globals["project_name"] = project_name
 
     _mkdir(project_name)

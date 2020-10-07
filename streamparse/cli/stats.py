@@ -89,7 +89,7 @@ def _print_cluster_status(env_name, config_file=None):
 def _get_topology_ui_detail(env_name, topology_name, config_file=None):
     env_name = get_env_config(env_name, config_file=config_file)[0]
     topology_id = _get_topology_id(env_name, topology_name)
-    detail_url = "/api/v1/topology/%s" % topology_id
+    detail_url = f"/api/v1/topology/{topology_id}"
     detail = get_ui_json(env_name, detail_url, config_file=config_file)
     return detail
 
@@ -339,5 +339,5 @@ def main(args):
             config_file=args.config,
         )
     else:
-        print("ERROR: Storm {0} does not support this command.".format(storm_version))
+        print(f"ERROR: Storm {storm_version} does not support this command.")
         sys.stdout.flush()

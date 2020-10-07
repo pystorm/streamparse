@@ -29,8 +29,7 @@ class TopologyType(type):
                 TopologyType.add_spout_spec(spec, spout_specs)
             else:
                 raise TypeError(
-                    "Specifications should either be bolts or "
-                    "spouts.  Given: {!r}".format(spec)
+                    f"Specifications should either be bolts or spouts.  Given: {spec!r}"
                 )
             TopologyType.clean_spec_inputs(spec, specs)
         if classname != "Topology" and not spout_specs:
@@ -39,8 +38,7 @@ class TopologyType(type):
             config_dict = class_dict["config"]
             if not isinstance(config_dict, dict):
                 raise TypeError(
-                    "Topology config must be a dictionary. Given: "
-                    "{!r}".format(config_dict)
+                    f"Topology config must be a dictionary. Given: {config_dict!r}"
                 )
         else:
             class_dict["config"] = {}
@@ -63,7 +61,7 @@ class TopologyType(type):
                 if spec.name is None:
                     spec.name = name
                 if spec.name in specs:
-                    raise ValueError("Duplicate component name: {}".format(spec.name))
+                    raise ValueError(f"Duplicate component name: {spec.name}")
                 else:
                     specs[spec.name] = spec
             elif isinstance(spec, Component):
@@ -287,8 +285,7 @@ class Topology(metaclass=TopologyType):
                 flux_dict["spouts"].append(cls._spec_to_flux_dict(spec))
             else:
                 raise TypeError(
-                    "Specifications should either be bolts or "
-                    "spouts.  Given: {!r}".format(spec)
+                    f"Specifications should either be bolts or spouts.  Given: {spec!r}"
                 )
         flux_dict = {key: val for key, val in flux_dict.items() if val}
         return flux_dict

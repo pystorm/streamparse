@@ -150,7 +150,7 @@ class Spout(pystorm.spout.Spout, ShellSpout):
         return ShellSpoutSpec(
             cls,
             command="streamparse_run",
-            script="{}.{}".format(cls.__module__, cls.__name__),
+            script=f"{cls.__module__}.{cls.__name__}",
             name=name,
             par=par,
             config=config,

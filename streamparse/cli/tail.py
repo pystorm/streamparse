@@ -32,7 +32,7 @@ def _tail_logs(topology_name, pattern, follow, num_lines, is_old_storm):
     ls_cmd = get_logfiles_cmd(
         topology_name=topology_name, pattern=pattern, is_old_storm=is_old_storm
     )
-    tail_pipe = " | xargs tail -n {}".format(num_lines)
+    tail_pipe = f" | xargs tail -n {num_lines}"
     if follow:
         tail_pipe += " -f"
     run(ls_cmd + tail_pipe)

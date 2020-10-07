@@ -44,7 +44,7 @@ def random_pixel_generator():
         "http://example.com/article3",
     )
     while True:
-        ip = "192.168.0.{}".format(random.randint(0, 255))
+        ip = f"192.168.0.{random.randint(0, 255)}"
         url = random.choice(urls)
         ts = int(time.time() + random.randint(0, 30))
         yield {"ip": ip, "url": url, "ts": ts}

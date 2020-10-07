@@ -96,4 +96,4 @@ def main(args):
     if storm_version >= parse_version("0.9.2-incubating"):
         display_slot_usage(args.environment)
     else:
-        print("ERROR: Storm {0} does not support this command.".format(storm_version))
+        print(f"ERROR: Storm {storm_version} does not support this command.")

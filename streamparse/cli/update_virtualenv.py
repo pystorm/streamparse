@@ -45,31 +45,29 @@ def _create_or_update_virtualenv(
     with show("output"):
         virtualenv_path = "/".join((virtualenv_root, virtualenv_name))
         if overwrite_virtualenv:
-            puts("Removing virtualenv if it exists in {}".format(virtualenv_root))
-            cmd = "rm -rf {}".format(virtualenv_path)
+            puts(f"Removing virtualenv if it exists in {virtualenv_root}")
+            cmd = f"rm -rf {virtualenv_path}"
             run_cmd(cmd, user, warn_only=True)
         if not exists(virtualenv_path):
             if virtualenv_flags is None:
                 virtualenv_flags = ""
-            puts("virtualenv not found in {}, creating one.".format(virtualenv_root))
-            cmd = "virtualenv --never-download {} {}".format(
-                virtualenv_path, virtualenv_flags
-            )
+            puts(f"virtualenv not found in {virtualenv_root}, creating one.")
+            cmd = f"virtualenv --never-download {virtualenv_path} {virtualenv_flags}"
             run_cmd(cmd, user)
 
         if isinstance(requirements_paths, str):
             requirements_paths = [requirements_paths]
         temp_req_paths = []
         for requirements_path in requirements_paths:
-            puts("Uploading {} to temporary file.".format(requirements_path))
+            puts(f"Uploading {requirements_path} to temporary file.")
             temp_req = run("mktemp /tmp/streamparse_requirements-XXXXXXXXX.txt")
             temp_req_paths.append(temp_req)
             put(requirements_path, temp_req, mode="0666")
 
-        puts("Updating virtualenv: {}".format(virtualenv_name))
+        puts(f"Updating virtualenv: {virtualenv_name}")
         pip_path = "/".join((virtualenv_path, "bin", "pip"))
         # Make sure we're using latest pip so options work as expected
-        run_cmd("{} install --upgrade 'pip>=9.0,!=19.0'".format(pip_path), user)
+        run_cmd(f"{pip_path} install --upgrade 'pip>=9.0,!=19.0'", user)
         run_cmd(
             (
                 "{} install -r {} --exists-action w --upgrade "
@@ -78,7 +76,7 @@ def _create_or_update_virtualenv(
             user,
         )
 
-        run("rm -f {}".format(" ".join(temp_req_paths)))
+        run(f"rm -f {' '.join(temp_req_paths)}")
 
 
 def create_or_update_virtualenvs(
@@ -119,7 +117,7 @@ def create_or_update_virtualenvs(
 
     if requirements_paths is None:
         requirements_paths = [
-            os.path.join(config["virtualenv_specs"], "{}.txt".format(topology_name))
+            os.path.join(config["virtualenv_specs"], f"{topology_name}.txt")
         ]
 
     # Check to ensure streamparse is in at least one requirements file

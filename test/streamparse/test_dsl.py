@@ -134,8 +134,8 @@ class TopologyTests(unittest.TestCase):
             Grouping.SHUFFLE,
         )
         for i in range(2, 13):
-            bolt = getattr(WordCount, "word_bolt{}".format(i))
-            prev_bolt = getattr(WordCount, "word_bolt{}".format(i - 1))
+            bolt = getattr(WordCount, f"word_bolt{i}")
+            prev_bolt = getattr(WordCount, f"word_bolt{i - 1}")
             self.assertEqual(list(bolt.inputs.keys())[0], prev_bolt["default"])
             self.assertEqual(bolt.inputs[prev_bolt["default"]], Grouping.SHUFFLE)
 

@@ -24,18 +24,16 @@ def jar_for_deploy(simple_jar=False):
         res = local("lein clean")
     if not res.succeeded:
         raise RuntimeError(
-            "Unable to run 'lein clean'!\nSTDOUT:\n{}"
-            "\nSTDERR:\n{}".format(res.stdout, res.stderr)
+            f"Unable to run 'lein clean'!\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
         )
-    print("Creating topology {}...".format(jar_type))
+    print(f"Creating topology {jar_type}...")
     sys.stdout.flush()
     cmd = "lein jar" if simple_jar else "lein uberjar"
     with hide("running"), settings(warn_only=True):
         res = local(cmd, capture=True)
         if not res.succeeded:
             raise RuntimeError(
-                "Unable to run '{}'!\nSTDOUT:\n{}"
-                "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr)
+                f"Unable to run '{cmd}'!\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
             )
     # XXX: This will fail if more than one JAR is built
     lines = res.stdout.splitlines()
@@ -53,7 +51,7 @@ def jar_for_deploy(simple_jar=False):
             "Failed to find JAR in '{}' output\nSTDOUT:\n{}"
             "STDERR:\n{}".format(cmd, res.stdout, res.stderr)
         )
-    print("{} created: {}".format(jar_type, jar))
+    print(f"{jar_type} created: {jar}")
     sys.stdout.flush()
     print("Removing _resources temporary directory...", end="")
     sys.stdout.flush()

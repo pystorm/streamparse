@@ -21,6 +21,6 @@ class WordCountBolt(Bolt):
         self._increment(word, 10 if word == "dog" else 1)
         if self.total % 1000 == 0:
             self.logger.info(
-                "counted [{:,}] words [pid={}]".format(self.total, self.pid)
+                f"counted [{self.total:,}] words [pid={self.pid}]"
             )
         self.emit([word, self.counter[word]])

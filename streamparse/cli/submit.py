@@ -81,11 +81,11 @@ def is_safe_to_submit(topology_name, nimbus_client):
 
 def _kill_existing_topology(topology_name, force, wait, nimbus_client):
     if force and not is_safe_to_submit(topology_name, nimbus_client):
-        print('Killing current "{}" topology.'.format(topology_name))
+        print(f'Killing current "{topology_name}" topology.')
         sys.stdout.flush()
         _kill_topology(topology_name, nimbus_client, wait=wait)
         while not is_safe_to_submit(topology_name, nimbus_client):
-            print("Waiting for topology {} to quit...".format(topology_name))
+            print(f"Waiting for topology {topology_name} to quit...")
             sys.stdout.flush()
             time.sleep(0.5)
         print("Killed.")
@@ -103,7 +103,7 @@ def _submit_topology(
     active=True,
 ):
     if options.get("pystorm.log.path"):
-        print("Routing Python logging to {}.".format(options["pystorm.log.path"]))
+        print(f"Routing Python logging to {options['pystorm.log.path']}.")
         sys.stdout.flush()
 
     set_topology_serializer(env_config, config, topology_class)
@@ -112,11 +112,10 @@ def _submit_topology(
     if nimbus_storm_version(nimbus_client) >= parse_version("1.1.0"):
         if not nimbus_client.isTopologyNameAllowed(topology_name):
             raise ValueError(
-                "Nimbus says {} is an invalid name for a "
-                "Storm topology.".format(topology_name)
+                f"Nimbus says {topology_name} is an invalid name for a Storm topology."
             )
 
-    print("Submitting {} topology to nimbus...".format(topology_name), end="")
+    print(f"Submitting {topology_name} topology to nimbus...", end="")
     sys.stdout.flush()
     initial_status = (
         TopologyInitialStatus.ACTIVE if active else TopologyInitialStatus.INACTIVE
@@ -157,15 +156,13 @@ def _post_submit_hooks(topology_name, env_name, env_config, options):
 def _upload_jar(nimbus_client, local_path):
     upload_location = nimbus_client.beginFileUpload()
     print(
-        "Uploading topology jar {} to assigned location: {}".format(
-            local_path, upload_location
-        )
+        f"Uploading topology jar {local_path} to assigned location: {upload_location}"
     )
     total_bytes = os.path.getsize(local_path)
     bytes_uploaded = 0
     with open(local_path, "rb") as local_jar:
         while True:
-            print("Uploaded {}/{} bytes".format(bytes_uploaded, total_bytes), end="\r")
+            print(f"Uploaded {bytes_uploaded}/{total_bytes} bytes", end="\r")
             sys.stdout.flush()
             curr_chunk = local_jar.read(THRIFT_CHUNK_SIZE)
             if not curr_chunk:
@@ -173,7 +170,7 @@ def _upload_jar(nimbus_client, local_path):
             nimbus_client.uploadChunk(upload_location, curr_chunk)
             bytes_uploaded += len(curr_chunk)
         nimbus_client.finishFileUpload(upload_location)
-        print("Uploaded {}/{} bytes".format(bytes_uploaded, total_bytes))
+        print(f"Uploaded {bytes_uploaded}/{total_bytes} bytes")
         sys.stdout.flush()
     return upload_location
 
@@ -264,7 +261,7 @@ def submit_topology(
             thrift_component.common.parallelism_hint = par_hint.get(env_name)
 
     if local_jar_path:
-        print("Using prebuilt JAR: {}".format(local_jar_path))
+        print(f"Using prebuilt JAR: {local_jar_path}")
     elif not remote_jar_path:
         # Check topology for JVM stuff to see if we need to create uber-jar
         if simple_jar:
@@ -276,9 +273,9 @@ def submit_topology(
         local_jar_path = jar_for_deploy(simple_jar=simple_jar)
 
     if name != override_name:
-        print('Deploying "{}" topology with name "{}"...'.format(name, override_name))
+        print(f'Deploying "{name}" topology with name "{override_name}"...')
     else:
-        print('Deploying "{}" topology...'.format(name))
+        print(f'Deploying "{name}" topology...')
     sys.stdout.flush()
     # Use ssh tunnel with Nimbus if use_ssh_for_nimbus is unspecified or True
     with ssh_tunnel(env_config) as (host, port):
@@ -287,9 +284,7 @@ def submit_topology(
         )
         if remote_jar_path:
             print(
-                "Reusing remote JAR on Nimbus server at path: {}".format(
-                    remote_jar_path
-                )
+                f"Reusing remote JAR on Nimbus server at path: {remote_jar_path}"
             )
         else:
             remote_jar_path = _upload_jar(nimbus_client, local_jar_path)

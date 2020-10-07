@@ -27,23 +27,22 @@ class Stream(StreamInfo):
             for field in fields:
                 if not isinstance(field, str):
                     raise TypeError(
-                        "All field names must be strings; given: " "{!r}".format(field)
+                        f"All field names must be strings; given: {field!r}"
                     )
         else:
             raise TypeError(
-                "Stream fields must be a list, tuple, or None; "
-                "given: {!r}".format(fields)
+                f"Stream fields must be a list, tuple, or None; given: {fields!r}"
             )
         self.fields = fields
         if isinstance(name, str):
             self.name = name
         else:
-            raise TypeError("Stream name must be a string; given: {!r}".format(name))
+            raise TypeError(f"Stream name must be a string; given: {name!r}")
         if isinstance(direct, bool):
             self.direct = direct
         else:
             raise TypeError(
-                '"direct" must be either True or False; given: {!r}'.format(direct)
+                f'"direct" must be either True or False; given: {direct!r}'
             )
 
 
@@ -56,9 +55,9 @@ class _Grouping(storm_thrift.Grouping):
         for name, val in vars(self).items():
             if not name.startswith("_") and val is not None:
                 if isinstance(val, NullStruct):
-                    return "{}".format(name.upper())
+                    return f"{name.upper()}"
                 else:
-                    return "{}({!r})".format(name, val)
+                    return f"{name}({val!r})"
 
 
 class Grouping:

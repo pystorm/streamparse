@@ -70,16 +70,14 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
             user = env_config.get("user")
             port = env_config.get("ssh_port")
             if user:
-                user_at_host = "{user}@{host}".format(user=user, host=host)
+                user_at_host = f"{user}@{host}"
             else:
                 user_at_host = host  # Rely on SSH default or config to connect.
 
             ssh_cmd = [
                 "ssh",
                 "-NL",
-                "{local}:localhost:{remote}".format(
-                    local=local_port, remote=remote_port
-                ),
+                f"{local_port}:localhost:{remote_port}",
                 user_at_host,
             ]
             # Specify port if in config
@@ -94,12 +92,12 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
                 # value, then raise an Exception
                 if ssh_proc.poll() is not None:
                     raise IOError(
-                        'Unable to open ssh tunnel via: "{}"'.format(" ".join(ssh_cmd))
+                        f"Unable to open ssh tunnel via: \"{' '.join(ssh_cmd)}\""
                     )
                 time.sleep(0.2)
             if not quiet:
                 print(
-                    "ssh tunnel to Nimbus {}:{} established.".format(host, remote_port)
+                    f"ssh tunnel to Nimbus {host}:{remote_port} established."
                 )
             _active_tunnels[local_port] = remote_port
         yield "localhost", local_port
@@ -147,12 +145,12 @@ def activate_env(env_name=None, options=None, config_file=None):
 
 
 def die(msg, error_code=1):
-    print("{}: {}".format(red("error"), msg))
+    print(f"{red('error')}: {msg}")
     sys.exit(error_code)
 
 
 def warn(msg, error_code=1):
-    print("{}: {}".format(yellow("warning"), msg))
+    print(f"{yellow('warning')}: {msg}")
 
 
 _config = None
@@ -203,9 +201,9 @@ def get_topology_definition(topology_name=None, config_file=None):
     config = get_config(config_file=config_file)
     topology_path = config["topology_specs"]
     if topology_name is None:
-        topology_files = glob("{}/*.py".format(topology_path))
+        topology_files = glob(f"{topology_path}/*.py")
         if not topology_files:
-            die("No topology definitions are defined in {}.".format(topology_path))
+            die(f"No topology definitions are defined in {topology_path}.")
         if len(topology_files) > 1:
             die(
                 "Found more than one topology definition file in {specs_dir}. "
@@ -216,7 +214,7 @@ def get_topology_definition(topology_name=None, config_file=None):
         topology_file = topology_files[0]
         topology_name = re.sub(r"(^{}|\.py$)".format(topology_path), "", topology_file)
     else:
-        topology_file = "{}.py".format(os.path.join(topology_path, topology_name))
+        topology_file = f"{os.path.join(topology_path, topology_name)}.py"
         if not os.path.exists(topology_file):
             die(
                 "Topology definition file not found {}. You need to "
@@ -248,9 +246,7 @@ def get_env_config(env_name=None, config_file=None):
         )
     if env_name not in config["envs"]:
         die(
-            'Could not find a "{}" in config.json, have you specified one?'.format(
-                env_name
-            )
+            f'Could not find a "{env_name}" in config.json, have you specified one?'
         )
 
     return (env_name, config["envs"][env_name])
@@ -375,8 +371,7 @@ def local_storm_version():
         res = local(cmd, capture=True)
         if not res.succeeded:
             raise RuntimeError(
-                "Unable to run '{}'!\nSTDOUT:\n{}"
-                "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr)
+                f"Unable to run '{cmd}'!\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
             )
 
     pattern = r"Storm ([0-9.]+)"
@@ -411,8 +406,7 @@ def storm_lib_version():
         res = local(cmd, capture=True)
         if not res.succeeded:
             raise RuntimeError(
-                "Unable to run '{}'!\nSTDOUT:\n{}"
-                "\nSTDERR:\n{}".format(cmd, res.stdout, res.stderr)
+                f"Unable to run '{cmd}'!\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
             )
     deps_tree = res.stdout
     pattern = r'\[org\.apache\.storm/storm-core "([^"]+)"\]'
@@ -444,15 +438,14 @@ def get_ui_jsons(env_name, api_paths, config_file=None):
                 env_config, local_port=local_port, remote_port=remote_ui_port
             ) as (host, local_port):
                 for api_path in api_paths:
-                    url = "http://{}:{}{}".format(host, local_port, api_path)
+                    url = f"http://{host}:{local_port}{api_path}"
                     r = requests.get(url)
                     data[api_path] = r.json()
                     error = data[api_path].get("error")
                     if error:
                         error_msg = data[api_path].get("errorMessage")
                         raise RuntimeError(
-                            "Received bad response from {}: "
-                            "{}\n{}".format(url, error, error_msg)
+                            f"Received bad response from {url}: {error}\n{error_msg}"
                         )
             return data
         except Exception as e:
@@ -503,7 +496,7 @@ def get_logfiles_cmd(
     will yield all of the logfiles for the given topology that meet the given
     pattern (if specified).
     """
-    log_name_patterns = ["*{topo_name}*".format(topo_name=topology_name)]
+    log_name_patterns = [f"*{topology_name}*"]
     if not include_all_artifacts:
         log_name_patterns[0] += ".log"
     # The worker logs are separated by topology in Storm 1.0+, so no need to do
@@ -521,7 +514,7 @@ def get_logfiles_cmd(
         )
     ls_cmd = _get_file_names_command(env.log_path, log_name_patterns)
     if pattern is not None:
-        ls_cmd += " | egrep '{pattern}'".format(pattern=pattern)
+        ls_cmd += f" | egrep '{pattern}'"
     return ls_cmd
 
 
@@ -537,7 +530,7 @@ def print_stats_table(
     :type header:  `str`
     :param data:   List of dictionaries (or objects )
     """
-    print("# %s" % header)
+    print(f"# {header}")
     table = Texttable(max_width=115)
     table.header(columns)
     table.set_cols_align(default_alignment * len(columns))
@@ -589,12 +582,12 @@ def set_topology_serializer(env_config, config, topology_class):
         for thrift_bolt in topology_class.thrift_bolts.values():
             inner_shell = thrift_bolt.bolt_object.shell
             if inner_shell is not None:
-                inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)
+                inner_shell.script = f"-s {serializer} {inner_shell.script}"
         # Set serializer arg in spouts
         for thrift_spout in topology_class.thrift_spouts.values():
             inner_shell = thrift_spout.spout_object.shell
             if inner_shell is not None:
-                inner_shell.script = "-s {} {}".format(serializer, inner_shell.script)
+                inner_shell.script = f"-s {serializer} {inner_shell.script}"
 
 
 def run_cmd(cmd, user, **kwargs):

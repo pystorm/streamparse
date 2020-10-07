@@ -65,13 +65,11 @@ class ComponentSpec:
                     )
         elif not isinstance(par, int):
             raise TypeError(
-                "Parallelism hint must be an integer greater than "
-                "0. Given: {!r}".format(par)
+                f"Parallelism hint must be an integer greater than 0. Given: {par!r}"
             )
         elif par < 1:
             raise ValueError(
-                "Parallelism hint must be an integer greater than "
-                "0. Given: {}".format(par)
+                f"Parallelism hint must be an integer greater than 0. Given: {par}"
             )
         return par
 
@@ -130,8 +128,7 @@ class ComponentSpec:
                 input_dict = {}
             else:
                 raise TypeError(
-                    "Inputs must either be a list, dict, or None.  "
-                    "Given: {!r}".format(inputs)
+                    f"Inputs must either be a list, dict, or None.  Given: {inputs!r}"
                 )
         return input_dict
 
@@ -145,7 +142,7 @@ class ComponentSpec:
             config = "{}"
         else:
             raise TypeError(
-                "Config must either be a dict or None.  Given: {!r}".format(config)
+                f"Config must either be a dict or None.  Given: {config!r}"
             )
         return config
 
@@ -194,11 +191,9 @@ class ComponentSpec:
         """:returns: A string representation of the Specification. """
         attr_dict = deepcopy(self.__dict__)
         component_cls = attr_dict.pop("component_cls")
-        repr_str = "{}({cls}".format(
-            self.__class__.__name__, cls=component_cls.__name__
-        )
+        repr_str = f"{self.__class__.__name__}({component_cls.__name__}"
         for key, val in attr_dict.items():
-            repr_str += ", {}={!r}".format(key, val)
+            repr_str += f", {key}={val!r}"
         repr_str += ")"
         return repr_str
 
