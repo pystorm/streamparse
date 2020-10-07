@@ -4,7 +4,7 @@ Python Storm Topology DSL
 
 import io
 
-import thriftpy
+import thriftpy2
 
 # Apache storm.thrift file as string to simplify loading it.
 _THRIFT_STR = """
@@ -782,7 +782,7 @@ exception HBExecutionException {
 }
 """
 
-storm_thrift = thriftpy.load_fp(io.StringIO(_THRIFT_STR), module_name="storm_thrift")
+storm_thrift = thriftpy2.load_fp(io.StringIO(_THRIFT_STR), module_name="storm_thrift")
 # Fix a lovely issue where GlobalStreamIds didn't have consistent hash values
 storm_thrift.GlobalStreamId.__hash__ = lambda self: (
     hash(self.componentId) ^ hash(self.streamId)

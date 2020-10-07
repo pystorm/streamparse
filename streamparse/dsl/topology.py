@@ -3,8 +3,8 @@ Topology base class
 """
 import simplejson as json
 from pystorm.component import Component
-from thriftpy.transport import TMemoryBuffer
-from thriftpy.protocol import TBinaryProtocol
+from thriftpy2.transport import TMemoryBuffer
+from thriftpy2.protocol import TBinaryProtocol
 
 from ..thrift import Bolt, SpoutSpec, StormTopology
 from .bolt import JavaBoltSpec, ShellBoltSpec
