@@ -1,3 +1,10 @@
+# Use faster LXD containers
+arch: arm64-graviton2
+virt: lxd
+os: linux
+dist: focal
+group: edge
+
 language: python
 sudo: false
 cache:
@@ -7,17 +14,13 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-  - "3.9"
   - "3.9-dev"
-  - "pypy3.5"
+  - "pypy3"
 
 matrix:
   fast_finish: true
   allow_failures:
     - python: '3.9-dev'
-
-dist:
-  - focal
 
 install:
   - travis_retry pip install --upgrade pip setuptools
