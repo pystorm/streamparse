@@ -17,7 +17,7 @@ matrix:
     - python: '3.9-dev'
 
 dist:
-  - xenial
+  - focal
 
 install:
   - travis_retry pip install --upgrade pip setuptools
