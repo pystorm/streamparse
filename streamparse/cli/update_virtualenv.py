@@ -123,7 +123,7 @@ def create_or_update_virtualenvs(
     # Check to ensure streamparse is in at least one requirements file
     found_streamparse = False
     for requirements_path in requirements_paths:
-        with open(requirements_path, "r") as fp:
+        with open(requirements_path) as fp:
             for line in fp:
                 if "streamparse" in line:
                     found_streamparse = True

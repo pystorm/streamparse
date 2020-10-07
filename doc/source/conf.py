@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # streamparse documentation build configuration file, created by
 # sphinx-quickstart on Sun Jan 19 22:29:52 2014.
@@ -50,8 +49,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"streamparse"
-copyright = u"2014-2017, Parsely"
+project = "streamparse"
+copyright = "2014-2020, Parsely"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -213,7 +212,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ("index", "streamparse.tex", u"streamparse Documentation", u"Parsely", "manual")
+    ("index", "streamparse.tex", "streamparse Documentation", "Parsely", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -241,7 +240,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "streamparse", u"streamparse Documentation", [u"Parsely"], 1)]
+man_pages = [("index", "streamparse", "streamparse Documentation", ["Parsely"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -256,8 +255,8 @@ texinfo_documents = [
     (
         "index",
         "streamparse",
-        u"streamparse Documentation",
-        u"Parsely",
+        "streamparse Documentation",
+        "Parsely",
         "streamparse",
         "Run Python on real-time streams of data.",
         "Miscellaneous",

@@ -1,12 +1,8 @@
 import argparse
 import unittest
+from unittest.mock import patch
 
 from nose.tools import ok_
-
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
 
 from streamparse.cli.run import main, subparser_hook
 

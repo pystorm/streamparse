@@ -21509,17 +21509,11 @@ def unpack(sources):
 
 
 if __name__ == "__main__":
-    if sys.version_info >= (3, 0):
-        exec("def do_exec(co, loc): exec(co, loc)\n")
-        import pickle
+    exec("def do_exec(co, loc): exec(co, loc)\n")
+    import pickle
 
-        sources = sources.encode("ascii")  # ensure bytes
-        sources = pickle.loads(bz2.decompress(base64.decodebytes(sources)))
-    else:
-        import cPickle as pickle
-
-        exec("def do_exec(co, loc): exec co in loc\n")
-        sources = pickle.loads(bz2.decompress(base64.decodestring(sources)))
+    sources = sources.encode("ascii")  # ensure bytes
+    sources = pickle.loads(bz2.decompress(base64.decodebytes(sources)))
 
     try:
         temp_dir = unpack(sources)

@@ -408,7 +408,7 @@ class TopologyTests(unittest.TestCase):
             word_spout = WordSpout.spec(par=2)
             word_bolt = JavaBolt.spec(
                 full_class_name="com.bar.foo.counter.WordCountBolt",
-                args_list=[u"foo", 1, b"\x09\x10", True, 3.14159],
+                args_list=["foo", 1, b"\x09\x10", True, 3.14159],
                 inputs={word_spout: Grouping.fields("word")},
                 par=8,
                 outputs=["word", "count"],
@@ -421,7 +421,7 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(
             java_object.args_list,
             [
-                JavaObjectArg(string_arg=u"foo"),
+                JavaObjectArg(string_arg="foo"),
                 JavaObjectArg(long_arg=1),
                 JavaObjectArg(binary_arg=b"\x09\x10"),
                 JavaObjectArg(bool_arg=True),
@@ -522,7 +522,7 @@ class TopologyTests(unittest.TestCase):
         class JavaWordCount(Topology):
             word_spout = JavaSpout.spec(
                 full_class_name="com.bar.foo.counter.WordSpout",
-                args_list=[u"foo", 1, b"\x09\x10", True, 3.14159],
+                args_list=["foo", 1, b"\x09\x10", True, 3.14159],
                 par=8,
                 outputs=["word"],
             )
@@ -535,7 +535,7 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(
             java_object.args_list,
             [
-                JavaObjectArg(string_arg=u"foo"),
+                JavaObjectArg(string_arg="foo"),
                 JavaObjectArg(long_arg=1),
                 JavaObjectArg(binary_arg=b"\x09\x10"),
                 JavaObjectArg(bool_arg=True),

@@ -91,7 +91,7 @@ def ssh_tunnel(env_config, local_port=6627, remote_port=None, quiet=False):
                 # Periodically check to see if the ssh command failed and returned a
                 # value, then raise an Exception
                 if ssh_proc.poll() is not None:
-                    raise IOError(
+                    raise OSError(
                         f"Unable to open ssh tunnel via: \"{' '.join(ssh_cmd)}\""
                     )
                 time.sleep(0.2)
@@ -212,7 +212,7 @@ def get_topology_definition(topology_name=None, config_file=None):
                 "--name flags.".format(specs_dir=topology_path)
             )
         topology_file = topology_files[0]
-        topology_name = re.sub(r"(^{}|\.py$)".format(topology_path), "", topology_file)
+        topology_name = re.sub(fr"(^{topology_path}|\.py$)", "", topology_file)
     else:
         topology_file = f"{os.path.join(topology_path, topology_name)}.py"
         if not os.path.exists(topology_file):

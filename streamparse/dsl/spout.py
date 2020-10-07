@@ -17,7 +17,7 @@ class ShellSpoutSpec(ShellComponentSpec):
         config=None,
         outputs=None,
     ):
-        super(ShellSpoutSpec, self).__init__(
+        super().__init__(
             component_cls,
             name=name,
             par=par,
@@ -40,7 +40,7 @@ class JavaSpoutSpec(JavaComponentSpec):
         config=None,
         outputs=None,
     ):
-        super(JavaSpoutSpec, self).__init__(
+        super().__init__(
             component_cls,
             name=name,
             par=par,

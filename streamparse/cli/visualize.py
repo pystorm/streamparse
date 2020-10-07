@@ -74,9 +74,7 @@ def to_graphviz(topology_class, node_attr=None, edge_attr=None, **kwargs):
         for stream_id, grouping in spec.inputs.items():
             parent = stream_id.componentId
             outputs = all_specs[parent].common.streams[stream_id.streamId].output_fields
-            label = "Stream: {}\lFields: {}\lGrouping: {}\l".format(
-                stream_id.streamId, outputs, grouping
-            )
+            label = fr"Stream: {stream_id.streamId}\lFields: {outputs}\lGrouping: {grouping}\l"
             sametail = f"{parent}-{stream_id.streamId}"
             if sametail not in sametail_nodes:
                 g.node(sametail, shape="point", width="0")

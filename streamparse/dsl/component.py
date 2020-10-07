@@ -213,7 +213,7 @@ class JavaComponentSpec(ComponentSpec):
         config=None,
         outputs=None,
     ):
-        super(JavaComponentSpec, self).__init__(
+        super().__init__(
             component_cls,
             name=name,
             inputs=inputs,
@@ -256,7 +256,7 @@ class ShellComponentSpec(ComponentSpec):
         config=None,
         outputs=None,
     ):
-        super(ShellComponentSpec, self).__init__(
+        super().__init__(
             component_cls,
             name=name,
             inputs=inputs,

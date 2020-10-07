@@ -30,7 +30,7 @@ class _StoreDictAction(argparse.Action):
             raise ValueError("nargs for store_dict actions must be > 0")
         if const is not None and nargs != "?":
             raise ValueError('nargs must be "?" to supply const')
-        super(_StoreDictAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             nargs=nargs,

@@ -18,7 +18,7 @@ class ShellBoltSpec(ShellComponentSpec):
         config=None,
         outputs=None,
     ):
-        super(ShellBoltSpec, self).__init__(
+        super().__init__(
             component_cls,
             name=name,
             inputs=inputs,
@@ -43,7 +43,7 @@ class JavaBoltSpec(JavaComponentSpec):
         config=None,
         outputs=None,
     ):
-        super(JavaBoltSpec, self).__init__(
+        super().__init__(
             component_cls,
             name=name,
             serialized_java=serialized_java,
