@@ -67,7 +67,7 @@ def _create_or_update_virtualenv(
         puts(f"Updating virtualenv: {virtualenv_name}")
         pip_path = "/".join((virtualenv_path, "bin", "pip"))
         # Make sure we're using latest pip so options work as expected
-        run_cmd(f"{pip_path} install --upgrade 'pip>=9.0,!=19.0'", user)
+        run_cmd(f"{pip_path} install --upgrade 'pip>=9.0,!=19.0' setuptools", user)
         run_cmd(
             (
                 "{} install -r {} --exists-action w --upgrade "
@@ -155,7 +155,7 @@ def create_or_update_virtualenvs(
 
 
 def subparser_hook(subparsers):
-    """ Hook to add subparser for this command. """
+    """Hook to add subparser for this command."""
     subparser = subparsers.add_parser(
         "update_virtualenv", description=__doc__, help=main.__doc__
     )
@@ -172,7 +172,7 @@ def subparser_hook(subparsers):
 
 
 def main(args):
-    """ Create or update a virtualenv on Storm workers. """
+    """Create or update a virtualenv on Storm workers."""
     env.pool_size = args.pool_size
     create_or_update_virtualenvs(
         args.environment,
