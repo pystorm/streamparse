@@ -16,3 +16,5 @@ _resources/
 .*.un~
 
 \.idea/
+.envrc
+.venv*/
