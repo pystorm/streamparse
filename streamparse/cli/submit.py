@@ -283,9 +283,7 @@ def submit_topology(
             env_config, host=host, port=port, timeout=timeout
         )
         if remote_jar_path:
-            print(
-                f"Reusing remote JAR on Nimbus server at path: {remote_jar_path}"
-            )
+            print(f"Reusing remote JAR on Nimbus server at path: {remote_jar_path}")
         else:
             remote_jar_path = _upload_jar(nimbus_client, local_jar_path)
         _kill_existing_topology(override_name, force, wait, nimbus_client)
@@ -303,7 +301,7 @@ def submit_topology(
 
 
 def subparser_hook(subparsers):
-    """ Hook to add subparser for this command. """
+    """Hook to add subparser for this command."""
     subparser = subparsers.add_parser("submit", description=__doc__, help=main.__doc__)
     subparser.set_defaults(func=main)
     add_ackers(subparser)
@@ -367,7 +365,7 @@ def subparser_hook(subparsers):
 
 
 def main(args):
-    """ Submit a Storm topology to Nimbus. """
+    """Submit a Storm topology to Nimbus."""
     env.pool_size = args.pool_size
     submit_topology(
         name=args.name,
