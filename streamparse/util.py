@@ -599,5 +599,5 @@ def run_cmd(cmd, user, **kwargs):
                 else sudo(cmd, user=user, **kwargs)
             )
     if command_result.return_code != 0:
-        raise ValueError()
+        raise RuntimeError('Command failed to run: %s' % cmd)
     return command_result
