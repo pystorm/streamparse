@@ -592,6 +592,12 @@ def set_topology_serializer(env_config, config, topology_class):
 
 def run_cmd(cmd, user, **kwargs):
     with show("everything"):
-        return (
-            run(cmd, **kwargs) if user == env.user else sudo(cmd, user=user, **kwargs)
-        )
+        with settings(warn_only=True):
+            command_result = (
+                run(cmd, **kwargs)
+                if user == env.user
+                else sudo(cmd, user=user, **kwargs)
+            )
+    if command_result.return_code != 0:
+        raise RuntimeError('Command failed to run: %s' % cmd)
+    return command_result
