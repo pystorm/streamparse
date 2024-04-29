@@ -382,17 +382,17 @@ def nimbus_storm_version(nimbus_client):
     """Get the Storm version that Nimbus is reporting, if it's reporting it.
 
     :returns: Storm version that Nimbus is reporting, if it's reporting it.
-              Will return `LegacyVersion('')` if it's not reporting anything.
+              Will return `Version('0.0.0')` if it's not reporting anything.
     :rtype: pkg_resources.Version
     """
-    version = parse_version("")
+    version = "0.0.0"
     nimbuses = nimbus_client.getClusterInfo().nimbuses
     if nimbuses is not None:
         for nimbus in nimbuses:
             if nimbus.version != "VERSION_NOT_PROVIDED":
-                version = parse_version(nimbus.version)
+                version = nimbus.version
                 break
-    return version
+    return parse_version(version)
 
 
 def storm_lib_version():
