@@ -67,7 +67,7 @@ def _create_or_update_virtualenv(
         puts(f"Updating virtualenv: {virtualenv_name}")
         pip_path = "/".join((virtualenv_path, "bin", "pip"))
         # Make sure we're using latest pip so options work as expected
-        run_cmd(f"{pip_path} install --upgrade 'pip>=9.0,!=19.0' setuptools wheel", user)
+        run_cmd(f"{pip_path} install --upgrade 'pip>=9.0,!=19.0' setuptools==69.5.1", user)
         run_cmd(
             (
                 "{} install -r {} --exists-action w --upgrade "
