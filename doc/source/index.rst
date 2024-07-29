@@ -19,6 +19,7 @@ Integrates with Apache Storm.
    topologies
    api
    develop
+   releases
    faq
 
 .. image:: images/quickstart.gif
