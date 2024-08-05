@@ -17,7 +17,7 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath("../../streamparse"))
+sys.path.insert(0, os.path.abspath("../streamparse"))
 from version import __version__ as VERSION
 
 # -- General configuration ------------------------------------------------
@@ -40,7 +40,7 @@ extensions = [
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+# source_suffix = {".rst": "restructuredtext"}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -50,7 +50,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "streamparse"
-copyright = "2014-2020, Parsely"
+copyright = "2014-2024, Parsely"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -277,4 +277,4 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"http://docs.python.org/": None}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
