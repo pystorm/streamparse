@@ -135,7 +135,7 @@ topology in pure Python using Thrift.  For details see :ref:`topology_dsl`.
 Let's have a look at the definition file created by using the
 ``sparse quickstart`` command.
 
-.. literalinclude:: ../../streamparse/bootstrap/project/topologies/wordcount.py
+.. literalinclude:: ../streamparse/bootstrap/project/topologies/wordcount.py
     :language: python
 
 In the ``count_bolt`` bolt, we've told Storm that we'd like the stream of
