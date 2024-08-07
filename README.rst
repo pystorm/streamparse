@@ -59,11 +59,11 @@ Roadmap
 
 See the `Roadmap <https://github.com/Parsely/streamparse/wiki/Roadmap>`__.
 
-.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/streamparse-logo.png
+.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/images/streamparse-logo.png
 .. |Build Status| image:: https://github.com/pystorm/streamparse/actions/workflows/test.yml/badge.svg
    :target: https://github.com/pystorm/streamparse/actions/workflows/test.yml
    :alt: Build Status
-.. |Docs Status| image:: https://readthedocs.org/projects/streamparse/badge/?version=stable
-   :target: https://streamparse.readthedocs.io/en/stable/?badge=stable
+.. |Docs Status| image:: https://readthedocs.org/projects/streamparse/badge/?version=latest
+   :target: https://streamparse.readthedocs.io/en/stable/?badge=latest
    :alt: Documentation Status
 .. |Demo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif
