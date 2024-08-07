@@ -1,6 +1,6 @@
 |logo|
 
-|Build Status|
+|Build Status| |Docs Status|
 
 Streamparse lets you run Python code against real-time streams of data via
 Apache Storm.  With streamparse you can create Storm bolts and spouts in
@@ -60,6 +60,10 @@ Roadmap
 See the `Roadmap <https://github.com/Parsely/streamparse/wiki/Roadmap>`__.
 
 .. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/streamparse-logo.png
-.. |Build Status| image:: https://travis-ci.org/Parsely/streamparse.svg?branch=master
-   :target: https://travis-ci.org/Parsely/streamparse
+.. |Build Status| image:: https://github.com/pystorm/streamparse/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/pystorm/streamparse/actions/workflows/test.yml
+   :alt: Build Status
+.. |Docs Status| image:: https://readthedocs.org/projects/streamparse/badge/?version=stable
+   :target: https://streamparse.readthedocs.io/en/stable/?badge=stable
+   :alt: Documentation Status
 .. |Demo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif

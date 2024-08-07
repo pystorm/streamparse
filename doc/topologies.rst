@@ -36,11 +36,11 @@ Simple Python Example
 The first step to putting together a topology, is creating the bolts and spouts,
 so let's assume we have the following bolt and spout:
 
-.. literalinclude:: ../../examples/redis/src/bolts.py
+.. literalinclude:: ../examples/redis/src/bolts.py
     :language: python
     :lines: 1-28
 
-.. literalinclude:: ../../examples/redis/src/spouts.py
+.. literalinclude:: ../examples/redis/src/spouts.py
     :language: python
 
 One important thing to note is that we have added an ``outputs`` attribute to
@@ -51,7 +51,7 @@ objects.
 
 Now let's hook up the bolt to read from the spout:
 
-.. literalinclude:: ../../examples/redis/topologies/wordcount_mem.py
+.. literalinclude:: ../examples/redis/topologies/wordcount_mem.py
     :language: python
 
 .. note::
@@ -72,7 +72,7 @@ The topology DSL fully supports JVM-based bolts and spouts via the
 Here's an example of how we would use the
 `Storm Kafka Spout <http://storm.apache.org/releases/current/storm-kafka.html>`_:
 
-.. literalinclude:: ../../examples/kafka-jvm/topologies/pixelcount.py
+.. literalinclude:: ../examples/kafka-jvm/topologies/pixelcount.py
     :language: python
 
 One limitation of the Thrift interface we use to send the topology to Storm is
@@ -127,7 +127,7 @@ attribute. The most common grouping is probably the
 with the same value for the specified fields to the same executor. This can be
 seen in the prototypical word count topology:
 
-.. literalinclude:: ../../examples/redis/topologies/wordcount_mem.py
+.. literalinclude:: ../examples/redis/topologies/wordcount_mem.py
     :language: python
 
 

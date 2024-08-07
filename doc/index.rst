@@ -9,8 +9,12 @@
 streamparse lets you run Python code against real-time streams of data.
 Integrates with Apache Storm.
 
-.. image:: https://travis-ci.org/Parsely/streamparse.svg?branch=master
-    :target: https://travis-ci.org/Parsely/streamparse
+.. image:: https://github.com/pystorm/streamparse/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/pystorm/streamparse/actions/workflows/test.yml
+   :alt: Build Status
+.. image:: https://readthedocs.org/projects/streamparse/badge/?version=stable
+   :target: https://streamparse.readthedocs.io/en/stable/?badge=stable
+   :alt: Documentation Status
 
 .. toctree::
    :maxdepth: 1
