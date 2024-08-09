@@ -21,7 +21,7 @@ in one place. Based on the suggestion `here. <http://bit.ly/16LbuJF>`_
 
 
 def _safe_int(string):
-    """ Simple function to convert strings into ints without dying. """
+    """Simple function to convert strings into ints without dying."""
     try:
         return int(string)
     except ValueError:
