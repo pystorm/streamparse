@@ -1,7 +1,7 @@
 """
 This package makes it easier to work with Storm and Python.
 
-:organization: Parsely
+:organization: pystorm
 """
 
 import logging
@@ -51,7 +51,7 @@ __all__ = [
 ]
 
 __license__ = """
-Copyright 2014-2020 Parsely, Inc.
+Copyright Andrew Montalenti
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

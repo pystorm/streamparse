@@ -1,4 +1,4 @@
-# Copyright 2014-2020 Parsely, Inc.
+# Copyright Andrew Montalenti
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 This module exists solely for version information so we only have to change it
 in one place. Based on the suggestion `here. <http://bit.ly/16LbuJF>`_
 
-:organization: Parsely
+:organization: pystorm
 """
 
 

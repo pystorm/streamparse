@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright 2014-2020 Parsely, Inc.
+Copyright Andrew Montalenti
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ tests_require = ["graphviz", "pytest"]
 setup(
     name="streamparse",
     version=get_version(),
-    author="Parsely, Inc.",
-    author_email="hello@parsely.com",
-    url="https://github.com/Parsely/streamparse",
+    author="Andrew Montalenti",
+    author_email="git@amontalenti.com",
+    url="https://github.com/pystorm/streamparse",
     description=(
         "streamparse lets you run Python code against real-time "
         "streams of data. Integrates with Apache Storm."

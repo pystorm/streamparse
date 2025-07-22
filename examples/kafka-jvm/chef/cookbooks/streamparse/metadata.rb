@@ -1,5 +1,5 @@
-maintainer       "Parsely"
-maintainer_email "hello@parsely.com"
+maintainer       "Andrew Montalenti"
+maintainer_email "git@amontalenti.com"
 name			 "streamparse"
 license          "Apache 2.0"
 description      "Installs/Configures streamparse"
