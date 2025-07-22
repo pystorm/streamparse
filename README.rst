@@ -51,19 +51,19 @@ Alphabetical, by last name:
 Changelog
 ---------
 
-See the `releases <https://github.com/Parsely/streamparse/releases>`__ page on
+See the `releases <https://github.com/pystorm/streamparse/releases>`__ page on
 GitHub.
 
 Roadmap
 -------
 
-See the `Roadmap <https://github.com/Parsely/streamparse/wiki/Roadmap>`__.
+See the `Roadmap <https://github.com/pystorm/streamparse/wiki/Roadmap>`__.
 
-.. |logo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/images/streamparse-logo.png
+.. |logo| image:: https://raw.githubusercontent.com/pystorm/streamparse/master/doc/images/streamparse-logo.png
 .. |Build Status| image:: https://github.com/pystorm/streamparse/actions/workflows/test.yml/badge.svg
    :target: https://github.com/pystorm/streamparse/actions/workflows/test.yml
    :alt: Build Status
 .. |Docs Status| image:: https://readthedocs.org/projects/streamparse/badge/?version=latest
    :target: https://streamparse.readthedocs.io/en/stable/?badge=latest
    :alt: Documentation Status
-.. |Demo| image:: https://raw.githubusercontent.com/Parsely/streamparse/master/doc/source/images/quickstart.gif
+.. |Demo| image:: https://raw.githubusercontent.com/pystorm/streamparse/master/doc/source/images/quickstart.gif

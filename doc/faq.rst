@@ -29,14 +29,14 @@ Is streamparse compatible with Python 3?
 Yes, streamparse is fully compatible with Python 3 starting with version 3.3
 which we use in our `unit tests`_.
 
-.. _unit tests: https://github.com/Parsely/streamparse/blob/master/.travis.yml
+.. _unit tests: https://github.com/pystorm/streamparse/blob/master/.travis.yml
 
 How can I contribute to streamparse?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please see the `CONTRIBUTING`_ document in Github
 
-.. _CONTRIBUTING: https://github.com/Parsely/streamparse/blob/master/CONTRIBUTING.rst
+.. _CONTRIBUTING: https://github.com/pystorm/streamparse/blob/master/CONTRIBUTING.rst
 
 
 How do I trigger some code before or after I submit my topology?

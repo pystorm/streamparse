@@ -17,7 +17,7 @@ the `streamparse user group`_ and we'll give you a hand.
 From there, get to work on your improvement and submit a pull request when ready which
 we'll review.
 
-.. _open issues: https://github.com/Parsely/streamparse/issues?state=open
+.. _open issues: https://github.com/pystorm/streamparse/issues?state=open
 .. _streamparse user group: https://groups.google.com/forum/#!forum/streamparse
 
 
@@ -33,15 +33,13 @@ Style Guidelines
 We'll work with you to get pull requests merged into streamparse. But to help us out, generally
 following PEP8 guidelines will result in less back and forth.
 
-Parse.ly's CTO, Andrew Montalenti, has published on Github an `Elements of Python Style`_ with 
-style suggestions for Python beyond PEP8.
+This project's creator, Andrew Montalenti, has published on GitHub an `Elements
+of Python Style`_ with style suggestions for Python beyond PEP8.
 
 
 .. _Elements of Python Style: https://github.com/amontalenti/elements-of-python-style
 
-
 Contributor License Agreement
 -----------------------------
-No contributor license agreement is needed for streamparse. All pull requests are understood 
+No contributor license agreement is needed for streamparse. All pull requests are understood
 to be acceptable to release under streamparse's license, Apache 2.0.
-
