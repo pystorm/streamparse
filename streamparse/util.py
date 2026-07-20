@@ -187,7 +187,7 @@ def get_config(config_file=None):
 
 def get_topology_definition(topology_name=None, config_file=None):
     """Fetch a topology name and definition file.  If the topology_name is
-    None, and there's only one topology definiton listed, we'll select that
+    None, and there's only one topology definition listed, we'll select that
     one, otherwise we'll die to avoid ambiguity.
 
     :param topology_name: a `str`, the topology_name of the topology (without
