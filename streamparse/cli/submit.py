@@ -10,7 +10,6 @@ from itertools import chain
 
 import simplejson as json
 from fabric.api import env
-from pkg_resources import parse_version
 
 from ..dsl.component import JavaComponentSpec
 from ..thrift import ShellComponent, SubmitOptions, TopologyInitialStatus
@@ -23,6 +22,7 @@ from ..util import (
     get_topology_definition,
     get_topology_from_file,
     nimbus_storm_version,
+    parse_storm_version,
     set_topology_serializer,
     ssh_tunnel,
     warn,
@@ -109,7 +109,7 @@ def _submit_topology(
     set_topology_serializer(env_config, config, topology_class)
 
     # Check if topology name is okay on Storm versions that support that
-    if nimbus_storm_version(nimbus_client) >= parse_version("1.1.0"):
+    if nimbus_storm_version(nimbus_client) >= parse_storm_version("1.1.0"):
         if not nimbus_client.isTopologyNameAllowed(topology_name):
             raise ValueError(
                 f"Nimbus says {topology_name} is an invalid name for a Storm topology."

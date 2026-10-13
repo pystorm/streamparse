@@ -5,12 +5,11 @@ Display stats about running Storm topologies.
 import sys
 from itertools import chain
 
-from pkg_resources import parse_version
-
 from ..util import (
     get_env_config,
     get_ui_json,
     get_ui_jsons,
+    parse_storm_version,
     print_stats_table,
     storm_lib_version,
 )
@@ -330,7 +329,7 @@ def subparser_hook(subparsers):
 def main(args):
     """ Display stats about running Storm topologies. """
     storm_version = storm_lib_version()
-    if storm_version >= parse_version("0.9.2-incubating"):
+    if storm_version >= parse_storm_version("0.9.2-incubating"):
         display_stats(
             args.environment,
             topology_name=args.name,

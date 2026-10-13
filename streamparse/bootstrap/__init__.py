@@ -6,7 +6,6 @@ import os
 import sys
 import shutil
 
-import pkg_resources
 from fabric.colors import green, red, blue
 from jinja2 import Environment, FileSystemLoader
 
@@ -18,8 +17,7 @@ _root = os.path.abspath(os.path.dirname(__file__))
 
 def _here(*paths):
     path = os.path.join(*paths)
-    filename = pkg_resources.resource_filename(__name__, path)
-    return filename
+    return os.path.join(_root, path)
 
 
 _env = Environment(loader=FileSystemLoader(_here("project")))

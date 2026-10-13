@@ -4,10 +4,14 @@ Display slots used by every topology on the cluster
 
 from collections import Counter, defaultdict
 
-from pkg_resources import parse_version
-
 from .common import add_config, add_environment
-from ..util import get_ui_json, get_ui_jsons, print_stats_table, storm_lib_version
+from ..util import (
+    get_ui_json,
+    get_ui_jsons,
+    parse_storm_version,
+    print_stats_table,
+    storm_lib_version,
+)
 
 
 def subparser_hook(subparsers):
@@ -93,7 +97,7 @@ def display_slot_usage(env_name, config_file=None):
 def main(args):
     """ Display slots used by every topology on the cluster. """
     storm_version = storm_lib_version()
-    if storm_version >= parse_version("0.9.2-incubating"):
+    if storm_version >= parse_storm_version("0.9.2-incubating"):
         display_slot_usage(args.environment)
     else:
         print(f"ERROR: Storm {storm_version} does not support this command.")

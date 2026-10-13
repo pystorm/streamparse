@@ -3,7 +3,6 @@ Tail the specified log files.
 """
 
 from fabric.api import env, execute, parallel, run
-from pkg_resources import parse_version
 
 from .common import (
     add_config,
@@ -20,6 +19,7 @@ from ..util import (
     get_topology_definition,
     get_nimbus_client,
     nimbus_storm_version,
+    parse_storm_version,
     ssh_tunnel,
 )
 
@@ -60,7 +60,7 @@ def tail_topology(
     env_name, env_config = get_env_config(env_name, config_file=config_file)
     with ssh_tunnel(env_config) as (host, port):
         nimbus_client = get_nimbus_client(env_config, host=host, port=port)
-        is_old_storm = nimbus_storm_version(nimbus_client) < parse_version("1.0")
+        is_old_storm = nimbus_storm_version(nimbus_client) < parse_storm_version("1.0")
     activate_env(env_name)
     execute(
         _tail_logs,
