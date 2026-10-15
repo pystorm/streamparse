@@ -28,7 +28,7 @@ def get_version():
 
 def readme():
     """ Returns README.rst contents as str """
-    with open("README.rst") as f:
+    with open("README.rst", encoding="utf-8") as f:
         return f.read()
 
 
@@ -52,7 +52,7 @@ setup(
     ),
     long_description=readme(),
     license="Apache License 2.0",
-    packages=find_packages(),
+    packages=find_packages(exclude=["test", "test.*"]),
     entry_points={
         "console_scripts": [
             "sparse = streamparse.cli.sparse:main",
