@@ -2,10 +2,14 @@
 Display uptime for workers in running Storm topologies.
 """
 
-from pkg_resources import parse_version
-
 from .common import add_config, add_environment
-from ..util import get_ui_json, get_ui_jsons, print_stats_table, storm_lib_version
+from ..util import (
+    get_ui_json,
+    get_ui_jsons,
+    parse_storm_version,
+    print_stats_table,
+    storm_lib_version,
+)
 
 
 def subparser_hook(subparsers):
@@ -70,7 +74,7 @@ def display_worker_uptime(env_name, config_file=None):
 def main(args):
     """ Display uptime for Storm workers. """
     storm_version = storm_lib_version()
-    if storm_version >= parse_version("0.9.2-incubating"):
+    if storm_version >= parse_storm_version("0.9.2-incubating"):
         display_worker_uptime(args.environment, config_file=args.config)
     else:
         print(f"ERROR: Storm {storm_version} does not support this command.")

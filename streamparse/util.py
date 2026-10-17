@@ -17,7 +17,7 @@ import requests
 import simplejson as json
 from fabric.api import env, hide, local, settings, show, run, sudo
 from fabric.colors import red, yellow
-from pkg_resources import parse_version
+from packaging.version import Version
 from texttable import Texttable
 from thriftpy2.protocol import TBinaryProtocolFactory
 from thriftpy2.rpc import make_client
@@ -360,11 +360,25 @@ def is_ssh_for_nimbus(env_config):
     return env_config.get("use_ssh_for_nimbus", True)
 
 
+def parse_storm_version(version):
+    """Parse a Storm version string into a comparable version.
+
+    Storm versions are not always PEP 440 compliant (e.g. "0.9.2-incubating"
+    or "2.0.0-SNAPSHOT"), so only the leading numeric release part is used.
+
+    :rtype: packaging.version.Version
+    """
+    match = re.match(r"\d+(?:\.\d+)*", version.strip())
+    if match is None:
+        raise ValueError(f"Unable to parse Storm version {version!r}")
+    return Version(match.group(0))
+
+
 def local_storm_version():
     """Get the Storm version available on the users PATH.
 
     :returns: The Storm library available on the users PATH
-    :rtype: pkg_resources.Version
+    :rtype: packaging.version.Version
     """
     with hide("running"), settings(warn_only=True):
         cmd = "storm version"
@@ -375,7 +389,7 @@ def local_storm_version():
             )
 
     pattern = r"Storm ([0-9.]+)"
-    return parse_version(re.findall(pattern, res.stdout, flags=re.MULTILINE)[0])
+    return parse_storm_version(re.findall(pattern, res.stdout, flags=re.MULTILINE)[0])
 
 
 def nimbus_storm_version(nimbus_client):
@@ -383,7 +397,7 @@ def nimbus_storm_version(nimbus_client):
 
     :returns: Storm version that Nimbus is reporting, if it's reporting it.
               Will return `Version('0.0.0')` if it's not reporting anything.
-    :rtype: pkg_resources.Version
+    :rtype: packaging.version.Version
     """
     version = "0.0.0"
     nimbuses = nimbus_client.getClusterInfo().nimbuses
@@ -392,14 +406,14 @@ def nimbus_storm_version(nimbus_client):
             if nimbus.version != "VERSION_NOT_PROVIDED":
                 version = nimbus.version
                 break
-    return parse_version(version)
+    return parse_storm_version(version)
 
 
 def storm_lib_version():
     """Get the Storm library version being used by Leiningen.
 
     :returns: The Storm library version specified in project.clj
-    :rtype: pkg_resources.Version
+    :rtype: packaging.version.Version
     """
     with hide("running"), settings(warn_only=True):
         cmd = "lein deps :tree"
@@ -417,7 +431,7 @@ def storm_lib_version():
     elif len(versions) == 0:
         raise RuntimeError("No Storm version specified in project.clj " "dependencies.")
     else:
-        return parse_version(versions.pop())
+        return parse_storm_version(versions.pop())
 
 
 def get_ui_jsons(env_name, api_paths, config_file=None):
