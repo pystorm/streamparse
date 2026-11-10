@@ -40,6 +40,30 @@ class CliCommonTests(unittest.TestCase):
 
     maxDiff = 1000
 
+    def test_option_without_equals_is_usage_error(self):
+        """`-o topology.debug` (missing =value) must exit 2, not traceback."""
+        import argparse
+        import contextlib
+        import io
+
+        parser = argparse.ArgumentParser(prog="sparse")
+        common.add_options(parser)
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as ctx:
+                parser.parse_args(["-o", "topology.debug"])
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertIn("KEY=VALUE", stderr.getvalue())
+
+    def test_option_with_equals_still_parses(self):
+        """`-o topology.debug=true` keeps working after the validation."""
+        import argparse
+
+        parser = argparse.ArgumentParser(prog="sparse")
+        common.add_options(parser)
+        ns = parser.parse_args(["-o", "topology.debug=true"])
+        self.assertEqual(ns.options, {"topology.debug": True})
+
     def test_resolve_options(self):
         """Ensure that CLI > topo settings > config.json"""
 

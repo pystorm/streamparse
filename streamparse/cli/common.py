@@ -48,6 +48,10 @@ class _StoreDictAction(argparse.Action):
             setattr(namespace, self.dest, {})
         # Only doing a copy here because that's what _AppendAction does
         items = copy.copy(getattr(namespace, self.dest))
+        if "=" not in values:
+            raise argparse.ArgumentError(
+                self, "expected KEY=VALUE format, got {!r}".format(values)
+            )
         key, val = values.split("=", 1)
         if yaml.version_info < (0, 15):
             items[key] = yaml.safe_load(val)
